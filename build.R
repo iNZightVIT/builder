@@ -55,9 +55,9 @@ if (any(pkgs$replace)) {
         pkgs <- list.files(pattern = "*.tar.gz")
 
         for (pkg in pkgs) {
-            system(sprintf("R CMD install -l . %s", pkg))
+            system(sprintf("R CMD INSTALL -l . %s", pkg))
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
-            pkgn <- gsub(".tar.gz", "", pkg, fixed = TRUE)
+            pkgn <- gsub("_*.tar.gz", "", pkg, fixed = TRUE)
             zip(zip, pkgn)
         }
 
