@@ -26,6 +26,7 @@ if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
     current_pkgs <- new_pkgs
     current_pkgs[, "Version"] <- "0"
+    NEW <- TRUE
 } else {
     current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
     current_pkgs <- current_pkgs[, c("Package", "Version")]
@@ -61,7 +62,10 @@ if (any(pkgs$replace)) {
         message(" === Building binaries ===")
         pkgs <- list.files(pattern = "*.tar.gz")
 
-        options(repos = c("https://r.docker.stat.auckland.ac.nz", "https://cran.rstudio.com"))
+        options(
+            repos = c("https://r.docker.stat.auckland.ac.nz", "https://cran.rstudio.com"),
+            install.packages.compile.from.source = TRUE
+        )
         install.packages("remotes")
 
         for (pkg in pkgs) {
