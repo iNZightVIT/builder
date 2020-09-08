@@ -12,6 +12,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+        submodules: true
 
       - uses: r-lib/actions/setup-r@master
         with:
@@ -30,7 +31,7 @@ jobs:
           - {os: windows-latest, r: '3.6'}
           - {os: windows-latest, r: 'oldrel'}
           - {os: windows-latest, r: 'release'}
-          - {os: windows-devel, r: 'devel'}
+          - {os: windows-latest, r: 'devel'}
     env:
       OS_TYPE: ${{ matrix.config.os }}
     steps:
