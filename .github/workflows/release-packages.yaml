@@ -49,10 +49,6 @@ jobs:
           OS_TYPE: ${{ runner.os }}
         run: Rscript build.R
 
-      - name: Update HTML pages
-        run: |
-          python create_webpages.py --path src
-
       - name: Push repository
         run: |
           aws --profile saml s3 sync --delete \
@@ -134,10 +130,6 @@ jobs:
           OS_TYPE: ${{ runner.os }}
         run: Rscript build.R
 
-      - name: Update HTML pages
-        run: |
-          python create_webpages.py --path bin
-
       - name: Push repository
         run: |
           aws --profile saml s3 sync --delete `
@@ -145,7 +137,7 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
   clearcache:
-    name: clear AWS cache
+    name: Clear AWS cache and update HTML
     runs-on: ubuntu-latest
     needs: [sources, binaries]
     steps:
@@ -162,11 +154,27 @@ jobs:
 
       - name: Generate credentials
         run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS}} \
+            --token ${{ secrets.AWS_TOKEN }} \
             --idp iam.auckland.ac.nz
+
+      - name: Pull repository
+        run: |
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz \
+            www
+
+      - name: Update HTML pages
+        run: |
+          python create_webpages.py --path www
+
+      - name: Push repository
+        run: |
+          aws --profile saml s3 sync --delete \
+            www \
+            s3://r.docker.stat.auckland.ac.nz
 
       - name: Clear cache
         run: |
