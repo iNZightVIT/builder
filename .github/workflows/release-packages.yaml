@@ -9,7 +9,7 @@ jobs:
     name: source
     runs-on: ubuntu-latest
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      TZ: "Pacific/Auckland"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -60,6 +60,8 @@ jobs:
           - {os: windows-latest, r: 'oldrel'}
           - {os: windows-latest, r: 'release'}
           - {os: windows-latest, r: 'devel'}
+    env:
+      TZ: "Pacific/Auckland"
     steps:
       - uses: actions/checkout@v2
         with:
