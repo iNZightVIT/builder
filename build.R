@@ -53,8 +53,6 @@ pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version
 if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
-    # but they need the correct order ...
-    replace_pkgs <- PACKAGE_ORDER[PACKAGE_ORDER %in% replace_pkgs]
 
     message(" === Building sources ===")
     for (pkg in replace_pkgs)
@@ -74,6 +72,10 @@ if (any(pkgs$replace)) {
     } else {
         message(" === Building binaries ===")
         pkgs <- list.files(pattern = "*.tar.gz")
+
+        # but they need the correct order ...
+        f <- sapply(PACKAGE_ORDER, function(x) pkgs[which(grepl(paste0(x, "_"), pkgs))])
+        pkgs <- as.character(unlist(f))
 
         options(
             repos = c("https://cran.rstudio.com"),
