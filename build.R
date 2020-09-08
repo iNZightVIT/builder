@@ -1,5 +1,16 @@
 # build packages
 
+PACKAGE_ORDER <- c(
+    "iNZightTools",
+    "iNZightMR",
+    "iNZightTS",
+    "iNZightPlots",
+    "iNZightRegression",
+    "iNZightMaps",
+    "iNZight",
+    "iNZightModules"
+)
+
 os <- Sys.getenv("OS_TYPE")
 sources <- os == "Linux"
 rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
@@ -42,6 +53,8 @@ pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version
 if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
+    # but they need the correct order ...
+    replace_pkgs <- PACKAGE_ORDER[PACKAGE_ORDER %in% replace_pkgs]
 
     message(" === Building sources ===")
     for (pkg in replace_pkgs)
@@ -63,7 +76,7 @@ if (any(pkgs$replace)) {
         pkgs <- list.files(pattern = "*.tar.gz")
 
         options(
-            repos = c("https://r.docker.stat.auckland.ac.nz", "https://cran.rstudio.com"),
+            repos = c("https://cran.rstudio.com"),
             install.packages.compile.from.source = TRUE
         )
         install.packages("remotes")
