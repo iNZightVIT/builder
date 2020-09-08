@@ -78,19 +78,19 @@ if (any(pkgs$replace)) {
         pkgs <- as.character(unlist(f))
 
         options(
-            repos = c("https://cran.rstudio.com"),
-            install.packages.compile.from.source = TRUE
+            repos = c("https://cran.rstudio.com",
+                "https://r.docker.stat.auckland.ac.nz"),
         )
         install.packages("remotes")
+        for (pkg in PACKAGE_ORDER) {
+            remotes::install_local(file.path("library", pkg))
+        }
 
         for (pkg in pkgs) {
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_*.tar.gz", "", pkg, fixed = TRUE)
 
-            remotes::install_deps(pkgn)
-            install.packages(pkgn, repos = NULL)
             system(sprintf("R CMD INSTALL -l . %s", pkg))
-
             zip(zip, pkgn)
         }
 
