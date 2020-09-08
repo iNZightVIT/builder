@@ -15,3 +15,12 @@ The main repository is at https://r.docker.stat.auckland.ac.nz, and has source a
 6. syncs (push) repository
 
 Next, the windows installer is built and uploaded.
+
+
+# Triggering a release
+
+When ready to trigger a release, simply run
+```bash
+git submodule update --remote
+```
+to sync packages in `./library` with the latest commits to `master` (after creating a new release on the master branch for each package, of course). Then commit and push this repository and let github actions do the rest!
