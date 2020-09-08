@@ -107,22 +107,17 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/bin/windows `
             bin/windows
 
-      - name: Build sources for updated packages
+      - name: Build binaries for updated packages
         env:
           OS_TYPE: ${{ runner.os }}
         run: Rscript build.R
 
       - name: Update HTML pages
         run: |
-          python create_webpages.py --path src
+          python create_webpages.py --path bin
 
       - name: Push repository
         run: |
           aws --profile saml s3 sync --dry --delete `
             bin/windows `
             s3://r.docker.stat.auckland.ac.nz/bin/windows
-
-      - name: Build binaries for updated packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript build.R

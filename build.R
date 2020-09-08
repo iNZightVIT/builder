@@ -34,15 +34,16 @@ pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version
 if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
-    if (sources) {
-        message(" === Building sources ===")
-        for (pkg in replace_pkgs)
-            system(
-                sprintf("R CMD build --no-build-vignettes %s",
-                    file.path("library", pkg)
-                )
-            )
 
+    message(" === Building sources ===")
+    for (pkg in replace_pkgs)
+        system(
+            sprintf("R CMD build --no-build-vignettes %s",
+                file.path("library", pkg)
+            )
+        )
+
+    if (sources) {
         # Delete old sources
         unlink(paste0(file.path(dir, replace_pkgs), "*"))
 
@@ -50,6 +51,21 @@ if (any(pkgs$replace)) {
         system(sprintf("mv *.tar.gz %s", dir))
         tools::write_PACKAGES(dir)
     } else {
-        print("Building binaries")
+        message(" === Building binaries ===")
+        pkgs <- list.files(pattern = "*.tar.gz")
+
+        for (pkg in pkgs) {
+            system(sprintf("R CMD install -l . %s", pkg))
+            zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
+            pkgn <- gsub(".tar.gz", "", pkg, fixed = TRUE)
+            zip(zip, pkgn)
+        }
+
+        # Delete old binaries
+        unlink(paste0(file.path(dir, replace_pkgs), "*"))
+
+        # Move new binaries into place
+        system(sprintf("mv *.zip %s", dir))
+        tools::write_PACKAGES(dir)
     }
 }
