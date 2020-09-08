@@ -8,7 +8,7 @@ rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
 # current versions:
 dir <- ifelse(sources,
     "src/contrib",
-    sprintf("windows/contrib/%s", rv)
+    sprintf("bin/windows/contrib/%s", rv)
 )
 current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
 current_pkgs <- current_pkgs[, c("Package", "Version")]
