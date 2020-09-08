@@ -25,8 +25,4 @@ for (pkg in pkgs) {
         file.path("library", pkg),
         INSTALL_opts = "--no-multiarch"
     )
-    remotes::install_deps(
-        dependencies = TRUE,
-        INSTALL_opts = "--no-multiarch"
-    )
 }
