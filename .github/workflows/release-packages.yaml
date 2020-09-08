@@ -37,6 +37,16 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} \
             --idp iam.auckland.ac.nz
 
+      - name: Pull repository
+        run: |
+          mkdir -p src
+          aws --profile saml s2 sync \
+            s3://r.docker.stat.auckland.ac.nz/src \
+            src
+
+      - name: Check listing
+        run: ls -l src
+
   binaries:
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
     runs-on: ${{ matrix.config.os }}
