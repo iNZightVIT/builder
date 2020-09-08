@@ -79,7 +79,7 @@ if (any(pkgs$replace)) {
 
         options(
             repos = c("https://cran.rstudio.com",
-                "https://r.docker.stat.auckland.ac.nz"),
+                "https://r.docker.stat.auckland.ac.nz")
         )
         install.packages("remotes")
         for (pkg in PACKAGE_ORDER) {
