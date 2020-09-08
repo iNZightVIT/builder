@@ -170,18 +170,21 @@ jobs:
       - name: Pull repository
         run: |
           aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz \
-            www
+            s3://r.docker.stat.auckland.ac.nz/bin bin
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz/src src
 
       - name: Update HTML pages
         run: |
-          python create_webpages.py --path www
+          python create_webpages.py --path bin
+          python create_webpages.py --path src
 
       - name: Push repository
         run: |
           aws --profile saml s3 sync --delete \
-            www \
-            s3://r.docker.stat.auckland.ac.nz
+            bin s3://r.docker.stat.auckland.ac.nz/bin
+          aws --profile saml s3 sync --delete \
+            src s3://r.docker.stat.auckland.ac.nz/src
 
       - name: Clear cache
         run: |
