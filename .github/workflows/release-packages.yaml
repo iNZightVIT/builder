@@ -30,7 +30,12 @@ jobs:
           pip install --use-feature=2020-resolver -r ./requirements.txt
 
       - name: Generate credentials
-        python aws_saml_login.py --user ${{ secrets.AWS_USER }} --password ${{ secrets.AWS_PASS}} --token ${{ secrets.AWS_TOKEN }} --idp iam.auckland.ac.nz
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS}} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
 
   binaries:
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
