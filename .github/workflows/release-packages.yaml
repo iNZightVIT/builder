@@ -80,7 +80,7 @@ jobs:
 
       - name: Query packages
         run: |
-          saveRDS(system("cat library/*/DESCRIPTION"), ".github/depends.Rds", version = 2)
+          saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
         shell: Rscript {0}
 
       - name: Cache R packages
