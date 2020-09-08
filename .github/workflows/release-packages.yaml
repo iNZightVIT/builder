@@ -24,7 +24,7 @@ jobs:
   binaries:
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
     runs-on: ${{ matrix.config.os }}
-    needs: sources
+    # needs: sources
     strategy:
       fail-fast: false
       matrix:
