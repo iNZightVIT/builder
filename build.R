@@ -43,10 +43,10 @@ if (any(pkgs$replace)) {
                 )
             )
 
-        message(" === Delete old sources ===")
+        # Delete old sources
         unlink(paste0(file.path(dir, replace_pkgs), "*"))
 
-        message(" === Move new soures into place ===")
+        # Move new soures into place
         system(sprintf("mv *.tar.gz %s", dir))
         tools::write_PACKAGES(dir)
     } else {

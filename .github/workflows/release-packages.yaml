@@ -49,6 +49,13 @@ jobs:
           OS_TYPE: ${{ runner.os }}
         run: Rscript build.R
 
+      - name: Update HTML pages
+        run: |
+          python create_webpages.py --path src
+
+      - name: Check ...
+        run: cat src/contrib/index.html
+
   binaries:
     name: windows binaries (${{ matrix.config.r }})
     runs-on: ${{ matrix.config.os }}
