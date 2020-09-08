@@ -83,7 +83,10 @@ if (any(pkgs$replace)) {
         )
         install.packages("remotes")
         for (pkg in PACKAGE_ORDER) {
-            remotes::install_local(file.path("library", pkg))
+            remotes::install_local(
+                file.path("library", pkg),
+                INSTALL_opts = "--no-multiarch"
+            )
         }
 
         for (pkg in pkgs) {
