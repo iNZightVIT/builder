@@ -65,7 +65,7 @@ if (any(pkgs$replace)) {
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_*.tar.gz", "", pkg, fixed = TRUE)
 
-            system(sprintf("R CMD INSTALL -l . %s", pkg))
+            system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
             zip(zip, pkgn)
         }
 
