@@ -55,7 +55,7 @@ jobs:
 
       - name: Push repository
         run: |
-          aws --profile saml s3 sync --dry --delete \
+          aws --profile saml s3 sync --delete \
             src \
             s3://r.docker.stat.auckland.ac.nz/src
 
@@ -114,7 +114,7 @@ jobs:
 
       - name: Pull repository
         run: |
-          mkdir -p bin/windows/${{ steps.r-version.outputs.ver }}
+          mkdir -p bin/windows/contrib/${{ steps.r-version.outputs.ver }}
           aws --profile saml s3 sync `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
@@ -140,6 +140,6 @@ jobs:
 
       - name: Push repository
         run: |
-          aws --profile saml s3 sync --dry --delete `
+          aws --profile saml s3 sync --delete `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
