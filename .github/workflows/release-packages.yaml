@@ -40,7 +40,7 @@ jobs:
       - name: Pull repository
         run: |
           mkdir -p src
-          aws --profile saml s2 sync \
+          aws --profile saml s3 sync \
             s3://r.docker.stat.auckland.ac.nz/src \
             src
 
