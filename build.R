@@ -54,10 +54,16 @@ if (any(pkgs$replace)) {
         message(" === Building binaries ===")
         pkgs <- list.files(pattern = "*.tar.gz")
 
+        options(repos = c("https://r.docker.stat.auckland.ac.nz", "https://cran.rstudio.com"))
+        install.packages("remotes")
+
         for (pkg in pkgs) {
-            system(sprintf("R CMD INSTALL -l . %s", pkg))
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_*.tar.gz", "", pkg, fixed = TRUE)
+
+            remotes::install_deps(pkgn)
+            system(sprintf("R CMD INSTALL -l . %s", pkg))
+
             zip(zip, pkgn)
         }
 
