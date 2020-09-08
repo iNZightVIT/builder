@@ -75,7 +75,7 @@ if (any(pkgs$replace)) {
         # Move new binaries into place
         system(sprintf("mv *.zip %s", dir))
         tools::write_PACKAGES(dir)
-
-        system("ls -lR bin")
     }
 }
+
+system("ls -lR")
