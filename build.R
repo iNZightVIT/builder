@@ -1,6 +1,6 @@
 # build packages
 
-os <- Sys.get("OS_TYPE")
+os <- Sys.getenv("OS_TYPE")
 
 cat("Running on", os, "\n")
 
