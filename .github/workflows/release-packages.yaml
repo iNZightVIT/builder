@@ -50,7 +50,7 @@ jobs:
         run: Rscript build.R
 
   binaries:
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    name: windows binaries (${{ matrix.config.r }})
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
