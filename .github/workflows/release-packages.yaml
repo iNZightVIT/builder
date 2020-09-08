@@ -78,6 +78,11 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
+      - name: Query packages
+        run: |
+          saveRDS(system("cat library/*/DESCRIPTION"), ".github/depends.Rds", version = 2)
+        shell: Rscript {0}
+
       - name: Cache R packages
         uses: actions/cache@v1
         with:

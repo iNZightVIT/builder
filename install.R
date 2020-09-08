@@ -27,5 +27,3 @@ for (pkg in pkgs) {
         INSTALL_opts = "--no-multiarch"
     )
 }
-
-saveRDS(installed.packages(), ".github/depends.Rds", version = 2)
