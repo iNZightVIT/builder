@@ -53,5 +53,3 @@ if (any(pkgs$replace)) {
         print("Building binaries")
     }
 }
-
-system(sprintf("ls -lR %s", dir))

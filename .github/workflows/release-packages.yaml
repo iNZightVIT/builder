@@ -81,15 +81,46 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
-      # - uses: r-lib/actions/setup-pandoc@master
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
 
-      # - name: Install python dependencies
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
-      #     pip install -r ./requirements.txt
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+          pip install -r ./requirements.txt
 
-      # only sync bin/windows
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS}} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Pull repository
+        run: |
+          mkdir -p bin/windows
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz/bin/windows \
+            bin/windows
+
+      - name: Build sources for updated packages
+        env:
+          OS_TYPE: ${{ runner.os }}
+        run: Rscript build.R
+
+      - name: Update HTML pages
+        run: |
+          python create_webpages.py --path src
+
+      - name: Push repository
+        run: |
+          aws --profile saml s3 sync --dry --delete \
+            bin/windows \
+            s3://r.docker.stat.auckland.ac.nz/bin/windows
 
       - name: Build binaries for updated packages
         env:
