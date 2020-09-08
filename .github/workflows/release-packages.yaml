@@ -106,13 +106,13 @@ jobs:
         with:
           python-version: 3.6
 
-      - name: Cache python dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+      # - name: Cache python dependencies
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~\AppData\Local\pip\Cache
+      #     key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pip-
 
       - name: Install python dependencies
         run: |
