@@ -115,7 +115,7 @@ jobs:
       - name: Add GTK to PATH
         run: echo "::add-path::D:\a\_temp\Library\RGtk2\gtk\bin"
 
-      - name: Install pacakges
+      - name: Install packages
         run: Rscript install.R
 
       - name: Build binaries for updated packages
