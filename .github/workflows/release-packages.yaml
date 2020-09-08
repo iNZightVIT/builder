@@ -97,6 +97,10 @@ jobs:
           key: ${{ runner.os }}-r-${{ matrix.config.r }}-1-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-1-
 
+      - name: Set R version env var
+        id: r-version
+        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -126,10 +130,10 @@ jobs:
 
       - name: Pull repository
         run: |
-          mkdir -p bin/windows
+          mkdir -p bin/windows/${{ steps.r-version.outputs.ver }}
           aws --profile saml s3 sync `
-            s3://r.docker.stat.auckland.ac.nz/bin/windows `
-            bin/windows
+            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+            bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Install RGtk2
         run: library/iNZight/.github/install_gtk.cmd
@@ -153,5 +157,5 @@ jobs:
       - name: Push repository
         run: |
           aws --profile saml s3 sync --dry --delete `
-            bin/windows `
-            s3://r.docker.stat.auckland.ac.nz/bin/windows
+            bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }}

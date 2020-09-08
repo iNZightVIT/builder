@@ -21,7 +21,7 @@ dir <- ifelse(sources,
     sprintf("bin/windows/contrib/%s", rv)
 )
 
-if (!dir.exists(dir)) {
+if (!file.exists(file.path(dir, "PACKAGES"))) {
     dir.create(dir, recursive = TRUE)
     current_pkgs <- new_pkgs
     current_pkgs[, "Version"] <- "0"
