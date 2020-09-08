@@ -17,32 +17,24 @@
 [submodule "library/iNZightTS"]
 	path = library/iNZightTS
 	url = git@github.com:iNZightVIT/iNZightTS.git
-	branch = master
 [submodule "library/iNZightMR"]
 	path = library/iNZightMR
 	url = git@github.com:iNZightVIT/iNZightMR.git
-	branch = master
 [submodule "library/iNZightModules"]
 	path = library/iNZightModules
 	url = git@github.com:iNZightVIT/iNZightModules.git
-	branch = master
 [submodule "library/iNZightMaps"]
 	path = library/iNZightMaps
 	url = git@github.com:iNZightVIT/iNZightMaps.git
-	branch = master
 [submodule "library/iNZightUpdate"]
 	path = library/iNZightUpdate
 	url = git@github.com:iNZightVIT/iNZightUpdate.git
-	branch = master
 [submodule "library/iNZightMultivariate"]
 	path = library/iNZightMultivariate
 	url = git@github.com:iNZightVIT/iNZightMultivariate.git
-	branch = master
 [submodule "library/vit"]
 	path = library/vit
 	url = git@github.com:iNZightVIT/vit.git
-	branch = master
 [submodule "library/FutureLearnData"]
 	path = library/FutureLearnData
 	url = git@github.com:iNZightVIT/FutureLearnData.git
-	branch = master
