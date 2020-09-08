@@ -188,5 +188,5 @@ jobs:
           aws --profile 'saml' \
             cloudfront \
             create-invalidation \
-            --distribution-id $(AWS_ID) \
+            --distribution-id ${{ secret.AWS_ID }} \
             --paths "/*"
