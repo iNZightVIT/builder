@@ -1,0 +1,44 @@
+name: Release packages
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  sources:
+    name: source
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: ${{ matrix.config.r }}
+
+      - uses: r-lib/actions/setup-pandoc@master
+
+  binaries:
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    runs-on: ${{ matrix.config.os }}
+    needs: sources
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: windows-latest, r: '3.6'}
+          - {os: windows-latest, r: 'oldrel'}
+          - {os: windows-latest, r: 'release'}
+          - {os: windows-devel, r: 'devel'}
+    env:
+      OS_TYPE: ${{ matrix.config.os }}
+    steps:
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: ${{ matrix.config.r }}
+
+      - uses: r-lib/actions/setup-pandoc@master
+
+      - name: Build
+        run: Rscript build.R
