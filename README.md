@@ -19,8 +19,11 @@ Next, the windows installer is built and uploaded.
 
 # Triggering a release
 
-When ready to trigger a release, simply run
+When ready to trigger a release, simply pull or checkout packages from inside the `library` directory:
 ```bash
-git submodule update --remote
+cd library/iNZightTools
+git pull
+# or assuming there is a version tag:
+git checkout 1.9.1
 ```
-to sync packages in `./library` with the latest commits to `master` (after creating a new release on the master branch for each package, of course). Then commit and push this repository and let github actions do the rest!
+Then commit and push this repository and let Github Actions do the rest!
