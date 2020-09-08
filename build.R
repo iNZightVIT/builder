@@ -6,6 +6,7 @@ sources <- os == "Linux"
 
 if (sources) {
     print("Building sources")
+    system("ls -lR src")
 } else {
     print("Building binaries")
 }
