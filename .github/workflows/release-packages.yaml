@@ -15,9 +15,9 @@ jobs:
         with:
           submodules: true
 
-      # - uses: r-lib/actions/setup-r@master
-      #   with:
-      #     r-version: ${{ matrix.config.r }}
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: ${{ matrix.config.r }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -44,8 +44,8 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/src \
             src
 
-      - name: Check listing
-        run: ls -l src
+      - name: Build sources for updated packages
+        run: Rscript build.R
 
   binaries:
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})

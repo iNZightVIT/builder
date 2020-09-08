@@ -2,7 +2,10 @@
 
 os <- Sys.getenv("OS_TYPE")
 
-cat("Running on", os, "\n")
+sources <- os == "Linux"
 
-cat("Files available:\n")
-print(list.files())
+if (sources) {
+    print("Building sources")
+} else {
+    print("Building binaries")
+}
