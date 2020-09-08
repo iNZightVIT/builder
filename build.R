@@ -10,6 +10,11 @@ dir <- ifelse(sources,
     "src/contrib",
     sprintf("bin/windows/contrib/%s", rv)
 )
+if (!dir.exists(dir)) {
+    # when R version increases, create new one ...
+    dir.create(dir)
+}
+
 current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
 current_pkgs <- current_pkgs[, c("Package", "Version")]
 
