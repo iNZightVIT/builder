@@ -53,8 +53,11 @@ jobs:
         run: |
           python create_webpages.py --path src
 
-      - name: Check ...
-        run: cat src/contrib/index.html
+      - name: Push repository
+        run: |
+          aws --profile saml s3 sync --dry --delete \
+            src \
+            s3://r.docker.stat.auckland.ac.nz/src
 
   binaries:
     name: windows binaries (${{ matrix.config.r }})
