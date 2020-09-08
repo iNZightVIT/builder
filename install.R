@@ -15,7 +15,8 @@ options(
     repos = c(
         "https://r.docker.stat.auckland.ac.nz",
         "https://cran.rstudio.com"
-    )
+    ),
+    install.packages.compile.from.source = "never"
 )
 install.packages("remotes")
 
