@@ -42,3 +42,7 @@
 	path = library/vit
 	url = git@github.com:iNZightVIT/vit.git
 	branch = master
+[submodule "library/FutureLearnData.git"]
+	path = library/FutureLearnData.git
+	url = git@github.com:iNZightVIT/FutureLearnData.git
+	branch = master

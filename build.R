@@ -88,6 +88,7 @@ if (any(pkgs$replace)) {
             pkgn <- gsub("_*.tar.gz", "", pkg, fixed = TRUE)
 
             remotes::install_deps(pkgn)
+            install.packages(pkgn, repos = NULL)
             system(sprintf("R CMD INSTALL -l . %s", pkg))
 
             zip(zip, pkgn)
