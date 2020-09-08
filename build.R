@@ -1,16 +1,4 @@
 # build packages
-
-PACKAGE_ORDER <- c(
-    "iNZightTools",
-    "iNZightMR",
-    "iNZightTS",
-    "iNZightPlots",
-    "iNZightRegression",
-    "iNZightMaps",
-    "iNZight",
-    "iNZightModules"
-)
-
 os <- Sys.getenv("OS_TYPE")
 sources <- os == "Linux"
 rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
@@ -72,22 +60,6 @@ if (any(pkgs$replace)) {
     } else {
         message(" === Building binaries ===")
         pkgs <- list.files(pattern = "*.tar.gz")
-
-        # but they need the correct order ...
-        f <- sapply(PACKAGE_ORDER, function(x) pkgs[which(grepl(paste0(x, "_"), pkgs))])
-        pkgs <- as.character(unlist(f))
-
-        options(
-            repos = c("https://cran.rstudio.com",
-                "https://r.docker.stat.auckland.ac.nz")
-        )
-        install.packages("remotes")
-        for (pkg in PACKAGE_ORDER) {
-            remotes::install_local(
-                file.path("library", pkg),
-                INSTALL_opts = "--no-multiarch"
-            )
-        }
 
         for (pkg in pkgs) {
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
