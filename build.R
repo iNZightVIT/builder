@@ -77,5 +77,3 @@ if (any(pkgs$replace)) {
         tools::write_PACKAGES(dir)
     }
 }
-
-system("ls -lR")

@@ -8,6 +8,7 @@ pkgs <- c(
     "FutureLearnData",
     "iNZight",
     "iNZightModules",
+    "iNZightMultivariate",
     "vit"
 )
 
