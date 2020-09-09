@@ -231,7 +231,7 @@ jobs:
 
       - name: Add GTK+ to R library
         run: |
-          mv gtk ${{ R_LIBS_USER }}/RGtk2
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Check
         run: |
