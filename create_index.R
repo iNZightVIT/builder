@@ -7,6 +7,8 @@ exclude <- c("index.html", "windows_versions.txt")
 get_list <- function(dir) {
     path <- sprintf("s3://r.docker.stat.auckland.ac.nz/%s/", dir)
     cmd <- sprintf("aws --profile saml s3 ls %s", path)
+    print(cmd)
+    print(system("whoami"))
     x <- system(cmd, intern = TRUE)
     x <- do.call(rbind,
         lapply(strsplit(x, "[ ]+"),
@@ -46,7 +48,7 @@ html_page <- function(dir) {
     tbl <- html_table(x)
     html <- glue::glue(template)
     dir.create(dir, recursive = TRUE)
-    writeLines(file.path(dir, "index.html"), html)
+    writeLines(html, file.path(dir, "index.html"))
 }
 
 ca <- commandArgs(TRUE)
