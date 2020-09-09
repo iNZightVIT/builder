@@ -246,3 +246,5 @@ jobs:
       - name: Build installer
         working-directory: installers/win-installer
         run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: "1.2.3.4"
