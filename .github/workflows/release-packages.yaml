@@ -245,5 +245,4 @@ jobs:
 
       - name: Build installer
         working-directory: installers/win-installer
-        run: |
-          "C:\Program Files (x86)\NSIS\makensis.exe" "inzight_installer.nsi"
+        run: makensis.exe inzight_installer.nsi
