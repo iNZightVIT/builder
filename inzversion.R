@@ -1,2 +1,2 @@
 # Compute the version of iNZight to use
-cat(packageVersion("iNZight"))
+cat(as.character(packageVersion("iNZight")))
