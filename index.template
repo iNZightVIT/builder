@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>iNZight Package Repository</title>
+
+    <link rel='stylesheet' type='text/css' href='/style.css'>
+  </head>
+
+  <body>
+    <div id="container">
+      <h1>iNZight Package Repository</h1>
+      <h3>Index of {{dirname}} </h3>
+
+      <table>
+        <tr class="header">
+          <th></th>
+          <th>Name</th>
+          <th>Last Modified</th>
+          <th>Size</th>
+        </tr>
+
+        <tr><td class=\"nopad\"><img src=\"/R/icons/updir.png\"></td><td><a href=\"../\">Parent Directory</a></td><td> - </td><td> - </td></tr>
+
+        {{dirs}}
+        {{files}}
+
+      </table>
+    <p class="footer">
+    For technical support, please contact <a href="mailto:inzight_support@stat.auckland.ac.nz">inzight_support@stat.auckland.ac.nz</a>.
+  </p>
+  </div>
+</body>
+</html>
