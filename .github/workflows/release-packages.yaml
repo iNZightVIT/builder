@@ -233,7 +233,18 @@ jobs:
         run: |
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
-      - name: Check
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
         run: |
-          list.files(.libPaths()[1], recursive = TRUE)
-        shell: Rscript {0}
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build Installer
+        working-directory: installers/win-installer
+        uses: joncloud/maknsis-action@v3.1
+        with:
+          script-file: "inzight_installer.nsi"
