@@ -285,7 +285,7 @@ jobs:
 
       - name: Generate index.html
         run: |
-          mkdir -p downloads/{Windows,macOS}
+          mkdir -p downloads/Windows downloads/macOS
           Rscript create_index.R `
             --args downloads downloads/Windows downloads/macOS
 
@@ -296,8 +296,8 @@ jobs:
 
       - name: Clear cache
         run: |
-          aws --profile 'saml' \
-            cloudfront \
-            create-invalidation \
-            --distribution-id ${{ secrets.AWS_ID }} \
+          aws --profile 'saml' `
+            cloudfront `
+            create-invalidation `
+            --distribution-id ${{ secrets.AWS_ID }} `
             --paths "/*"
