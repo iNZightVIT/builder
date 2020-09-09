@@ -250,3 +250,49 @@ jobs:
         run: makensis.exe inzight_installer.nsi
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Pull latest
+        run: |
+          mkdir downloads
+          aws --profile saml s3 sync `
+            s3://r.docker.stat.auckland.ac.nz/downloads `
+            downloads
+
+      - name: Move installer and create symlink
+        run: |
+          mv installers/win-installer/iNZight-installer.exe `
+            downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
+          ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
+            downloads/iNZightVIT-installer.exe
+
+      - name: Push downloads
+        run: |
+          aws --profile saml s3 sync --dry \
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      # - name: Clear cache
+      #   run: |
+      #     aws --profile 'saml' \
+      #       cloudfront \
+      #       create-invalidation \
+      #       --distribution-id ${{ secrets.AWS_ID }} \
+      #       --paths "/*"
