@@ -10,7 +10,7 @@
   <body>
     <div id="container">
       <h1>iNZight Package Repository</h1>
-      <h3>Index of {{dirname}} </h3>
+      <h3>Index of {dir}</h3>
 
       <table>
         <tr class="header">
@@ -22,8 +22,7 @@
 
         <tr><td class=\"nopad\"><img src=\"/R/icons/updir.png\"></td><td><a href=\"../\">Parent Directory</a></td><td> - </td><td> - </td></tr>
 
-        {{dirs}}
-        {{files}}
+        {tbl}
 
       </table>
     <p class="footer">
