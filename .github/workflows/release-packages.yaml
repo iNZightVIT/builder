@@ -271,7 +271,7 @@ jobs:
             --idp iam.auckland.ac.nz
 
       - name: Fetch file list
-        run: aws --profile saml s3 ls `
+        run: aws --profile saml s3 ls --recursive `
           s3://r.docker.stat.auckland.ac.nz/downloads > files.txt
 
       - name: Print files
