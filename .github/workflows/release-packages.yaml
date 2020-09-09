@@ -6,11 +6,9 @@ on:
     paths:
       - 'library/**'
       - 'installers/**'
-      - 'build.R'
-      - 'install.R'
       - 'create_webpages.py'
       - 'requirements.txt'
-      - 'rversion.R'
+      - '*.R'
       - '.github/**'
 
 jobs:
@@ -222,6 +220,10 @@ jobs:
         working-directory: installers/win-installer
         run: Rscript install_inzight.R
 
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript inzversion.R)"
+
       - name: Download GTK+
         run: |
           curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
@@ -247,4 +249,4 @@ jobs:
         working-directory: installers/win-installer
         run: makensis.exe inzight_installer.nsi
         env:
-          INSTALLER_VERSION: "1.2.3.4"
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
