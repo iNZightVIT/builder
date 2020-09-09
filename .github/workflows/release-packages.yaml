@@ -286,7 +286,7 @@ jobs:
       - name: Generate index.html
         run: |
           Rscript create_index.R `
-            --args downloads downloads/Windows downloads/macOS
+            downloads downloads/Windows downloads/macOS
 
       - name: Push indices
         run: |
