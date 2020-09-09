@@ -152,34 +152,10 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
-  build-installer:
-    name: Build Windows installer
-    runs-on: windows-latest
-    # needs: binaries
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-
-      - name: Install iNZight
-        working-directory: installers/win-installer
-        run: Rscript install_inzight.R
-
-      - name: Add GTK+
-        run: |
-          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-          mkdir -p gtk/i386
-          cd gtk/i386
-          7z x ../../gtk32.zip
-
-      - name: List
-        run: ls -lR .
-
-
   clearcache:
     name: Clear AWS cache and update HTML
     runs-on: ubuntu-latest
-    needs: [sources, binaries, build-installer]
+    needs: [sources, binaries]
     steps:
       - uses: actions/checkout@v2
 
@@ -228,3 +204,37 @@ jobs:
             create-invalidation \
             --distribution-id ${{ secrets.AWS_ID }} \
             --paths "/*"
+
+  windows-installer:
+    name: Deploy Windows installer
+    runs-on: windows-latest
+    # needs: clearcache
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: ${{ matrix.config.r }}
+
+      - name: Query R library
+        id: r-lib
+        run: echo "::set-output name=path::$(Rscript -e 'cat(.libPaths()[1])')"
+
+      - name: Install iNZight
+        working-directory: installers/win-installer
+        run: Rscript install_inzight.R
+
+      - name: Add GTK+
+        run: |
+          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
+          mkdir -p gtk/i386
+          cd gtk/i386
+          7z x ../../gtk32.zip
+          mv gtk ${{ steps.r-lib.outputs.path }}/RGtk2/
+
+      - name: Check
+        run: |
+          list.files(.libPaths()[1], recursive = TRUE)
+        shell: Rscript {0}
