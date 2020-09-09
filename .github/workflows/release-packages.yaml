@@ -154,7 +154,7 @@ jobs:
   build-installer:
     name: Build Windows installer
     runs-on: windows-latest
-    needs: binaries
+    # needs: binaries
     steps:
       - uses: actions/checkout@v2
 
