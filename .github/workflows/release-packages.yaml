@@ -218,21 +218,20 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
-      - name: Query R library
-        id: r-lib
-        run: echo "::set-output name=path::$(Rscript -e 'cat(.libPaths()[1])')"
-
       - name: Install iNZight
         working-directory: installers/win-installer
         run: Rscript install_inzight.R
 
-      - name: Add GTK+
+      - name: Download GTK+
         run: |
           curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
           mkdir -p gtk/i386
           cd gtk/i386
           7z x ../../gtk32.zip
-          mv gtk ${{ steps.r-lib.outputs.path }}/RGtk2/
+
+      - name: Add GTK+ to R library
+        run: |
+          mv gtk ${{ R_LIBS_USER }}/RGtk2
 
       - name: Check
         run: |
