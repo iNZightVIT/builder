@@ -38,3 +38,6 @@
 [submodule "library/FutureLearnData"]
 	path = library/FutureLearnData
 	url = git@github.com:iNZightVIT/FutureLearnData.git
+[submodule "installers/win-installer"]
+	path = installers/win-installer
+	url = git@github.com:iNZightVIT/win-installer.git
