@@ -243,8 +243,7 @@ jobs:
         working-directory: installers/win-installer
         run: R\bin\Rscript.exe rgui_settings.R
 
-      - name: Build Installer
+      - uses: joncloud/maknsis-action@v3.1
         working-directory: installers/win-installer
-        uses: joncloud/maknsis-action@v3.1
         with:
           script-file: "inzight_installer.nsi"
