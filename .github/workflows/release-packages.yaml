@@ -3,6 +3,13 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'library/**'
+      - 'build.R'
+      - 'install.R'
+      - 'create_webpages.py'
+      - 'requirements.txt'
+      - 'rversion.R'
 
 jobs:
   sources:
