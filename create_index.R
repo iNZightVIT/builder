@@ -45,6 +45,7 @@ html_page <- function(dir) {
     x <- get_list(dir)
     tbl <- html_table(x)
     html <- glue::glue(template)
+    dir.create(dir, recursive = TRUE)
     writeLines(file.path(dir, "index.html"), html)
 }
 
