@@ -18,7 +18,7 @@ get_list <- function(dir) {
         )
     )
     data.frame(
-        date = format(as.POSIXct(x[,1]), "%Y-%m-%d %H:%M:%S")
+        date = format(as.POSIXct(x[,1]), "%Y-%m-%d %H:%M:%S"),
         size = as.integer(x[,2]),
         path = x[,3]
     )
