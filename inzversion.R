@@ -40,10 +40,18 @@ if (is.na(vers)) {
         all.x = TRUE
     )
     comp$update <-
-        numeric_version(comp$version.cur) < numeric_version(comp$version.new)
+        package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(!is.na(comp$update)) || any(comp$update)) {
         # updates are required
         VERSION <- pkgs["iNZight", "version"]
+        if (!comp["iNZight", "update"]) {
+            # need to add 1 to patch version since iNZight package not updated
+            # (but others are):
+            v <- package_version(VERSION)
+            p <- v[[1, 4]]
+            if (is.na(p)) p <- 0
+            VERSION <- paste(as.character(v[1, 1:3]), p, sep = "-")
+        }
     } else {
         # no update necessary
         VERSION <- ""
