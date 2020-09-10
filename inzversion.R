@@ -25,6 +25,7 @@ pkgs <- c(
     "vit",
     "iNZightUpdate"
 )
+message(installed.packages()[,c("Package", "Version")])
 new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
 pkgs <- data.frame(package = pkgs, version = new)
 
