@@ -207,6 +207,7 @@ jobs:
   windows-installer:
     name: Deploy Windows installer
     runs-on: windows-latest
+    continue-on-error: true
     # needs: clearcache
     steps:
       - uses: actions/checkout@v2
@@ -218,7 +219,10 @@ jobs:
           r-version: ${{ matrix.config.r }}
 
       - name: Create downloads directory
-        run: mkdir downloads downloads/Windows downloads/macOS
+        run: |
+          mkdir downloads
+          mkdir downloads/Windows
+          mkdir downloads/macOS
 
       - name: Install iNZight
         working-directory: installers/win-installer
@@ -228,10 +232,9 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
-      - name: Check if build required
-        if: ${{ steps.inzight.output.version }} == ""
-        run: |
-          exit 0
+      - name: Check need for building installer
+        if: ${{ steps.inzight.output.version }} != ""
+        run: exit 1
 
       - name: Download GTK+
         run: |
