@@ -18,7 +18,7 @@ get_list <- function(dir) {
         )
     )
     data.frame(
-        date = as.POSIXct(x[,1]),
+        date = format(as.POSIXct(x[,1]), "%Y-%m-%d %H:%M:%S")
         size = as.integer(x[,2]),
         path = x[,3]
     )
@@ -31,7 +31,7 @@ html_table <- function(x) {
         function(i) {
             type <- ifelse(is.na(x[i, "date"]), "folder", "file")
             path <- x[i, "path"]
-            date <- format(ifelse(type == "folder", "-", x[i, "date"]), "%Y-%m-%d %H:%M:%S")
+            date <- ifelse(type == "folder", "-", x[i, "date"])
             size <- ifelse(type == "folder", "-", gdata::humanReadable(x[i, "size"], standard = "SI"))
             glue::glue(tmp)
         }
