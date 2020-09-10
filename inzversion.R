@@ -45,6 +45,7 @@ if (length(vers) == 1L && is.na(vers)) {
         if (!comp[comp$package == "iNZight", "update"]) {
             # need to add 1 to patch version since iNZight package not updated
             # (but others are):
+            # this also needs to account for previous version bumps ...
             v <- package_version(VERSION)
             p <- v[[1L, 4L]]
             if (is.na(p)) p <- 0
