@@ -24,7 +24,7 @@ dir <- ifelse(sources,
 if (!file.exists(file.path(dir, "PACKAGES"))) {
     dir.create(dir, recursive = TRUE)
     current_pkgs <- new_pkgs
-    current_pkgs[, "Version"] <- "0"
+    current_pkgs[, "Version"] <- rep("0.0.1", neow(current_pkgs))
     NEW <- TRUE
 } else {
     current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
