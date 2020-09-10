@@ -10,9 +10,11 @@ verf <- try(
 if (inherits(verf, "try-error")) {
     vers <- NA
 } else {
+    f <- "test"
     message(paste(readLines(f), sep = "\n"))
     vers <- read.dcf(f)
     message(vers)
+    quit("n", 1)
 }
 
 pkgs <- c(
