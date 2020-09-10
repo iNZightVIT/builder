@@ -40,7 +40,7 @@ pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version
 
 if (TRUE || any(pkgs$replace)) {
     # the packages that need updating are:
-    replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
+    replace_pkgs <- "iNZightTools"#as.character(pkgs$Package[pkgs$replace])
 
     message(" === Building sources ===")
     for (pkg in replace_pkgs)
