@@ -61,5 +61,4 @@ if (is.na(vers)) {
 # this will be uploaded with the installer (and not if build fails!)
 write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
 
-VERSION <- ""
 cat(VERSION)
