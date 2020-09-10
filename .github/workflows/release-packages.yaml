@@ -218,11 +218,35 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
-      - name: Create downloads directory
+      # - name: Create downloads directory
+      #   run: |
+      #     mkdir downloads
+      #     mkdir downloads/Windows
+      #     mkdir downloads/macOS
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
         run: |
-          mkdir downloads
-          mkdir downloads/Windows
-          mkdir downloads/macOS
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Upload installer
+        run: |
+          aws --profile saml s3 sync `
+            --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
+            s3://r.docker.stat.auckland.ac.nz/downloads downloads
 
       - name: Install iNZight
         working-directory: installers/win-installer
@@ -258,24 +282,6 @@ jobs:
         run: makensis.exe inzight_installer.nsi
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
-
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
-
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
 
       - name: Move installer and create symlink
         run: |

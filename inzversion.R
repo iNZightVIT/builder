@@ -1,20 +1,12 @@
 # Compute the version of iNZight to use
-f <- tempfile()
-verf <- try(
-    download.file(
-        "https://r.docker.stat.auckland.ac.nz/downloads/windows_versions",
-        f
-    ),
-    silent = TRUE
-)
-if (inherits(verf, "try-error")) {
-    vers <- NA
-} else {
-    f <- "test"
+f <- "downloads/windows_versions"
+if (file.exists(f)) {
     message(paste(readLines(f), sep = "\n"))
     vers <- read.dcf(f)
     message(vers)
     quit("n", 1)
+} else {
+    vers <- NA
 }
 
 pkgs <- c(
