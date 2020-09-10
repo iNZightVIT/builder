@@ -2,7 +2,7 @@ install.packages("glue")
 install.packages("gdata")
 
 template <- paste(readLines("index.template"), collapse = "\n")
-exclude <- c("index.html", "windows_versions.txt")
+exclude <- c("index.html", "windows_versions")
 
 get_list <- function(dir) {
     x <- readLines(paste0(gsub("/", "_", dir), ".txt"))

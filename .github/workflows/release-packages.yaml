@@ -217,40 +217,48 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
-      # - name: Install iNZight
-      #   working-directory: installers/win-installer
-      #   run: Rscript install_inzight.R
+      - name: Create downloads directory
+        run: mkdir downloads downloads/Windows downloads/macOS
 
-      # - name: Set iNZight version
-      #   id: inzight
-      #   run: echo "::set-output name=version::$(Rscript inzversion.R)"
+      - name: Install iNZight
+        working-directory: installers/win-installer
+        run: Rscript install_inzight.R
 
-      # - name: Download GTK+
-      #   run: |
-      #     curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-      #     mkdir -p gtk/i386
-      #     cd gtk/i386
-      #     7z x ../../gtk32.zip
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
-      # - name: Add GTK+ to R library
-      #   run: |
-      #     mv gtk ${{ env.R_LIBS_USER }}/RGtk2
+      - name: Check if build required
+        if: ${{ steps.inzight.output.version }} == ""
+        run: |
+          exit 0
 
-      # - name: Move R and library to build location
-      #   working-directory: installers/win-installer
-      #   run: |
-      #     mv C:/R R
-      #     mv ${{ env.R_LIBS_USER }} library
+      - name: Download GTK+
+        run: |
+          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
+          mkdir -p gtk/i386
+          cd gtk/i386
+          7z x ../../gtk32.zip
 
-      # - name: Configure R GUI
-      #   working-directory: installers/win-installer
-      #   run: R\bin\Rscript.exe rgui_settings.R
+      - name: Add GTK+ to R library
+        run: |
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
-      # - name: Build installer
-      #   working-directory: installers/win-installer
-      #   run: makensis.exe inzight_installer.nsi
-      #   env:
-      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -260,7 +268,6 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
           pip install --use-feature=2020-resolver -r ./requirements.txt
 
       - name: Generate credentials
@@ -271,17 +278,17 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      # - name: Move installer and create symlink
-      #   run: |
-      #     mv installers/win-installer/iNZight-installer.exe `
-      #       downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
-      #     ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
-      #       downloads/iNZightVIT-installer.exe
+      - name: Move installer and create symlink
+        run: |
+          mv installers/win-installer/iNZight-installer.exe `
+            downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
+          ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
+            downloads/iNZightVIT-installer.exe
 
-      # - name: Upload installer
-      #   run: |
-      #     aws --profile saml s3 sync --dry \
-      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
+      - name: Upload installer
+        run: |
+          aws --profile saml s3 sync --dry \
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Generate index.html
         run: |
@@ -290,7 +297,9 @@ jobs:
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/macOS/ > downloads_macOS.txt
           Rscript create_index.R `
             downloads downloads/Windows downloads/macOS
-          cat **/*.html
+          cat downloads/index.html
+          cat downloads/Windows/index.html
+          cat downloads/macOS/index.html
 
       - name: Push indices
         run: |
