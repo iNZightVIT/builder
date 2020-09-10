@@ -5,11 +5,7 @@ template <- paste(readLines("index.template"), collapse = "\n")
 exclude <- c("index.html", "windows_versions.txt")
 
 get_list <- function(dir) {
-    path <- sprintf("s3://r.docker.stat.auckland.ac.nz/%s/", dir)
-    cmd <- sprintf("aws --profile saml s3 ls %s", path)
-    print(cmd)
-    print(system("whoami"))
-    x <- system(cmd, intern = TRUE)
+    x <- readLines(paste0(gsub("/", "_", dir), ".txt"))
     x <- do.call(rbind,
         lapply(strsplit(x, "[ ]+"),
             function(z) {

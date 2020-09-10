@@ -285,6 +285,9 @@ jobs:
 
       - name: Generate index.html
         run: |
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/macOS/ > downloads_macOS.txt
           Rscript create_index.R `
             downloads downloads/Windows downloads/macOS
 
