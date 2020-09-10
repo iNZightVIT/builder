@@ -232,8 +232,11 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
-      - name: Download GTK+
+      - name: Check need for building installer
         if: ${{ steps.inzight.output.version }} != ""
+        run: exit 1
+
+      - name: Download GTK+
         run: |
           curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
           mkdir -p gtk/i386
@@ -241,43 +244,36 @@ jobs:
           7z x ../../gtk32.zip
 
       - name: Add GTK+ to R library
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Move R and library to build location
-        if: ${{ steps.inzight.output.version }} != ""
         working-directory: installers/win-installer
         run: |
           mv C:/R R
           mv ${{ env.R_LIBS_USER }} library
 
       - name: Configure R GUI
-        if: ${{ steps.inzight.output.version }} != ""
         working-directory: installers/win-installer
         run: R\bin\Rscript.exe rgui_settings.R
 
       - name: Build installer
-        if: ${{ steps.inzight.output.version }} != ""
         working-directory: installers/win-installer
         run: makensis.exe inzight_installer.nsi
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
-        if: ${{ steps.inzight.output.version }} != ""
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
 
       - name: Install python dependencies
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           python -m pip install --upgrade pip
           pip install --use-feature=2020-resolver -r ./requirements.txt
 
       - name: Generate credentials
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           python aws_saml_login.py `
             --user ${{ secrets.AWS_USER }} `
@@ -286,7 +282,6 @@ jobs:
             --idp iam.auckland.ac.nz
 
       - name: Move installer and create symlink
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           mv installers/win-installer/iNZight-installer.exe `
             downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
@@ -294,13 +289,11 @@ jobs:
             downloads/iNZightVIT-installer.exe
 
       - name: Upload installer
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           aws --profile saml s3 sync --dry \
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Generate index.html
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
@@ -312,13 +305,11 @@ jobs:
           cat downloads/macOS/index.html
 
       - name: Push indices
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           aws --profile saml s3 sync --dry `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Clear cache
-        if: ${{ steps.inzight.output.version }} != ""
         run: |
           aws --profile 'saml' `
             cloudfront `
