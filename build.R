@@ -38,7 +38,7 @@ pkgs <- merge(current_pkgs, new_pkgs,
 )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
-if (any(pkgs$replace)) {
+if (TRUE || any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
 
