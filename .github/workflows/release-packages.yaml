@@ -129,6 +129,7 @@ jobs:
           aws --profile saml s3 sync `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+          rm  bin/windows/contrib/${{ steps.r-version.outputs.ver }}/iNZightTools_1.9.1.zip
 
       - name: Install RGtk2
         run: library/iNZight/.github/install_gtk.cmd
