@@ -279,7 +279,7 @@ jobs:
 
       - name: Move installer and create symlink
         run: |
-          mv installers/win-installer/iNZight-installer.exe `
+          mv installers/win-installer/iNZightVIT-installer.exe `
             downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
           ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
             downloads/iNZightVIT-installer.exe
