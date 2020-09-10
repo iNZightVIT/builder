@@ -11,7 +11,7 @@ verf <- suppressWarnings(try(
 if (inherits(verf, "try-error")) {
     vers <- NA
 } else {
-    vers <- read.dcf(f)
+    vers <- read.dcf(verf)
 }
 
 pkgs <- c(
