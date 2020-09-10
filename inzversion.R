@@ -54,7 +54,7 @@ if (is.na(vers)) {
         }
     } else {
         # no update necessary
-        VERSION <- ""
+        quit("n", status = 1)
     }
 }
 
