@@ -44,9 +44,11 @@ if (length(vers) == 1L && is.na(vers)) {
     comp$update <-
         package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(is.na(comp$update)) || any(comp$update)) {
+        message("A")
         # updates are required
         VERSION <- pkgs[pkgs$package == "iNZight", "version"]
         if (!comp[comp$package == "iNZight", "update"]) {
+            message("B")
             # need to add 1 to patch version since iNZight package not updated
             # (but others are):
             v <- package_version(VERSION)
@@ -59,7 +61,7 @@ if (length(vers) == 1L && is.na(vers)) {
         quit("n", status = 1)
     }
 }
-
+message(VERSION)
 # this will be uploaded with the installer (and not if build fails!)
 write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
 
