@@ -277,17 +277,17 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Move installer and create symlink
-        run: |
-          mv installers/win-installer/iNZightVIT-installer.exe `
-            downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
-          ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
-            downloads/iNZightVIT-installer.exe
+      # - name: Move installer and create symlink
+      #   run: |
+      #     mv installers/win-installer/iNZightVIT-installer.exe `
+      #       downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
+      #     ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
+      #       downloads/iNZightVIT-installer.exe
 
-      - name: Upload installer
-        run: |
-          aws --profile saml s3 sync `
-            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+      # - name: Upload installer
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Generate index.html
         run: |
