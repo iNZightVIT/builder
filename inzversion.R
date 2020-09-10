@@ -29,7 +29,7 @@ new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
 pkgs <- data.frame(package = pkgs, version = new)
 
 
-if (is.na(vers)) {
+if (length(vers) == 1 && is.na(vers)) {
     # nothing to compare to
     VERSION <- pkgs["iNZight", "version"]
 } else {
