@@ -13,6 +13,9 @@ if (inherits(verf, "try-error")) {
     vers <- read.dcf(f)
 }
 
+message("vers ..")
+print(vers)
+
 pkgs <- c(
     "iNZightTools",
     "iNZightMR",
@@ -28,7 +31,7 @@ new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
 pkgs <- data.frame(package = pkgs, version = new)
 
 
-if (length(vers) == 1 && is.na(vers)) {
+if (length(vers) == 1L && is.na(vers)) {
     # nothing to compare to
     VERSION <- pkgs[pkgs$package == "iNZight", "version"]
 } else {
@@ -38,6 +41,8 @@ if (length(vers) == 1 && is.na(vers)) {
         suffixes = c(".new", ".cur"),
         all.x = TRUE
     )
+    message("comp ..")
+    print(comp)
     comp$update <-
         package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(is.na(comp$update)) || any(comp$update)) {
@@ -47,9 +52,9 @@ if (length(vers) == 1 && is.na(vers)) {
             # need to add 1 to patch version since iNZight package not updated
             # (but others are):
             v <- package_version(VERSION)
-            p <- v[[1, 4]]
+            p <- v[[1L, 4L]]
             if (is.na(p)) p <- 0
-            VERSION <- paste(as.character(v[1, 1:3]), p + 1, sep = "-")
+            VERSION <- paste(as.character(v[1L, 1:3]), p + 1, sep = "-")
         }
     } else {
         # no update necessary
