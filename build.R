@@ -38,9 +38,9 @@ pkgs <- merge(current_pkgs, new_pkgs,
 )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
-if (TRUE || any(pkgs$replace)) {
+if (any(pkgs$replace)) {
     # the packages that need updating are:
-    replace_pkgs <- "iNZightTools"#as.character(pkgs$Package[pkgs$replace])
+    replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
 
     message(" === Building sources ===")
     for (pkg in replace_pkgs)
