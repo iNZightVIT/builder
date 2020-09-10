@@ -20,11 +20,9 @@ pkgs <- c(
     "iNZightTS",
     "iNZightPlots",
     "iNZightRegression",
-    "iNZightMaps",
     "FutureLearnData",
     "iNZight",
     "iNZightModules",
-    "iNZightMultivariate",
     "vit"
 )
 new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
