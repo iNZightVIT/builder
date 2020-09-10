@@ -253,11 +253,11 @@ jobs:
         working-directory: installers/win-installer
         run: R\bin\Rscript.exe rgui_settings.R
 
-      - name: Build installer
-        working-directory: installers/win-installer
-        run: makensis.exe inzight_installer.nsi
-        env:
-          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      # - name: Build installer
+      #   working-directory: installers/win-installer
+      #   run: makensis.exe inzight_installer.nsi
+      #   env:
+      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -296,9 +296,6 @@ jobs:
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/macOS/ > downloads_macOS.txt
           Rscript create_index.R `
             downloads downloads/Windows downloads/macOS
-          cat downloads/index.html
-          cat downloads/Windows/index.html
-          cat downloads/macOS/index.html
 
       - name: Push indices
         run: |

@@ -20,7 +20,7 @@
           <th>Size</th>
         </tr>
 
-        <tr><td class=\"nopad\"><img src=\"/R/icons/updir.png\"></td><td><a href=\"../\">Parent Directory</a></td><td> - </td><td> - </td></tr>
+        <tr><td class="nopad"><img src="/R/icons/updir.png"></td><td><a href="../">Parent Directory</a></td><td> - </td><td> - </td></tr>
 
         {tbl}
 
