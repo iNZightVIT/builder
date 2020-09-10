@@ -286,7 +286,7 @@ jobs:
 
       - name: Upload installer
         run: |
-          aws --profile saml s3 sync `
+          aws --profile saml s3 sync --dry `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Generate index.html
@@ -299,7 +299,7 @@ jobs:
 
       - name: Push indices
         run: |
-          aws --profile saml s3 sync `
+          aws --profile saml s3 sync --dry `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Clear cache

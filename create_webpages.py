@@ -62,10 +62,8 @@ for dirname, dirnames, filenames in os.walk('.'):
               <th>Last Modified</th>
               <th>Size</th>
             </tr>
+            <tr><td class=\"nopad\"><img src=\"/R/icons/updir.png\"></td><td><a href=\"../\">Parent Directory</a></td><td> - </td><td> - </td></tr>
   """
-
-  if (dirname.count('\\') >= 1) or (dirname.count('/') >= 1):
-    html_str = html_str + "<tr><td class=\"nopad\"><img src=\"/R/icons/updir.png\"></td><td><a href=\"../\">Parent Directory</a></td><td> - </td><td> - </td></tr>"
 
   for subdirname in sorted(dirnames):
     #print(os.path.join(dirname, subdirname))
