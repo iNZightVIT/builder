@@ -14,7 +14,7 @@ if (inherits(verf, "try-error")) {
 }
 
 message("vers ..")
-print(vers)
+cat(capture.output(print(vers)), sep="\n")
 
 pkgs <- c(
     "iNZightTools",
@@ -42,7 +42,7 @@ if (length(vers) == 1L && is.na(vers)) {
         all.x = TRUE
     )
     message("comp ..")
-    print(comp)
+    cat(capture.output(print(comp)), sep="\n")
     comp$update <-
         package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(is.na(comp$update)) || any(comp$update)) {
