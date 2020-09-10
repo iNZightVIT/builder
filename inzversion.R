@@ -47,6 +47,7 @@ if (length(vers) == 1L && is.na(vers)) {
         message("A")
         # updates are required
         VERSION <- pkgs[pkgs$package == "iNZight", "version"]
+        message(comp)
         if (!comp[comp$package == "iNZight", "update"]) {
             message("B")
             # need to add 1 to patch version since iNZight package not updated
