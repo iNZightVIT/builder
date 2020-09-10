@@ -1,10 +1,7 @@
 # Compute the version of iNZight to use
 f <- "downloads/windows_versions"
 if (file.exists(f)) {
-    message(paste(readLines(f), sep = "\n"))
     vers <- read.dcf(f)
-    message(vers)
-    quit("n", 1)
 } else {
     vers <- NA
 }
@@ -42,12 +39,9 @@ if (length(vers) == 1L && is.na(vers)) {
     comp$update <-
         package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(is.na(comp$update)) || any(comp$update)) {
-        message("A")
         # updates are required
         VERSION <- pkgs[pkgs$package == "iNZight", "version"]
-        message(comp)
         if (!comp[comp$package == "iNZight", "update"]) {
-            message("B")
             # need to add 1 to patch version since iNZight package not updated
             # (but others are):
             v <- package_version(VERSION)
@@ -57,7 +51,7 @@ if (length(vers) == 1L && is.na(vers)) {
         }
     } else {
         # no update necessary
-        quit("n", status = 1)
+        quit(status = 1)
     }
 }
 message(VERSION)
