@@ -290,6 +290,7 @@ jobs:
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/macOS/ > downloads_macOS.txt
           Rscript create_index.R `
             downloads downloads/Windows downloads/macOS
+          cat **/*.html
 
       - name: Push indices
         run: |
