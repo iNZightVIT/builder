@@ -31,7 +31,7 @@ pkgs <- data.frame(package = pkgs, version = new)
 
 if (is.na(vers)) {
     # nothing to compare to
-    VERSION <- pkgs["iNZight", "version"])
+    VERSION <- pkgs["iNZight", "version"]
 } else {
     # compare versions:
     comp <- merge(pkgs, vers,
