@@ -13,9 +13,6 @@ if (inherits(verf, "try-error")) {
     vers <- read.dcf(f)
 }
 
-message("vers ..")
-cat(capture.output(print(vers)), sep="\n")
-
 pkgs <- c(
     "iNZightTools",
     "iNZightMR",
@@ -25,11 +22,11 @@ pkgs <- c(
     "FutureLearnData",
     "iNZight",
     "iNZightModules",
-    "vit"
+    "vit",
+    "iNZightUpdate"
 )
 new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
 pkgs <- data.frame(package = pkgs, version = new)
-
 
 if (length(vers) == 1L && is.na(vers)) {
     # nothing to compare to
@@ -41,14 +38,15 @@ if (length(vers) == 1L && is.na(vers)) {
         suffixes = c(".new", ".cur"),
         all.x = TRUE
     )
-    message("comp ..")
-    cat(capture.output(print(comp)), sep="\n")
+    # any NA go to zero
+    comp$version.new <- ifelse(is.na(comp$version.new), "0.0.1", comp$version.new)
+    comp$version.cur <- ifelse(is.na(comp$version.cur), "0.0.1", comp$version.cur)
     comp$update <-
         package_version(comp$version.cur) < package_version(comp$version.new)
     if (any(is.na(comp$update)) || any(comp$update)) {
         # updates are required
         VERSION <- pkgs[pkgs$package == "iNZight", "version"]
-        if (!comp[pkgs$package == "iNZight", "update"]) {
+        if (!comp[comp$package == "iNZight", "update"]) {
             # need to add 1 to patch version since iNZight package not updated
             # (but others are):
             v <- package_version(VERSION)
