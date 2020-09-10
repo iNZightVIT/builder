@@ -31,8 +31,8 @@ html_table <- function(x) {
         function(i) {
             type <- ifelse(is.na(x[i, "date"]), "folder", "file")
             path <- x[i, "path"]
-            date <- ifelse(type == "folder", "-", x[i, "date"])
-            size <- ifelse(type == "folder", "-", gdata::humanReadable(x[i, "size"]))
+            date <- format(ifelse(type == "folder", "-", x[i, "date"]), "%Y-%m-%d %H:%M:%S")
+            size <- ifelse(type == "folder", "-", gdata::humanReadable(x[i, "size"], standard = "SI"))
             glue::glue(tmp)
         }
     )

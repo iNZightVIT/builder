@@ -232,32 +232,32 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
-      - name: Download GTK+
-        run: |
-          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-          mkdir -p gtk/i386
-          cd gtk/i386
-          7z x ../../gtk32.zip
+      # - name: Download GTK+
+      #   run: |
+      #     curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
+      #     mkdir -p gtk/i386
+      #     cd gtk/i386
+      #     7z x ../../gtk32.zip
 
-      - name: Add GTK+ to R library
-        run: |
-          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
+      # - name: Add GTK+ to R library
+      #   run: |
+      #     mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
-      - name: Move R and library to build location
-        working-directory: installers/win-installer
-        run: |
-          mv C:/R R
-          mv ${{ env.R_LIBS_USER }} library
+      # - name: Move R and library to build location
+      #   working-directory: installers/win-installer
+      #   run: |
+      #     mv C:/R R
+      #     mv ${{ env.R_LIBS_USER }} library
 
-      - name: Configure R GUI
-        working-directory: installers/win-installer
-        run: R\bin\Rscript.exe rgui_settings.R
+      # - name: Configure R GUI
+      #   working-directory: installers/win-installer
+      #   run: R\bin\Rscript.exe rgui_settings.R
 
-      - name: Build installer
-        working-directory: installers/win-installer
-        run: makensis.exe inzight_installer.nsi
-        env:
-          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      # - name: Build installer
+      #   working-directory: installers/win-installer
+      #   run: makensis.exe inzight_installer.nsi
+      #   env:
+      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -277,17 +277,17 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Move installer and create symlink
-        run: |
-          mv installers/win-installer/iNZightVIT-installer.exe `
-            downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
-          ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
-            downloads/iNZightVIT-installer.exe
+      # - name: Move installer and create symlink
+      #   run: |
+      #     mv installers/win-installer/iNZightVIT-installer.exe `
+      #       downloads/Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version}}.exe
+      #     ln -s Windows/iNZightVIT-installer_${{ steps.inzight.outputs.version }}.exe `
+      #       downloads/iNZightVIT-installer.exe
 
-      - name: Upload installer
-        run: |
-          aws --profile saml s3 sync `
-            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+      # - name: Upload installer
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
       - name: Generate index.html
         run: |
