@@ -56,7 +56,7 @@ if (length(vers) == 1L && is.na(vers)) {
         }
     } else {
         # no update necessary
-        # quit("n", status = 1)
+        quit("n", status = 1)
     }
 }
 
