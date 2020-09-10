@@ -25,9 +25,14 @@ pkgs <- c(
     "vit",
     "iNZightUpdate"
 )
-message(installed.packages()[,c("Package", "Version")])
+
 new <- sapply(pkgs, function(p) as.character(packageVersion(p)))
+message(new)
+
 pkgs <- data.frame(package = pkgs, version = new)
+message(pkgs)
+
+message(vers)
 
 if (length(vers) == 1L && is.na(vers)) {
     # nothing to compare to
