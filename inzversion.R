@@ -6,6 +6,7 @@ if (file.exists(f)) {
     vers <- NA
 }
 
+# installer depends on these packages:
 pkgs <- c(
     "iNZightTools",
     "iNZightMR",
