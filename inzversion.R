@@ -48,7 +48,7 @@ if (length(vers) == 1L && is.na(vers)) {
             v <- package_version(VERSION)
             p <- v[[1L, 4L]]
             if (is.na(p)) p <- 0
-            VERSION <- paste(as.character(v[1L, 1:3]), p + 1, sep = "-")
+            VERSION <- paste(as.character(v[1L, 1:3]), p + 1, sep = ".")
         }
     } else {
         # no update necessary
