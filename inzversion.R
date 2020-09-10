@@ -10,6 +10,7 @@ verf <- try(
 if (inherits(verf, "try-error")) {
     vers <- NA
 } else {
+    message(readLines(f))
     vers <- read.dcf(f)
 }
 
