@@ -44,3 +44,9 @@
 [submodule "library/ggsfextra"]
 	path = library/ggsfextra
 	url = git@github.com:daniel-barnett/ggsfextra.git
+[submodule "library/gWidgets"]
+	path = library/gWidgets
+	url = git@github.com:cran/gWidgets.git
+[submodule "library/gWidgetsRGtk2"]
+	path = library/gWidgetsRGtk2
+	url = git@github.com:cran/gWidgetsRGtk2.git

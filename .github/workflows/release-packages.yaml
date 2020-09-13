@@ -53,6 +53,9 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/src \
             src
 
+      - name: Delete old packages
+        run: Rscript clean.R src
+
       - name: Build sources for updated packages
         env:
           OS_TYPE: ${{ runner.os }}
@@ -139,6 +142,9 @@ jobs:
 
       - name: Install packages
         run: Rscript install.R
+
+      - name: Delete old packages
+        run: Rscript clean.R ${{ bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Build binaries for updated packages
         env:
