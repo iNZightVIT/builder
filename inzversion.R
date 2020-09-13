@@ -1,5 +1,6 @@
 # Compute the version of iNZight to use
 f <- "downloads/windows_versions"
+vfile <- "downloads/VERSION"
 if (file.exists(f)) {
     vers <- read.dcf(f)
 } else {
@@ -43,10 +44,11 @@ if (length(vers) == 1L && is.na(vers)) {
         # updates are required
         VERSION <- pkgs[pkgs$package == "iNZight", "version"]
         if (!comp[comp$package == "iNZight", "update"]) {
-            # need to add 1 to patch version since iNZight package not updated
-            # (but others are):
-            # this also needs to account for previous version bumps ...
-            v <- package_version(VERSION)
+            if (file.exists(vfile)) {
+                v <- package_version(scan(vfile, character(), quiet = TRUE))
+            } else {
+                v <- package_version(VERSION)
+            }
             p <- v[[1L, 4L]]
             if (is.na(p)) p <- 0
             VERSION <- paste(as.character(v[1L, 1:3]), p + 1, sep = ".")
@@ -60,5 +62,5 @@ if (length(vers) == 1L && is.na(vers)) {
 message(VERSION)
 # this will be uploaded with the installer (and not if build fails!)
 write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
-
+writeLines(VERSION, vfile)
 cat(VERSION)
