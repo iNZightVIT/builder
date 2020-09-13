@@ -54,7 +54,7 @@ jobs:
             src
 
       - name: Delete old packages
-        run: Rscript clean.R src
+        run: Rscript clean.R src/contrib
 
       - name: Build sources for updated packages
         env:
