@@ -144,7 +144,7 @@ jobs:
         run: Rscript install.R
 
       - name: Delete old packages
-        run: Rscript clean.R ${{ bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+        run: Rscript clean.R bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Build binaries for updated packages
         env:
