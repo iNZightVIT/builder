@@ -53,3 +53,4 @@
 [submodule "website"]
 	path = website
 	url = git@github.com:iNZightVIT/inzight-www.git
+	branch = master
