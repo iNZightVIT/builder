@@ -214,7 +214,7 @@ jobs:
     name: Deploy Windows installer
     runs-on: windows-latest
     continue-on-error: true
-    needs: clearcache
+    # needs: clearcache
     outputs:
       inzversion: ${{ steps.inzight.outputs.version }}
     steps:
