@@ -3,9 +3,9 @@ s <- readLines(f)
 lv <- grep("$inzight_version", s, fixed = TRUE)
 ld <- grep("$release_date", s, fixed = TRUE)
 
-DESC <- read.dcf("library/iNZight/DESCRIPTION")
+source("get_website_version.R")
 
-s[lv] <- sprintf(gsub("\".+\"", "\"%s\"", s[lv]), DESC[,"Version"])
+s[lv] <- sprintf(gsub("\".+\"", "\"%s\"", s[lv]), VERSION)
 s[ld] <- sprintf(gsub("\".+\"", "\"%s\"", s[ld]),
     format(as.Date(DESC[,"Date"]), "%e %B %Y")
 )
