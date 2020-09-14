@@ -336,6 +336,7 @@ jobs:
       # run: echo "::set-output name=version::$(Rscript website_version.R)"
 
       - name: Tag new version
+        if: ${{ needs.windows-installer.outputs.inzversion != '' }}
         run: |
           cd website
           git config --local user.email "action@gitjub.com"
