@@ -332,11 +332,16 @@ jobs:
         run: echo "::set-output name=version::$(Rscript get_website_version.R)"
 
       - name: Update release version
+        run: Rscript website_version.R
+
+      - name: Push changes
+        working-directory: website
         run: |
-          cd website
           git config --local user.email "action@gitjub.com"
           git config --local user.name "GitHub Action"
-          git pull origin
-          Rscript website_version.R
           git commit -am "Release ${{ steps.inzight.outputs.inzversion }}" || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
+
+      - name: Update builder
+          git commit -am "Update website" || "No changes to commit"
           git push origin || echo "No changes to commit"
