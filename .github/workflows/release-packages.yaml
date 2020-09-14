@@ -328,13 +328,12 @@ jobs:
           submodules: true
 
       - name: Pull latest
-        if: ${{ needs.windows-installer.outputs.inzversion != '' }}
+        # if: ${{ needs.windows-installer.outputs.inzversion != '' }}
         run: |
           cd website
           git config --local user.email "action@gitjub.com"
           git config --local user.name "GitHub Action"
-          git pull
+          git pull origin
           Rscript website_version.R
-          git commit \
-            -am "Release ${{ needs.windows-installer.outputs.inzversion }}" && \
-            git push
+          git commit -am "Release ${{ needs.windows-installer.outputs.inzversion }}" || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
