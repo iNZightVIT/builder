@@ -1,4 +1,4 @@
-f <- file.path("website", "iNZight", "assets", "objects", "setup.php")
+f <- "website/iNZight/assets/objects/setup.php"
 s <- readLines(f)
 lv <- grep("$inzight_version", s, fixed = TRUE)
 ld <- grep("$release_date", s, fixed = TRUE)
@@ -11,5 +11,3 @@ s[ld] <- sprintf(gsub("\".+\"", "\"%s\"", s[ld]),
 )
 
 writeLines(s, f)
-
-cat(DESC[,"Version"][[1]])
