@@ -343,5 +343,6 @@ jobs:
           git push origin || echo "No changes to commit"
 
       - name: Update builder
+        run: |
           git commit -am "Update website" || "No changes to commit"
           git push origin || echo "No changes to commit"
