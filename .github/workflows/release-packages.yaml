@@ -325,6 +325,10 @@ jobs:
         with:
           submodules: true
 
+      - name: Checkout website
+        run: |
+          cd website && git checkout master
+
       - uses: r-lib/actions/setup-r@master
 
       - name: Get iNZight version
@@ -346,5 +350,5 @@ jobs:
         run: |
           git config --local user.email "action@gitjub.com"
           git config --local user.name "GitHub Action"
-          git commit -am "Update website" || "No changes to commit"
+          git commit -am "Update website" || echo "No changes to commit"
           git push origin || echo "No changes to commit"
