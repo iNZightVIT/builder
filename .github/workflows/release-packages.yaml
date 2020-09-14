@@ -344,5 +344,7 @@ jobs:
 
       - name: Update builder
         run: |
+          git config --local user.email "action@gitjub.com"
+          git config --local user.name "GitHub Action"
           git commit -am "Update website" || "No changes to commit"
           git push origin || echo "No changes to commit"
