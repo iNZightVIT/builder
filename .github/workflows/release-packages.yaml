@@ -331,7 +331,7 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript get_website_version.R)"
 
-      - name: Pull latest
+      - name: Update release version
         run: |
           cd website
           git config --local user.email "action@gitjub.com"
