@@ -39,9 +39,9 @@ pkgs <- merge(current_pkgs, new_pkgs,
 )
 pkgs[, "Version_cur"] <-
     ifelse(
-        is.na(current_pkgs[, "Version_cur"]),
-        rep("0.0.1", nrow(current_pkgs)),
-        current_pkgs[, "Version_cur"]
+        is.na(pkgs[, "Version_cur"]),
+        rep("0.0.1", nrow(pkgs)),
+        pkgs[, "Version_cur"]
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
