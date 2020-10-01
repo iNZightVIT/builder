@@ -24,7 +24,7 @@ dir <- ifelse(sources,
 if (!file.exists(file.path(dir, "PACKAGES"))) {
     dir.create(dir, recursive = TRUE)
     current_pkgs <- new_pkgs
-    current_pkgs[, "Version"] <- rep("0.0.1", neow(current_pkgs))
+    current_pkgs[, "Version"] <- rep("0.0.1", nrow(current_pkgs))
     NEW <- TRUE
 } else {
     current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
@@ -34,8 +34,15 @@ if (!file.exists(file.path(dir, "PACKAGES"))) {
 # compare
 pkgs <- merge(current_pkgs, new_pkgs,
     by = "Package",
-    suffix = c("_cur", "_new")
+    suffix = c("_cur", "_new"),
+    all.y = TRUE
 )
+pkgs[, "Version_cur"] <-
+    ifelse(
+        is.na(current_pkgs[, "Version_cur"]),
+        rep("0.0.1", nrow(current_pkgs)),
+        current_pkgs[, "Version_cur"]
+    )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
 if (any(pkgs$replace)) {
