@@ -50,3 +50,6 @@
 [submodule "library/gWidgetsRGtk2"]
 	path = library/gWidgetsRGtk2
 	url = git@github.com:cran/gWidgetsRGtk2.git
+[submodule "library/gWidgets2RGtk2"]
+	path = library/gWidgets2RGtk2
+	url = git@github.com:iNZightVIT/gWidgets2RGtk2.git
