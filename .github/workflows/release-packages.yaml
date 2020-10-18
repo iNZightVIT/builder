@@ -138,7 +138,7 @@ jobs:
         shell: bash
 
       - name: Add GTK to PATH
-        run: echo "::add-path::D:\a\_temp\Library\RGtk2\gtk\bin"
+        run: echo "D:\a\_temp\Library\RGtk2\gtk\bin" >> $GITHUB_PATH
 
       - name: Install packages
         run: Rscript install.R
