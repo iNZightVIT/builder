@@ -59,7 +59,11 @@ sapply(pkgs, function(pkg) {
     d <- sprintf("%s-dev", pkg)
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     utils::unzip(sprintf("%s.zip", pkg))
-    install.packages(d, repos = NULL, type = "source")
+    install.packages(d,
+        repos = NULL,
+        type = "source",
+        INSTALL_opts = "--no-multiarch"
+    )
 })
 
 # clean up
