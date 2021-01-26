@@ -35,3 +35,29 @@ jobs:
 
       - name: Install packages
         run: Rscript install_nightly.R
+
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript nightly_version.R)"
+
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - name: Upload installer as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe
+          path: installers/win-installer/*.exe
