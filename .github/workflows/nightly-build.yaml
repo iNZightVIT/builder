@@ -80,10 +80,10 @@ jobs:
 
       - name: Generate credentials
         run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
       - name: Pull downloads dir
@@ -123,3 +123,5 @@ jobs:
             create-invalidation `
             --distribution-id ${{ secrets.AWS_ID }} `
             --paths "/*"
+
+# update website ... should show date of build
