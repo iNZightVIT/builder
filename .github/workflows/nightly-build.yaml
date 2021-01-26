@@ -27,5 +27,11 @@ jobs:
       - name: Add GTK to PATH
         run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+      - name: Check RGtk2
+        run: |
+          library(RGtk2)
+          gtkWindowNew()
+        shell: Rscript {0}
+
       - name: Install packages
         run: Rscript install_nightly.R

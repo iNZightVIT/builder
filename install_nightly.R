@@ -23,6 +23,8 @@ pkgs <- c(
     "vit"
 )
 
+curr <- as.character(installed.packages()[, "Package"])
+
 # download all
 sapply(pkgs, function(pkg) {
     utils::download.file(
@@ -48,7 +50,8 @@ deps <- sapply(pkgs, function(pkg) {
     deps <- unique(gsub("\ .+", "", deps))
     deps[!deps %in% pkgs]
 })
-deps <- do.call(c, deps)
+deps <- unique(do.call(c, deps))
+deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
 install.packages(deps)
 
 # install iNZight packages
