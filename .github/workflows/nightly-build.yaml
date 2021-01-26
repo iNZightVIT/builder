@@ -49,7 +49,7 @@ jobs:
 
       - name: Replace GTK+ with 32bit
         run: |
-          rm -rf ${{ env.R_LIBS_USER }}/RGtk2/gtk
+          rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Move R and library to build location
