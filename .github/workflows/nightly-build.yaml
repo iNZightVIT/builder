@@ -1,7 +1,7 @@
 name: Nightly build
-on: push
-  # schedule:
-  #   - cron: '0 0 * * *' # every night at 2am
+on:
+  schedule:
+    - cron: '0 0 * * *' # every night at 2am
 
 jobs:
   build:
