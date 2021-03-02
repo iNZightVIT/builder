@@ -7,6 +7,8 @@ pkgs <- list.files("library")
 src <- gsub("_.+", "", list.files(dir, ext))
 del <- src[!src %in% pkgs]
 
+message(" --- deleting these packages:")
+cat(paste(del, collapse = ", "), "\n")
 
 for (pkg in del)
     unlink(paste0(file.path(dir, pkg), "_*", ext))
