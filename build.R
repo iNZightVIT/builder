@@ -51,11 +51,13 @@ if (any(pkgs$replace)) {
 
     message(" === Building sources ===")
     for (pkg in replace_pkgs)
-        system(
+        x <- system(
             sprintf("R CMD build --no-build-vignettes %s",
                 file.path("library", pkg)
             )
         )
+        # `x` is a return code (0 = ok; 1 = fail)
+        if (x) stop("Failure")
 
     if (sources) {
         # Delete old sources
@@ -72,7 +74,8 @@ if (any(pkgs$replace)) {
             zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_.+\\.tar\\.gz", "", pkg)
 
-            system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
+            x <- system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
+            if (x) stop("Failure")
             zip(zip, pkgn)
         }
 

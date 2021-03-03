@@ -64,8 +64,8 @@ jobs:
       - name: Push repository
         run: |
           aws --profile saml s3 sync --delete \
-            src \
-            s3://r.docker.stat.auckland.ac.nz/src
+            src/contrib \
+            s3://r.docker.stat.auckland.ac.nz/src/tmpcontrib
 
   binaries:
     name: windows binaries (${{ matrix.config.r }})
@@ -155,7 +155,7 @@ jobs:
         run: |
           aws --profile saml s3 sync --delete `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
 
   clearcache:
     name: Clear AWS cache and update HTML
@@ -189,6 +189,16 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/bin bin
           aws --profile saml s3 sync \
             s3://r.docker.stat.auckland.ac.nz/src src
+
+      - name: Move into place
+        run: |
+          dirs <- list.dirs("bin/contrib")
+          dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
+          for (dir in dirs) {
+            unlink(gsub("tmp", "", dir), TRUE, TRUE)
+            file.rename(dir, gsub("tmp", "", dir))
+          }
+        shell: Rscript {0}
 
       - name: Update HTML pages
         run: |
