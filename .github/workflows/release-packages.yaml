@@ -193,7 +193,7 @@ jobs:
 
       - name: Delete tmp files
         run: |
-          rm -rfv bin/contrib/tmp*
+          rm -rfv bin/windows/contrib/tmp*
           rm -rfv src/tmpcontrib
 
       # - name: Push repository
