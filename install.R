@@ -13,11 +13,11 @@ pkgs <- c(
     "vit"
 )
 
+OS <- Sys.getenv("OS_TYPE")
 if (OS == "Windows" && !requireNamespace('utf8', quietly = TRUE)) {
     install.packages("utf8", repos = "https://cran.rstudio.com")
 }
 
-if (!requireNamespace("utf8", TRUE)) install.packages("utf8")
 options(
     repos = c(
         "https://r.docker.stat.auckland.ac.nz",
