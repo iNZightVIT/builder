@@ -23,8 +23,9 @@ options(
 install.packages("remotes")
 
 for (pkg in pkgs) {
-    remotes::install_local(
+    x <- remotes::install_local(
         file.path("library", pkg),
         INSTALL_opts = "--no-multiarch"
     )
+    if (x != pkg) stop("Failed to install ", pkg)
 }
