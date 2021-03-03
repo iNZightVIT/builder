@@ -13,6 +13,11 @@ pkgs <- c(
     "vit"
 )
 
+if (OS == "Windows" && !requireNamespace('utf8', quietly = TRUE)) {
+    install.packages("utf8", repos = "https://cran.rstudio.com")
+}
+
+if (!requireNamespace("utf8", TRUE)) install.packages("utf8")
 options(
     repos = c(
         "https://r.docker.stat.auckland.ac.nz",
@@ -21,7 +26,6 @@ options(
     install.packages.compile.from.source = "never"
 )
 install.packages("remotes")
-
 for (pkg in pkgs) {
     remotes::install_local(
         file.path("library", pkg),
