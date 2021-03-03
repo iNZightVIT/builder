@@ -196,12 +196,12 @@ jobs:
           rm -rfv bin/windows/contrib/tmp*
           rm -rfv src/tmpcontrib
 
-      # - name: Push repository
-      #   run: |
-      #     aws --profile saml s3 sync --delete \
-      #       bin s3://r.docker.stat.auckland.ac.nz/bin
-      #     aws --profile saml s3 sync --delete \
-      #       src s3://r.docker.stat.auckland.ac.nz/src
+      - name: Push repository
+        run: |
+          aws --profile saml s3 sync --delete \
+            bin s3://r.docker.stat.auckland.ac.nz/bin
+          aws --profile saml s3 sync --delete \
+            src s3://r.docker.stat.auckland.ac.nz/src
 
   clearcache:
     name: Clear AWS cache and update HTML
