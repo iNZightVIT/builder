@@ -157,6 +157,52 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
 
+  cleanup-after-fail:
+    name: Clean up tmp files if previous jobs fail
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [sources, binaries]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS}} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Pull repository
+        run: |
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz/bin bin
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz/src src
+
+      - name: Delete tmp files
+        run: |
+          rm -rfv bin/contrib/tmp*
+          rm -rfv src/tmpcontrib
+
+      # - name: Push repository
+      #   run: |
+      #     aws --profile saml s3 sync --delete \
+      #       bin s3://r.docker.stat.auckland.ac.nz/bin
+      #     aws --profile saml s3 sync --delete \
+      #       src s3://r.docker.stat.auckland.ac.nz/src
+
   clearcache:
     name: Clear AWS cache and update HTML
     runs-on: ubuntu-latest
