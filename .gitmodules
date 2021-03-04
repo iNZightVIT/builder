@@ -41,9 +41,6 @@
 [submodule "installers/win-installer"]
 	path = installers/win-installer
 	url = git@github.com:iNZightVIT/win-installer.git
-[submodule "library/ggsfextra"]
-	path = library/ggsfextra
-	url = git@github.com:daniel-barnett/ggsfextra.git
 [submodule "library/gWidgets"]
 	path = library/gWidgets
 	url = git@github.com:cran/gWidgets.git
