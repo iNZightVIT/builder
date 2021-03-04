@@ -243,8 +243,7 @@ jobs:
           dirs <- list.dirs("bin/contrib")
           dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
           for (dir in dirs) {
-            unlink(gsub("tmp", "", dir), TRUE, TRUE)
-            file.rename(dir, gsub("tmp", "", dir))
+            system(sprintf("rsync -avP --delete %s %s", dir, gsub("tmp", "", dir)))
           }
         shell: Rscript {0}
 
