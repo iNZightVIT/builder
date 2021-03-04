@@ -244,6 +244,7 @@ jobs:
           dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
           for (dir in dirs) {
             system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
+            unlink(dir, TRUE, TRUE)
           }
         shell: Rscript {0}
 
