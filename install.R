@@ -9,7 +9,6 @@ pkgs <- c(
     "iNZight",
     "iNZightModules",
     "iNZightMultivariate",
-    "ggsfextra",
     "vit"
 )
 
