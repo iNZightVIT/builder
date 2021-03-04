@@ -240,10 +240,10 @@ jobs:
 
       - name: Move into place
         run: |
-          dirs <- list.dirs("bin/contrib")
+          dirs <- list.dirs("bin/windows/contrib")
           dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
           for (dir in dirs) {
-            system(sprintf("rsync -avP --delete %s %s", dir, gsub("tmp", "", dir)))
+            system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
           }
         shell: Rscript {0}
 
