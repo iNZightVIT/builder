@@ -68,3 +68,8 @@ sapply(pkgs, function(pkg) {
 
 # clean up
 unlink(paste0(pkgs, ".zip"))
+
+# create directories
+dir.create(file.path(".cache", "R", "iNZight"))
+dir.create(file.path(".config", "R", "iNZight"))
+writeLines("list()\n", file.path(".config", "R", "iNZight", "preferences.R"))
