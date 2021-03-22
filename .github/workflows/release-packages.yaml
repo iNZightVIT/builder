@@ -270,6 +270,7 @@ jobs:
 
   windows-installer:
     name: Deploy Windows installer
+    if: "!contains(github.event.head_commit.message, 'skip installer')"
     runs-on: windows-latest
     continue-on-error: true
     needs: clearcache

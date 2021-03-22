@@ -50,3 +50,6 @@
 [submodule "library/gWidgets2RGtk2"]
 	path = library/gWidgets2RGtk2
 	url = git@github.com:iNZightVIT/gWidgets2RGtk2.git
+[submodule "library/dembase"]
+	path = library/dembase
+	url = https://github.com/tmelliott/dembase.git
