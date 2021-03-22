@@ -24,7 +24,7 @@ dir <- ifelse(sources,
 if (!file.exists(file.path(dir, "PACKAGES"))) {
     dir.create(dir, recursive = TRUE)
     current_pkgs <- new_pkgs
-    current_pkgs[, "Version"] <- rep("0.0.1", nrow(current_pkgs))
+    current_pkgs[, "Version"] <- rep("0.0.0.1", nrow(current_pkgs))
     NEW <- TRUE
 } else {
     current_pkgs <- read.dcf(file.path(dir, "PACKAGES"))
@@ -40,7 +40,7 @@ pkgs <- merge(current_pkgs, new_pkgs,
 pkgs[, "Version_cur"] <-
     ifelse(
         is.na(pkgs[, "Version_cur"]),
-        rep("0.0.1", nrow(pkgs)),
+        rep("0.0.0.1", nrow(pkgs)),
         pkgs[, "Version_cur"]
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
