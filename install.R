@@ -11,8 +11,8 @@ pkgs <- c(
     "iNZightMultivariate",
     "vit",
     "demdata",
-    "dembase"
-    # "demest",
+    "dembase",
+    "demest"
     # "demlife"
 )
 
