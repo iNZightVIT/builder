@@ -10,7 +10,10 @@ pkgs <- c(
     "iNZightModules",
     "iNZightMultivariate",
     "vit",
-    "dembase"
+    "demdata",
+    "dembase",
+    "demest",
+    "demlife"
 )
 
 OS <- Sys.getenv("OS_TYPE")
