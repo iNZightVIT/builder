@@ -152,6 +152,14 @@ jobs:
         env:
           OS_TYPE: ${{ runner.os }}
         run: Rscript build.R
+        
+      - name: Generate credentials (2)
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
 
       - name: Push repository
         run: |
