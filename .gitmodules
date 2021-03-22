@@ -56,3 +56,6 @@
 [submodule "library/demdata"]
 	path = library/demdata
 	url = https://github.com/StatisticsNZ/demdata.git
+[submodule "library/demest"]
+	path = library/demest
+	url = https://github.com/StatisticsNZ/demest.git
