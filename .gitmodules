@@ -53,12 +53,6 @@
 [submodule "library/dembase"]
 	path = library/dembase
 	url = https://github.com/tmelliott/dembase.git
-[submodule "library/demest"]
-	path = library/demest
-	url = https://github.com/tmelliott/demest.git
 [submodule "library/demdata"]
 	path = library/demdata
 	url = https://github.com/StatisticsNZ/demdata.git
-[submodule "library/demlife"]
-	path = library/demlife
-	url = https://github.com/StatisticsNZ/demlife.git
