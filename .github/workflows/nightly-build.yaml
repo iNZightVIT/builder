@@ -3,8 +3,8 @@ on:
   schedule:
     - cron: '0 14 * * *' # every night at 2am
   push:
-    - paths:
-      - 'installers/win-installer'
+    paths:
+    - 'installers/win-installer'
 
 jobs:
   build:
