@@ -109,7 +109,7 @@ jobs:
       - name: Delete old installers
         run: |
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows > files.txt
-          cat files.txt
+          mv files.txt downloads
           # Rscript delete_old_files.R --args files.txt
 
       - name: Upload installer
