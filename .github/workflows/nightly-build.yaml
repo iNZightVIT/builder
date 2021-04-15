@@ -5,6 +5,7 @@ on:
   push:
     paths:
     - 'installers/win-installer'
+    - '.github/workflows/nightly-build.yaml'
 
 jobs:
   build:
@@ -104,6 +105,12 @@ jobs:
 
       - name: Add Version file
         run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
+
+      - name: Delete old installers
+        run: |
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downlodas/Windows > files.txt
+          cat files.txt
+          # Rscript delete_old_files.R --args files.txt
 
       - name: Upload installer
         run: |
