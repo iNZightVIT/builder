@@ -7,6 +7,7 @@ on:
     - 'installers/win-installer'
     - '.github/workflows/nightly-build.yaml'
 
+
 jobs:
   build:
     name: Build nightly installer
