@@ -101,8 +101,6 @@ jobs:
         run: |
           mv installers/win-installer/iNZightVIT-installer.exe `
             downloads/iNZightVIT-installer-nightly.exe
-          #   downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe
-          # ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
 
       - name: Add Version file
         run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
