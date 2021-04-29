@@ -62,18 +62,3 @@ jobs:
             create-invalidation `
             --distribution-id ${{ secrets.AWS_ID }} `
             --paths "/*"
-
-  update-website:
-    name: Update website
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Send signal
-        run: |
-          curl -XPOST \
-            -u "${{ secrets.PAT_USERNAME }}:${{ secrets.PAT_SECRET }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/iNZightVIT/inzight-www/actions/workflows/update-version.yaml/dispatches \
-            --data '{"ref": "master"}'
