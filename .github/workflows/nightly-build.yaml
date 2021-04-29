@@ -107,11 +107,6 @@ jobs:
       - name: Add Version file
         run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
 
-      # - name: Delete old installers
-      #   run: |
-      #     # aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads/files.txt
-      #     # Rscript delete_old_files.R --args files.txt
-
       - name: Upload installer
         run: |
           aws --profile saml s3 sync `
