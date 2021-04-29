@@ -100,17 +100,17 @@ jobs:
       - name: Move installer and setup symlink
         run: |
           mv installers/win-installer/iNZightVIT-installer.exe `
-            downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe
-          ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
             downloads/iNZightVIT-installer-nightly.exe
+          #   downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe
+          # ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
 
       - name: Add Version file
         run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
 
-      - name: Delete old installers
-        run: |
-          # aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads/files.txt
-          # Rscript delete_old_files.R --args files.txt
+      # - name: Delete old installers
+      #   run: |
+      #     # aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads/files.txt
+      #     # Rscript delete_old_files.R --args files.txt
 
       - name: Upload installer
         run: |
