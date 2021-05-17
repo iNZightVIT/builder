@@ -61,7 +61,7 @@ if (any(pkgs$replace)) {
 
     if (sources) {
         # Delete old sources
-        unlink(paste0(file.path(dir, replace_pkgs), "*"))
+        unlink(paste0(file.path(dir, replace_pkgs), "_*.tar.gz"))
 
         # Move new soures into place
         system(sprintf("mv *.tar.gz %s", dir))
@@ -80,7 +80,7 @@ if (any(pkgs$replace)) {
         }
 
         # Delete old binaries
-        unlink(paste0(file.path(dir, replace_pkgs), "*"))
+        unlink(paste0(file.path(dir, replace_pkgs), "_*.zip"))
 
         # Move new binaries into place
         system(sprintf("mv *.zip %s", dir))
