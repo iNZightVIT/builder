@@ -61,6 +61,6 @@ if (length(vers) == 1L && is.na(vers)) {
 }
 message(VERSION)
 # this will be uploaded with the installer (and not if build fails!)
-write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
-writeLines(VERSION, vfile)
+# write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
+# writeLines(VERSION, vfile)
 cat(VERSION)
