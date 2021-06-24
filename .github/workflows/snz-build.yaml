@@ -58,6 +58,8 @@ jobs:
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
-      - name: Upload artefact
-        run: |
-          mv installers/win-installer/iNZightVIT-installer.exe 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: iNZightVIT-installer-statsnz.exe
+          path: installers/win-installer/iNZightVIT-installer.exe 
+
