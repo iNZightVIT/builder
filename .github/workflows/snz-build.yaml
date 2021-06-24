@@ -1,4 +1,4 @@
-name: Release packages
+name: StatsNZ Datalab Build
 on:
   push:
     branches:
