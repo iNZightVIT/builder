@@ -1,4 +1,5 @@
 pkgs <- c(
+    "objectProperties",
     "iNZightTools",
     "iNZightMR",
     "iNZightTS",
@@ -13,8 +14,7 @@ pkgs <- c(
     "demdata",
     "dembase",
     "demest",
-    "demlife",
-    "objectProperties"
+    "demlife"
 )
 
 OS <- Sys.getenv("OS_TYPE")
