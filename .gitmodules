@@ -62,3 +62,6 @@
 [submodule "library/demlife"]
 	path = library/demlife
 	url = https://github.com/StatisticsNZ/demlife.git
+[submodule "library/objectProperties"]
+	path = library/objectProperties
+	url = git@github.com:tmelliott/objectProperties
