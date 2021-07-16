@@ -1,4 +1,5 @@
 pkgs <- c(
+    "objectProperties",
     "iNZightTools",
     "iNZightMR",
     "iNZightTS",
