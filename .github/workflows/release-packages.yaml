@@ -224,8 +224,8 @@ jobs:
       - name: Pull repository
         run: |
           mkdir -p bin/macosx/contrib/${{ steps.r-version.outputs.ver }}
-          aws --profile saml s3 sync `
-            s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/${{ steps.r-version.outputs.ver }} `
+          aws --profile saml s3 sync \
+            s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
             bin/macosx/contrib/${{ steps.r-version.outputs.ver }} || true
 
       - name: Install packages
