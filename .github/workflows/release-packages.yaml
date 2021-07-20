@@ -343,8 +343,6 @@ jobs:
             system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
             unlink(dir, TRUE, TRUE)
           }
-          unlink("bin/macosx", TRUE, TRUE)
-          dir.create("bin/macosx/contrib", recursive = TRUE)
         shell: Rscript {0}
 
       - name: Update HTML pages
