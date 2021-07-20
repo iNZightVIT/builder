@@ -15,10 +15,18 @@ new_pkgs <- do.call(
     )
 )
 
+if (OS == "macOS") {
+    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "objectProperties", "vit"), ]
+    new_pkgs <- new_pkgs[!grepl("^dem", new_pkgs[, 1]), ]
+}
+
 # current versions:
 dir <- ifelse(sources,
     "src/contrib",
-    sprintf("bin/windows/contrib/%s", rv)
+    sprintf("bin/%s/contrib/%s",
+        ifelse(os == "Windows", "windows", "macosx"),
+        rv
+    )
 )
 
 if (!file.exists(file.path(dir, "PACKAGES"))) {
@@ -45,7 +53,9 @@ pkgs[, "Version_cur"] <-
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
-if (any(pkgs$replace)) {
+if (os == "macOS") {
+    message(pkgs)
+} else if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
 

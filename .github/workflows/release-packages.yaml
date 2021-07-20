@@ -167,6 +167,97 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
 
+  mac_binaries:
+    name: macOS binaries (${{ matrix.config.r }})
+    if: "!contains(github.event.head_commit.message, 'skip repo')"
+    runs-on: macOS-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          r: [3.6, 4.0, 4.1, 4.2]
+
+    env:
+      # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: ${{ matrix.config.r }}
+
+      - name: Query packages
+        run: |
+          saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
+        shell: Rscript {0}
+
+      - name: Cache R packages
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ matrix.config.r }}-1-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-1-
+
+      - name: Set R version env var
+        id: r-version
+        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Pull repository
+        run: |
+          mkdir -p bin/macosx/contrib/${{ steps.r-version.outputs.ver }}
+          aws --profile saml s3 sync `
+            s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/${{ steps.r-version.outputs.ver }} `
+            bin/macosx/contrib/${{ steps.r-version.outputs.ver }}
+
+      - name: Install packages
+        env:
+          OS_TYPE: ${{ runner.os }}
+        run: Rscript install.R
+
+      - name: Delete old packages
+        run: Rscript clean.R bin/macosx/contrib/${{ steps.r-version.outputs.ver }} zip
+
+      - name: Build binaries for updated packages
+        env:
+          OS_TYPE: ${{ runner.os }}
+        run: Rscript build.R
+
+      - name: Generate credentials (2)
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Push repository
+        run: |
+          aws --profile saml s3 sync --delete `
+            bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
+
+
   cleanup-after-fail:
     name: Clean up tmp files if previous jobs fail
     runs-on: ubuntu-latest
