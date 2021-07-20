@@ -54,9 +54,7 @@ pkgs[, "Version_cur"] <-
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
-if (os == "macOS") {
-    message(pkgs)
-} else if (any(pkgs$replace)) {
+if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
 
@@ -82,19 +80,26 @@ if (os == "macOS") {
         pkgs <- list.files(pattern = "*.tar.gz")
 
         for (pkg in pkgs) {
-            zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_.+\\.tar\\.gz", "", pkg)
-
-            x <- system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
-            if (x) stop("Failure")
-            zip(zip, pkgn)
+            if (os == "Windows") {
+                zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
+                x <- system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
+                if (x) stop("Failure")
+                zip(zip, pkgn)
+            } else {
+                tgz <- gsub(".tar.gz", ".tgz", pkg, fixed = TRUE)
+                x <- system(sprintf("R CMD INSTALL -l . %s", pkg))
+                if (x) stop("Failure")
+                system(sprintf("tar czf %s %s", tgz, pkgn))
+            }
         }
 
         # Delete old binaries
-        unlink(paste0(file.path(dir, replace_pkgs), "_*.zip"))
+        unlink(paste0(file.path(dir, replace_pkgs),
+            ifelse(os == "Windows", "_*.zip", "_*.tgz")))
 
         # Move new binaries into place
-        system(sprintf("mv *.zip %s", dir))
+        system(sprintf("mv *.%s %s", ifelse(os == "Windows", "zip", "tgz"), dir))
         tools::write_PACKAGES(dir, verbose = TRUE)
     }
 }
