@@ -260,7 +260,7 @@ jobs:
     name: Clean up tmp files if previous jobs fail
     runs-on: ubuntu-latest
     if: failure()
-    needs: [sources, binaries]
+    needs: [sources, binaries, mac_binaries]
     steps:
       - uses: actions/checkout@v2
 
@@ -305,7 +305,7 @@ jobs:
   clearcache:
     name: Clear AWS cache and update HTML
     runs-on: ubuntu-latest
-    needs: [sources, binaries]
+    needs: [sources, binaries, mac_binaries]
     steps:
       - uses: actions/checkout@v2
 
