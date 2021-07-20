@@ -22,7 +22,7 @@ if (OS == "Windows" && !requireNamespace('utf8', quietly = TRUE)) {
     install.packages("utf8", repos = "https://cran.rstudio.com")
 }
 if (OS == "macOS") {
-    pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "objectProperties", "vit")]
+    pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "objectProperties", "vit", "iNZightUpdate")]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
 }
 

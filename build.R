@@ -16,8 +16,9 @@ new_pkgs <- do.call(
 )
 
 if (os == "macOS") {
-    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "objectProperties", "vit"), ]
+    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "objectProperties", "vit", "iNZightUpdate"), ]
     new_pkgs <- new_pkgs[!grepl("^dem", new_pkgs[, 1]), ]
+    new_pkgs <- new_pkgs[!grepl("^gWidgets", new_pkgs[, 1]), ]
 }
 
 # current versions:
