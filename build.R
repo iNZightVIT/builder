@@ -15,10 +15,19 @@ new_pkgs <- do.call(
     )
 )
 
+if (os == "macOS") {
+    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate"), ]
+    new_pkgs <- new_pkgs[!grepl("^dem", new_pkgs[, 1]), ]
+    new_pkgs <- new_pkgs[!grepl("^gWidgets", new_pkgs[, 1]), ]
+}
+
 # current versions:
 dir <- ifelse(sources,
     "src/contrib",
-    sprintf("bin/windows/contrib/%s", rv)
+    sprintf("bin/%s/contrib/%s",
+        ifelse(os == "Windows", "windows", "macosx"),
+        rv
+    )
 )
 
 if (!file.exists(file.path(dir, "PACKAGES"))) {
@@ -71,19 +80,26 @@ if (any(pkgs$replace)) {
         pkgs <- list.files(pattern = "*.tar.gz")
 
         for (pkg in pkgs) {
-            zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
             pkgn <- gsub("_.+\\.tar\\.gz", "", pkg)
-
-            x <- system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
-            if (x) stop("Failure")
-            zip(zip, pkgn)
+            if (os == "Windows") {
+                zip <- gsub(".tar.gz", ".zip", pkg, fixed = TRUE)
+                x <- system(sprintf("R CMD INSTALL --no-multiarch -l . %s", pkg))
+                if (x) stop("Failure")
+                zip(zip, pkgn)
+            } else {
+                tgz <- gsub(".tar.gz", ".tgz", pkg, fixed = TRUE)
+                x <- system(sprintf("R CMD INSTALL -l . %s", pkg))
+                if (x) stop("Failure")
+                system(sprintf("tar czf %s %s", tgz, pkgn))
+            }
         }
 
         # Delete old binaries
-        unlink(paste0(file.path(dir, replace_pkgs), "_*.zip"))
+        unlink(paste0(file.path(dir, replace_pkgs),
+            ifelse(os == "Windows", "_*.zip", "_*.tgz")))
 
         # Move new binaries into place
-        system(sprintf("mv *.zip %s", dir))
+        system(sprintf("mv *.%s %s", ifelse(os == "Windows", "zip", "tgz"), dir))
         tools::write_PACKAGES(dir, verbose = TRUE)
     }
 }
