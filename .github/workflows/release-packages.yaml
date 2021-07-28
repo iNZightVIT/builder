@@ -12,6 +12,7 @@ on:
       - '.github/**'
       - 'index.template'
 
+
 jobs:
   sources:
     name: source
