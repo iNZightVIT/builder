@@ -56,8 +56,7 @@ if (length(vers) == 1L && is.na(vers)) {
     } else {
         # no update necessary
         message("No changes - skipping installer build.")
-        # quit(status = 1)
-        VERSION <- pkgs[pkgs$package == "iNZight", "version"]
+        quit(status = 1)
     }
 }
 message(VERSION)
