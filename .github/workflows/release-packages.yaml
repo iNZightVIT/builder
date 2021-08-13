@@ -14,364 +14,364 @@ on:
 
 
 jobs:
-  sources:
-    name: source
-    if: "!contains(github.event.head_commit.message, 'skip repo')"
-    runs-on: ubuntu-latest
-    env:
-      TZ: "Pacific/Auckland"
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
+  # sources:
+  #   name: source
+  #   if: "!contains(github.event.head_commit.message, 'skip repo')"
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     TZ: "Pacific/Auckland"
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: true
 
-      - uses: r-lib/actions/setup-r@master
-        with:
-          r-version: release
+  #     - uses: r-lib/actions/setup-r@master
+  #       with:
+  #         r-version: release
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #     - name: Install python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS}} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Pull repository
-        run: |
-          mkdir -p src
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/src \
-            src
+  #     - name: Pull repository
+  #       run: |
+  #         mkdir -p src
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/src \
+  #           src
 
-      - name: Delete old packages
-        run: Rscript clean.R src/contrib tar.gz
+  #     - name: Delete old packages
+  #       run: Rscript clean.R src/contrib tar.gz
 
-      - name: Build sources for updated packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript build.R
+  #     - name: Build sources for updated packages
+  #       env:
+  #         OS_TYPE: ${{ runner.os }}
+  #       run: Rscript build.R
 
-      - name: Push repository
-        run: |
-          aws --profile saml s3 sync --delete \
-            src/contrib \
-            s3://r.docker.stat.auckland.ac.nz/src/tmpcontrib
+  #     - name: Push repository
+  #       run: |
+  #         aws --profile saml s3 sync --delete \
+  #           src/contrib \
+  #           s3://r.docker.stat.auckland.ac.nz/src/tmpcontrib
 
-  binaries:
-    name: windows binaries (${{ matrix.config.r }})
-    if: "!contains(github.event.head_commit.message, 'skip repo')"
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          # - {os: windows-latest, r: '3.6'}
-          - {os: windows-latest, r: '4.0'}
-          - {os: windows-latest, r: '4.1'}
-          - {os: windows-latest, r: 'devel'}
-    env:
-      # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      TZ: "Pacific/Auckland"
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
+  # binaries:
+  #   name: windows binaries (${{ matrix.config.r }})
+  #   if: "!contains(github.event.head_commit.message, 'skip repo')"
+  #   runs-on: ${{ matrix.config.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       config:
+  #         # - {os: windows-latest, r: '3.6'}
+  #         - {os: windows-latest, r: '4.0'}
+  #         - {os: windows-latest, r: '4.1'}
+  #         - {os: windows-latest, r: 'devel'}
+  #   env:
+  #     # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+  #     TZ: "Pacific/Auckland"
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: true
 
-      - uses: r-lib/actions/setup-r@master
-        with:
-          r-version: ${{ matrix.config.r }}
+  #     - uses: r-lib/actions/setup-r@master
+  #       with:
+  #         r-version: ${{ matrix.config.r }}
 
-      - name: Query packages
-        run: |
-          saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
-        shell: Rscript {0}
+  #     - name: Query packages
+  #       run: |
+  #         saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
+  #       shell: Rscript {0}
 
-      - name: Cache R packages
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-1-
+  #     - name: Cache R packages
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: ${{ env.R_LIBS_USER }}
+  #         key: ${{ runner.os }}-r-${{ matrix.config.r }}-1-${{ hashFiles('.github/depends.Rds') }}
+  #         restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-1-
 
-      - name: Set R version env var
-        id: r-version
-        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+  #     - name: Set R version env var
+  #       id: r-version
+  #       run: echo "::set-output name=ver::$(Rscript rversion.R)"
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #     - name: Install python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials
+  #       run: |
+  #         python aws_saml_login.py `
+  #           --user ${{ secrets.AWS_USER }} `
+  #           --password ${{ secrets.AWS_PASS}} `
+  #           --token ${{ secrets.AWS_TOKEN }} `
+  #           --idp iam.auckland.ac.nz
 
-      - name: Pull repository
-        run: |
-          mkdir -p bin/windows/contrib/${{ steps.r-version.outputs.ver }}
-          aws --profile saml s3 sync `
-            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-            bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+  #     - name: Pull repository
+  #       run: |
+  #         mkdir -p bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+  #         aws --profile saml s3 sync `
+  #           s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+  #           bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
-      - name: Install RGtk2
-        run: library/iNZight/.github/install_gtk.cmd
-        shell: bash
+  #     - name: Install RGtk2
+  #       run: library/iNZight/.github/install_gtk.cmd
+  #       shell: bash
 
-      - name: Add GTK to PATH
-        run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+  #     - name: Add GTK to PATH
+  #       run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Install packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript install.R
+  #     - name: Install packages
+  #       env:
+  #         OS_TYPE: ${{ runner.os }}
+  #       run: Rscript install.R
 
-      - name: Delete old packages
-        run: Rscript clean.R bin/windows/contrib/${{ steps.r-version.outputs.ver }} zip
+  #     - name: Delete old packages
+  #       run: Rscript clean.R bin/windows/contrib/${{ steps.r-version.outputs.ver }} zip
 
-      - name: Build binaries for updated packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript build.R
+  #     - name: Build binaries for updated packages
+  #       env:
+  #         OS_TYPE: ${{ runner.os }}
+  #       run: Rscript build.R
 
-      - name: Generate credentials (2)
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials (2)
+  #       run: |
+  #         python aws_saml_login.py `
+  #           --user ${{ secrets.AWS_USER }} `
+  #           --password ${{ secrets.AWS_PASS}} `
+  #           --token ${{ secrets.AWS_TOKEN }} `
+  #           --idp iam.auckland.ac.nz
 
-      - name: Push repository
-        run: |
-          aws --profile saml s3 sync --delete `
-            bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-            s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
+  #     - name: Push repository
+  #       run: |
+  #         aws --profile saml s3 sync --delete `
+  #           bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+  #           s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/tmp${{ steps.r-version.outputs.ver }}
 
-  mac_binaries:
-    name: macOS binaries (${{ matrix.r }})
-    if: "!contains(github.event.head_commit.message, 'skip repo')"
-    runs-on: macOS-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        r: [3.6, 4.0, 4.1]
-    env:
-      # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      TZ: "Pacific/Auckland"
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
+  # mac_binaries:
+  #   name: macOS binaries (${{ matrix.r }})
+  #   if: "!contains(github.event.head_commit.message, 'skip repo')"
+  #   runs-on: macOS-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       r: [3.6, 4.0, 4.1]
+  #   env:
+  #     # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+  #     TZ: "Pacific/Auckland"
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: true
 
-      - uses: r-lib/actions/setup-r@master
-        with:
-          r-version: ${{ matrix.r }}
+  #     - uses: r-lib/actions/setup-r@master
+  #       with:
+  #         r-version: ${{ matrix.r }}
 
-      - name: Query packages
-        run: |
-          saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
-        shell: Rscript {0}
+  #     - name: Query packages
+  #       run: |
+  #         saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
+  #       shell: Rscript {0}
 
-      - name: Cache R packages
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.r }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-r-${{ matrix.r }}-1-
+  #     - name: Cache R packages
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: ${{ env.R_LIBS_USER }}
+  #         key: ${{ runner.os }}-r-${{ matrix.r }}-1-${{ hashFiles('.github/depends.Rds') }}
+  #         restore-keys: ${{ runner.os }}-r-${{ matrix.r }}-1-
 
-      - name: Set R version env var
-        id: r-version
-        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+  #     - name: Set R version env var
+  #       id: r-version
+  #       run: echo "::set-output name=ver::$(Rscript rversion.R)"
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #     - name: Install python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS}} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Pull repository
-        run: |
-          mkdir -p bin/macosx/contrib/${{ steps.r-version.outputs.ver }}
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
-            bin/macosx/contrib/${{ steps.r-version.outputs.ver }} || true
+  #     - name: Pull repository
+  #       run: |
+  #         mkdir -p bin/macosx/contrib/${{ steps.r-version.outputs.ver }}
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
+  #           bin/macosx/contrib/${{ steps.r-version.outputs.ver }} || true
 
-      - name: Install packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript install.R
+  #     - name: Install packages
+  #       env:
+  #         OS_TYPE: ${{ runner.os }}
+  #       run: Rscript install.R
 
-      - name: Delete old packages
-        run: Rscript clean.R bin/macosx/contrib/${{ steps.r-version.outputs.ver }} zip
+  #     - name: Delete old packages
+  #       run: Rscript clean.R bin/macosx/contrib/${{ steps.r-version.outputs.ver }} zip
 
-      - name: Build binaries for updated packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript build.R
+  #     - name: Build binaries for updated packages
+  #       env:
+  #         OS_TYPE: ${{ runner.os }}
+  #       run: Rscript build.R
 
-      - name: Generate credentials (2)
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials (2)
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS}} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Push repository
-        run: |
-          aws --profile saml s3 sync --delete \
-            bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
-            s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/tmp${{ steps.r-version.outputs.ver }}
+  #     - name: Push repository
+  #       run: |
+  #         aws --profile saml s3 sync --delete \
+  #           bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
+  #           s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/tmp${{ steps.r-version.outputs.ver }}
 
 
-  cleanup-after-fail:
-    name: Clean up tmp files if previous jobs fail
-    runs-on: ubuntu-latest
-    if: failure()
-    needs: [sources, binaries, mac_binaries]
-    steps:
-      - uses: actions/checkout@v2
+  # cleanup-after-fail:
+  #   name: Clean up tmp files if previous jobs fail
+  #   runs-on: ubuntu-latest
+  #   if: failure()
+  #   needs: [sources, binaries, mac_binaries]
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #     - name: Install python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS}} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Pull repository
-        run: |
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/bin bin
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/src src
+  #     - name: Pull repository
+  #       run: |
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/bin bin
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/src src
 
-      - name: Delete tmp files
-        run: |
-          rm -rfv bin/windows/contrib/tmp*
-          rm -rfv src/tmpcontrib
+  #     - name: Delete tmp files
+  #       run: |
+  #         rm -rfv bin/windows/contrib/tmp*
+  #         rm -rfv src/tmpcontrib
 
-      - name: Push repository
-        run: |
-          aws --profile saml s3 sync --delete \
-            bin s3://r.docker.stat.auckland.ac.nz/bin
-          aws --profile saml s3 sync --delete \
-            src s3://r.docker.stat.auckland.ac.nz/src
+  #     - name: Push repository
+  #       run: |
+  #         aws --profile saml s3 sync --delete \
+  #           bin s3://r.docker.stat.auckland.ac.nz/bin
+  #         aws --profile saml s3 sync --delete \
+  #           src s3://r.docker.stat.auckland.ac.nz/src
 
-  clearcache:
-    name: Clear AWS cache and update HTML
-    runs-on: ubuntu-latest
-    needs: [sources, binaries, mac_binaries]
-    steps:
-      - uses: actions/checkout@v2
+  # clearcache:
+  #   name: Clear AWS cache and update HTML
+  #   runs-on: ubuntu-latest
+  #   needs: [sources, binaries, mac_binaries]
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #     - name: Install python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         # pip install ./lxml-4.2.3-cp37-cp37m-win_amd64.whl
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS}} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS}} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Pull repository
-        run: |
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/bin bin
-          aws --profile saml s3 sync \
-            s3://r.docker.stat.auckland.ac.nz/src src
+  #     - name: Pull repository
+  #       run: |
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/bin bin
+  #         aws --profile saml s3 sync \
+  #           s3://r.docker.stat.auckland.ac.nz/src src
 
-      - name: Move into place
-        run: |
-          dirs <- c(list.dirs("bin/windows/contrib"), list.dirs("bin/macosx/contrib"))
-          dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
-          for (dir in dirs) {
-            system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
-            unlink(dir, TRUE, TRUE)
-          }
-        shell: Rscript {0}
+  #     - name: Move into place
+  #       run: |
+  #         dirs <- c(list.dirs("bin/windows/contrib"), list.dirs("bin/macosx/contrib"))
+  #         dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
+  #         for (dir in dirs) {
+  #           system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
+  #           unlink(dir, TRUE, TRUE)
+  #         }
+  #       shell: Rscript {0}
 
-      - name: Update HTML pages
-        run: |
-          python create_webpages.py --path bin
-          python create_webpages.py --path src
+  #     - name: Update HTML pages
+  #       run: |
+  #         python create_webpages.py --path bin
+  #         python create_webpages.py --path src
 
-      - name: Push repository
-        run: |
-          aws --profile saml s3 sync --delete \
-            bin s3://r.docker.stat.auckland.ac.nz/bin
-          aws --profile saml s3 sync --delete \
-            src s3://r.docker.stat.auckland.ac.nz/src
+  #     - name: Push repository
+  #       run: |
+  #         aws --profile saml s3 sync --delete \
+  #           bin s3://r.docker.stat.auckland.ac.nz/bin
+  #         aws --profile saml s3 sync --delete \
+  #           src s3://r.docker.stat.auckland.ac.nz/src
 
-      - name: Clear cache
-        run: |
-          aws --profile 'saml' \
-            cloudfront \
-            create-invalidation \
-            --distribution-id ${{ secrets.AWS_ID }} \
-            --paths "/*"
+  #     - name: Clear cache
+  #       run: |
+  #         aws --profile 'saml' \
+  #           cloudfront \
+  #           create-invalidation \
+  #           --distribution-id ${{ secrets.AWS_ID }} \
+  #           --paths "/*"
 
   windows-installer:
     name: Deploy Windows installer
     if: "!contains(github.event.head_commit.message, 'skip installer')"
     runs-on: windows-latest
     continue-on-error: true
-    needs: clearcache
+    # needs: clearcache
     steps:
       - uses: actions/checkout@v2
         with:
