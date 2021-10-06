@@ -1,12 +1,13 @@
 name: Nightly build
 on:
   schedule:
-    - cron: '0 14 * * *' # every night at 2am
+    - cron: "0 14 * * *" # every night at 2am
   push:
+    branches:
+      - master
     paths:
-    - 'installers/win-installer'
-    - '.github/workflows/nightly-build.yaml'
-
+      - "installers/win-installer"
+      - ".github/workflows/nightly-build.yaml"
 
 jobs:
   build:
@@ -16,14 +17,13 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
     steps:
-
       - uses: actions/checkout@v2
         with:
           submodules: true
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: 'release'
+          r-version: "release"
 
       - name: Install RGtk2
         run: library/iNZight/.github/install_gtk.cmd

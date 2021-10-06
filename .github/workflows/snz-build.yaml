@@ -4,10 +4,10 @@ on:
     branches:
       - statsnz-datalab
     paths:
-      - 'library/**'
-      - 'installers/**'
-      - '*.R'
-      - '.github/**'
+      - "library/**"
+      - "installers/**"
+      - "*.R"
+      - ".github/**"
 
 jobs:
   windows-installer:
@@ -21,7 +21,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: '4.0'
+          r-version: "4.0"
 
       - name: Install iNZight
         working-directory: installers/win-installer
@@ -61,5 +61,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: iNZightVIT-installer-statsnz.exe
-          path: installers/win-installer/iNZightVIT-installer.exe 
-
+          path: installers/win-installer/iNZightVIT-installer.exe
