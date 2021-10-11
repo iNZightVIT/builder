@@ -61,15 +61,15 @@ jobs:
           rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
-      - name: Move R and library to build location
-        working-directory: installers/win-installer
-        run: |
-          mv C:/R R
-          mv ${{ env.R_LIBS_USER }} library
+      # - name: Move R and library to build location
+      #   working-directory: installers/win-installer
+      #   run: |
+      #     mv C:/R R
+      #     mv ${{ env.R_LIBS_USER }} library
 
-      - name: Configure R GUI
-        working-directory: installers/win-installer
-        run: R\bin\Rscript.exe rgui_settings.R
+      # - name: Configure R GUI
+      #   working-directory: installers/win-installer
+      #   run: R\bin\Rscript.exe rgui_settings.R
 
       # - name: Build installer
       #   working-directory: installers/win-installer
@@ -125,28 +125,33 @@ jobs:
       #     aws --profile saml s3 sync `
       #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
-      - name: Create dev repo dir
-        run: |
-          mkdir -p bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+      - name: Build binaries for updated packages
+        env:
+          OS_TYPE: ${{ runner.os }}
+        run: Rscript build.R
 
-      - name: Get binaries for our packages
+      - name: Move to repo dir
         run: |
-          pkgs_all <- list.files('library')
-          pkgs_keep <- list.files('installers/win-installer/library')
-          pkgs <- pkgs_all[pkgs_all %in% pkgs_keep]
-          rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
-            collapse = ".")
-          dir <- file.path('bin', 'windows', 'contrib', rv)
-          sapply(pkgs,
-            function(pkg) {
-              file.rename(
-                file.path('library', pkg),
-                file.path(dir, pkg)
-              )
-            }
-          )
-          tools::write_PACKAGES(dir, verbose = TRUE)
-        shell: Rscript {0}
+          mv bin dev/bin
+
+      # - name: Get binaries for our packages
+      #   run: |
+      #     pkgs_all <- list.files('library')
+      #     pkgs_keep <- list.files('installers/win-installer/library')
+      #     pkgs <- pkgs_all[pkgs_all %in% pkgs_keep]
+      #     rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
+      #       collapse = ".")
+      #     dir <- file.path('bin', 'windows', 'contrib', rv)
+      #     sapply(pkgs,
+      #       function(pkg) {
+      #         file.rename(
+      #           file.path('library', pkg),
+      #           file.path(dir, pkg)
+      #         )
+      #       }
+      #     )
+      #     tools::write_PACKAGES(dir, verbose = TRUE)
+      #   shell: Rscript {0}
 
       - name: Push dev repository
         run: |
