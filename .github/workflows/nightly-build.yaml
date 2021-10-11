@@ -61,21 +61,21 @@ jobs:
           rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
-      # - name: Move R and library to build location
-      #   working-directory: installers/win-installer
-      #   run: |
-      #     mv C:/R R
-      #     mv ${{ env.R_LIBS_USER }} library
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
 
-      # - name: Configure R GUI
-      #   working-directory: installers/win-installer
-      #   run: R\bin\Rscript.exe rgui_settings.R
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
 
-      # - name: Build installer
-      #   working-directory: installers/win-installer
-      #   run: makensis.exe inzight_installer.nsi
-      #   env:
-      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -95,46 +95,41 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      # - name: Pull downloads dir
-      #   run: |
-      #     aws --profile saml s3 sync `
-      #       --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
-      #       s3://r.docker.stat.auckland.ac.nz/downloads downloads
-
-      # - name: Move installer and setup symlink
-      #   run: |
-      #     mv installers/win-installer/iNZightVIT-installer.exe `
-      #       downloads/iNZightVIT-installer-nightly.exe
-
-      # - name: Add Version file
-      #   run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
-
-      # - name: Upload installer
-      #   run: |
-      #     aws --profile saml s3 sync `
-      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
-
-      # - name: Generate index.html
-      #   run: |
-      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
-      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
-      #     Rscript create_index.R downloads downloads/Windows
-
-      # - name: Push indices
-      #   run: |
-      #     aws --profile saml s3 sync `
-      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
-
-      - name: Build binaries for updated packages
-        env:
-          OS_TYPE: ${{ runner.os }}
-        run: Rscript build.R
-
-      - name: Move to repo dir
+      - name: Pull downloads dir
         run: |
-          mv bin dev/bin
+          aws --profile saml s3 sync `
+            --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
+            s3://r.docker.stat.auckland.ac.nz/downloads downloads
 
-      # - name: Get binaries for our packages
+      - name: Move installer and setup symlink
+        run: |
+          mv installers/win-installer/iNZightVIT-installer.exe `
+            downloads/iNZightVIT-installer-nightly.exe
+
+      - name: Add Version file
+        run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
+
+      - name: Upload installer
+        run: |
+          aws --profile saml s3 sync `
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      - name: Generate index.html
+        run: |
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+          Rscript create_index.R downloads downloads/Windows
+
+      - name: Push indices
+        run: |
+          aws --profile saml s3 sync `
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      # - name: Create dev dir
+      #   run: |
+      #     mkdir -p dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+
+      # - name: Zip binaries for our packages
       #   run: |
       #     pkgs_all <- list.files('library')
       #     pkgs_keep <- list.files('installers/win-installer/library')
@@ -153,21 +148,21 @@ jobs:
       #     tools::write_PACKAGES(dir, verbose = TRUE)
       #   shell: Rscript {0}
 
-      - name: Push dev repository
-        run: |
-          aws --profile saml s3 sync --delete `
-            bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-            s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+      # - name: Push dev repository
+      #   run: |
+      #     aws --profile saml s3 sync --delete `
+      #       bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+      #       s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
-      - name: Generate dev index.html
-        run: |
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/dev/ > dev.txt
-          Rscript create_index.R dev
+      # - name: Generate dev index.html
+      #   run: |
+      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/dev/ > dev.txt
+      #     Rscript create_index.R dev
 
-      - name: Push dev indices
-        run: |
-          aws --profile saml s3 sync `
-            dev s3://r.docker.stat.auckland.ac.nz/dev
+      # - name: Push dev indices
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       dev s3://r.docker.stat.auckland.ac.nz/dev
 
       - name: Clear cache
         run: |
