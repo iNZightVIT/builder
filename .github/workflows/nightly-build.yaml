@@ -1,12 +1,11 @@
 name: Nightly build
 on:
   schedule:
-    - cron: '0 14 * * *' # every night at 2am
+    - cron: "0 14 * * *" # every night at 2am
   push:
     paths:
-    - 'installers/win-installer'
-    - '.github/workflows/nightly-build.yaml'
-
+      - "installers/win-installer"
+      - ".github/workflows/nightly-build.yaml"
 
 jobs:
   build:
@@ -18,14 +17,13 @@ jobs:
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
     steps:
-
       - uses: actions/checkout@v2
         with:
           submodules: true
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: 'release'
+          r-version: "release"
 
       - name: Install RGtk2
         run: library/iNZight/.github/install_gtk.cmd
@@ -122,6 +120,38 @@ jobs:
         run: |
           aws --profile saml s3 sync `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      - name: Pull dev repo
+        run: |
+          mkdir -p bin/windows/contrib/$(Rscript rversion.R)"
+          aws --profile saml s3 sync `
+            s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/$(Rscript rversion.R)" `
+            bin/windows/contrib/$(Rscript rversion.R)"
+
+      - name: Get binaries for our packages
+        run: |
+          pkgs_all <- list.files('library')
+          pkgs_keep <- list.files('installers/win-installer/library')
+          pkgs <- pkgs_all[pkgs_all %in% pkgs_keep]
+          rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
+            collapse = ".")
+          dir <- file.path('bin', 'windows', 'contrib', rv)
+          sapply(pkgs,
+            function(pkg) {
+              file.rename(
+                file.path('library', pkg),
+                file.path(dir, pkg)
+              )
+            }
+          )
+          tools::write_PACKAGES(dir, verbose = TRUE)
+        shell: Rscript {0}
+
+      - name: Push dev repository
+        run: |
+          aws --profile saml s3 sync --delete \
+            bin/windows/contrib/$(Rscript rversion.R) \
+            s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/$(Rscript rversion.R)
 
       - name: Clear cache
         run: |
