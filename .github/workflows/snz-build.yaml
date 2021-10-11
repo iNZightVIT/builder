@@ -14,6 +14,10 @@ jobs:
     name: Build StatsNZ Datalab installer
     if: "!contains(github.event.head_commit.message, 'skip installer')"
     runs-on: windows-latest
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -67,6 +71,11 @@ jobs:
     name: Build StatsNZ Datalab installer (dev)
     if: "!contains(github.event.head_commit.message, 'skip installer')"
     runs-on: windows-latest
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
+
     steps:
       - uses: actions/checkout@v2
         with:
