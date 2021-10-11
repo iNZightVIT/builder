@@ -157,6 +157,16 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
+      - name: Generate dev index.html
+        run: |
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/dev/ > dev.txt
+          Rscript create_index.R dev
+
+      - name: Push dev indices
+        run: |
+          aws --profile saml s3 sync `
+            dev s3://r.docker.stat.auckland.ac.nz/dev
+
       - name: Clear cache
         run: |
           aws --profile 'saml' `
