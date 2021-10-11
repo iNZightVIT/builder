@@ -153,8 +153,8 @@ jobs:
 
       - name: Push dev repository
         run: |
-          aws --profile saml s3 sync --delete \
-            bin/windows/contrib/${{ steps.r-version.outputs.ver }} \
+          aws --profile saml s3 sync --delete `
+            bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Clear cache
