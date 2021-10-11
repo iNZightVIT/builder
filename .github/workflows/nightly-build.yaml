@@ -125,12 +125,9 @@ jobs:
       #     aws --profile saml s3 sync `
       #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
-      - name: Pull dev repo
+      - name: Create dev repo dir
         run: |
           mkdir -p bin/windows/contrib/${{ steps.r-version.outputs.ver }}
-          aws --profile saml s3 sync `
-            s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-            bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Get binaries for our packages
         run: |
