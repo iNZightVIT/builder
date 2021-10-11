@@ -4,14 +4,13 @@ on:
     branches:
       - master
     paths:
-      - 'library/**'
-      - 'installers/**'
-      - 'create_webpages.py'
-      - 'requirements.txt'
-      - '*.R'
-      - '.github/**'
-      - 'index.template'
-
+      - "library/**"
+      - "installers/**"
+      - "create_webpages.py"
+      - "requirements.txt"
+      - "*.R"
+      - ".github/**"
+      - "index.template"
 
 jobs:
   sources:
@@ -76,10 +75,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # - {os: windows-latest, r: '3.6'}
-          - {os: windows-latest, r: '4.0'}
-          - {os: windows-latest, r: '4.1'}
-          - {os: windows-latest, r: 'devel'}
+          - { os: windows-latest, r: "4.0" }
+          - { os: windows-latest, r: "4.1" }
+          - { os: windows-latest, r: "devel" }
     env:
       # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
@@ -175,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [3.6, 4.0, 4.1]
+        r: [4.0, 4.1]
     env:
       # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
@@ -255,7 +253,6 @@ jobs:
           aws --profile saml s3 sync --delete \
             bin/macosx/contrib/${{ steps.r-version.outputs.ver }} \
             s3://r.docker.stat.auckland.ac.nz/bin/macosx/contrib/tmp${{ steps.r-version.outputs.ver }}
-
 
   cleanup-after-fail:
     name: Clean up tmp files if previous jobs fail
@@ -379,7 +376,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: '4.0'
+          r-version: "4.0"
 
       - name: Set up Python
         uses: actions/setup-python@v2
