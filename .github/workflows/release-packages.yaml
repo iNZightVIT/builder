@@ -75,7 +75,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # - {os: windows-latest, r: '3.6'}
           - { os: windows-latest, r: "4.0" }
           - { os: windows-latest, r: "4.1" }
           - { os: windows-latest, r: "devel" }
@@ -174,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [3.6, 4.0, 4.1]
+        r: [4.0, 4.1]
     env:
       # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
