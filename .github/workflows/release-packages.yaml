@@ -133,7 +133,7 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Install RGtk2
-        run: library/iNZight/.github/install_gtk.cmd
+        run: install_gtk.cmd
         shell: bash
 
       - name: Add GTK to PATH
