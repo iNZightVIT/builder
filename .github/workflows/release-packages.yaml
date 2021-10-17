@@ -79,7 +79,6 @@ jobs:
           - { os: windows-latest, r: "4.1" }
           - { os: windows-latest, r: "devel" }
     env:
-      # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
     steps:
       - uses: actions/checkout@v2
