@@ -65,6 +65,3 @@
 [submodule "library/gWidgets2"]
 	path = library/gWidgets2
 	url = https://github.com/tmelliott/gWidgets2
-[submodule "library/RGtk2"]
-	path = library/RGtk2
-	url = https://github.com/cran/RGtk2
