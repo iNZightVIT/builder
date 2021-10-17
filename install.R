@@ -24,7 +24,7 @@ if (OS == "Windows") {
     pkgs <- pkgs[!grepl("^dem", pkgs)]
 }
 if (OS == "macOS") {
-    pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate")]
+    pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2")]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
 }
 
