@@ -31,7 +31,7 @@ dir <- ifelse(sources,
 )
 
 if (!file.exists(file.path(dir, "PACKAGES"))) {
-    dir.create(dir, recursive = TRUE)
+    dir.create(dir, showWarnings = FALSE, recursive = TRUE)
     current_pkgs <- new_pkgs
     current_pkgs[, "Version"] <- rep("0.0.0.1", nrow(current_pkgs))
     NEW <- TRUE
@@ -100,7 +100,9 @@ if (any(pkgs$replace)) {
 
         # Move new binaries into place
         system(sprintf("mv *.%s %s", ifelse(os == "Windows", "zip", "tgz"), dir))
-        tools::write_PACKAGES(dir, verbose = TRUE)
+        tools::write_PACKAGES(dir, verbose = TRUE,
+            type = ifelse(os == "Windows", "win.binary", "mac.binary")
+        )
     }
 }
 
