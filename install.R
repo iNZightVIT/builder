@@ -1,4 +1,5 @@
 pkgs <- c(
+    "surveyspec",
     "iNZightTools",
     "iNZightMR",
     "iNZightTS",
