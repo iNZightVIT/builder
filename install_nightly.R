@@ -9,7 +9,7 @@ options(
 )
 
 pkgs <- c(
-    "surveyspec",
+    "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
     "iNZightTS",
@@ -28,8 +28,10 @@ curr <- as.character(installed.packages()[, "Package"])
 
 # download all
 sapply(pkgs, function(pkg) {
+    pkg <- strsplit(pkg, "/")[[1]]
+    if (length(pkg) == 1L) pkg <- c("iNZightVIT", pkg)
     utils::download.file(
-        sprintf("https://github.com/iNZightVIT/%s/archive/dev.zip", pkg),
+        sprintf("https://github.com/%s/%s/archive/dev.zip", pkg),
         sprintf("%s.zip", pkg),
         quiet = TRUE
     )
