@@ -25,7 +25,6 @@ pkgs <- c(
 )
 
 curr <- as.character(installed.packages()[, "Package"])
-
 install.packages(c("httr", "lubridate"))
 
 # download all
