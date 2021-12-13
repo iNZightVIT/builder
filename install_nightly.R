@@ -26,20 +26,57 @@ pkgs <- c(
 
 curr <- as.character(installed.packages()[, "Package"])
 
+install.packages(c("httr", "lubridate"))
+
 # download all
 sapply(pkgs, function(pkg) {
     pkg <- strsplit(pkg, "/")[[1]]
     if (length(pkg) == 1L) pkg <- c("iNZightVIT", pkg)
+
+    # if there is a release- branch NEWER than the dev branch,
+    # use that instead:
+    x <- httr::GET(sprintf('https://api.github.com/repos/%s/%s/branches', pkg[1], pkg[2]))
+    branches <- httr::content(x)
+    names(branches) <- sapply(branches, function(z) z$name)
+    releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
+    branch <- "dev"
+    if (is.null(branches[[branch]])) {
+        if (!is.null(branches$develop)) branch <- "develop"
+        if (!is.null(branches$main)) branch <- "main"
+        if (!is.null(branches$master)) branch <- "master"
+    }
+    if (length(releaseBranches)) {
+        devBranch <- branches[[branch]]
+        devDate <- httr::content(httr::GET(devBranch$commit$url))$commit$author$date |>
+            lubridate::ymd_hms()
+
+        releaseDates <- lapply(releaseBranches, function(b) {
+            data.frame(
+                branch = b$name,
+                date =
+                    httr::content(httr::GET(b$commit$url))$commit$author$date |>
+                        lubridate::ymd_hms()
+            )
+        })
+        releaseDates <- do.call(rbind, releaseDates)
+        releaseBranch <- releaseDates[which.max(releaseDates$date), ]
+        if (releaseBranch$date > devDate) {
+            branch <- sprintf("refs/heads/%s", releaseBranch$branch)
+        }
+    }
+
     utils::download.file(
-        sprintf("https://github.com/%s/%s/archive/dev.zip", pkg),
-        sprintf("%s.zip", pkg),
+        sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
+        sprintf("%s.zip", pkg[2]),
         quiet = TRUE
     )
 })
 
+pkgs <- gsub(".*/", "", pkgs)
+
 # query and install dependencies
 deps <- sapply(pkgs, function(pkg) {
-    d <- sprintf("%s-dev", pkg)
+    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     desc <- utils::unzip(
         sprintf("%s.zip", pkg),
@@ -59,7 +96,7 @@ install.packages(deps)
 
 # install iNZight packages
 sapply(pkgs, function(pkg) {
-    d <- sprintf("%s-dev", pkg)
+    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     utils::unzip(sprintf("%s.zip", pkg))
     install.packages(d,
