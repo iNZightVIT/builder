@@ -477,10 +477,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Send signal
-        run: |
-          curl -XPOST \
-            -u "${{ secrets.PAT_USERNAME }}:${{ secrets.PAT_SECRET }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/iNZightVIT/inzight-www/actions/workflows/update-version.yaml/dispatches \
-            --data '{"ref": "master"}'
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: iNZightVIT/inzight-www
+          event-type: update-website
+          client-payload: '{"ref": "master"}'
