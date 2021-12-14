@@ -182,7 +182,7 @@ jobs:
       - name: Send signal
         uses: peter-evans/repository-dispatch@v1
         with:
-          token: ${{ secrets.INZIGHT_AUTOMATION }}
+          token: ${{ secrets.PAT_TOKEN }}
           repository: iNZightVIT/inzight-www
           event-type: update-website
           client-payload: '{"ref": "master"}'
