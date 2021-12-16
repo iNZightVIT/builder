@@ -25,6 +25,13 @@ if (OS == "Windows") {
         install.packages("utf8", repos = "https://cran.rstudio.com")
     dempkgs <- pkgs[grepl("^dem", pkgs)]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
+
+    ## Need to install GTK for compilation, to Sys.getenv('GTK_PATH')
+    system("curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip")
+    dir.create("gtk", recursive = TRUE)
+    system("7z x gtk.zip -ogtk > nul")
+    unlink("gtk.zip")
+    file.rename("gtk", Sys.getenv("GTK_PATH"))
 }
 if (OS == "macOS") {
     pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2", "cairoDevice")]
