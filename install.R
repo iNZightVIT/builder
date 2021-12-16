@@ -1,4 +1,6 @@
 pkgs <- c(
+    "RGtk2",
+    "cairoDevice",
     "surveyspec",
     "iNZightTools",
     "iNZightMR",
