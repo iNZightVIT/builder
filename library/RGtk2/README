@@ -1,0 +1,9 @@
+This RGtk package is an interface to Gtk and other libraries in the GTK+ platform.  
+As such, it allows one to do in the R language what one can do with Gtk in any other language
+for which there are bindings. For the most part, there is a one-to-one
+mapping from the C-level routines provided by Gtk to R functions. 
+One can register handlers for GTK+ events, and even define new GObject classes in R.
+
+This is a mature package that is feature complete and stable, despite receiving few updates.
+
+For an in-depth treatment of the package, see the book "Programming GUIs in R" by Lawrence and Verzani.

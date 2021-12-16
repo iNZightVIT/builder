@@ -1,0 +1,34 @@
+appWindow	Demonstrates a typical application window with menubar, toolbar, statusbar.
+drawingArea	Uses GtkDrawingArea to display a checkerboard pattern and a scribble tool.
+images	This demo code shows some of the more obscure cases of GtkImage, in the simple case a call to gtkImageNewFromFile() is all you need.
+pixbufs	A GdkPixbuf represents an image, normally in RGB or RGBA format. This demo is not all that educational, but looks cool.
+editableCells	This demo demonstrates the use of editable cells in a GtkTreeView.
+messageDialog	Dialog widgets are used to pop up a transient window for user feedback.
+buttonBoxes	The Button Box widgets are used to arrange buttons with padding.
+entryCompletion	GtkEntryCompletion provides a mechanism for adding support for completion in GtkEntry.
+rotatedText	This demo shows how to use GDK and Pango to draw rotated and transformed text. 
+clipboard	This demo shows how to copy and paste text to and from the clipboard.
+expander	GtkExpander allows to provide additional content that is initially hidden.
+sizeGroups	GtkSizeGroup provides a mechanism for grouping a number of widgets together so they all request the same amount of space.
+colorSelector	GtkColorSelection lets the user choose a color. GtkColorSelectionDialog is a prebuilt dialog containing a GtkColorSelection.
+multipleViews	This demo has two views displaying a single buffer, and shows off GtkTextView's text formatting features.
+svgspacewar	A port of a classic arcade game to cairo.
+dnd	Simple drag and drop demo that accepts URLs from your web browser.
+iconView	A simple file browser using GtkIconView.
+pangoCairo	The rotated text demo using cairo.
+treeStore	This demo builds a simple GtkTreeStore and displays it.
+iconviewdnd	The GtkIconView widget supports Editing and Drag-and-Drop. This example also demonstrates using the generic GtkCellLayout interface to set up cell renderers in an icon view.
+rgtkplot A port of the canonical tkrplot example using the cairoDevice package.
+compositeplot A demo of combining GDK-Pixbubf with the ability of cairoDevice to render to GdkDrawables.
+printing Demonstrates rendering a document and printing it via a dialog
+assistant A three-page demonstration of the wizard-like GtkAssistant
+alphaSlider	An R plot of microarray data with the alpha controlled by a slider
+alphaSliderClass	The alphaSlider demo based on a subclass of the GtkHScale widget
+slide A simple cairo-based cell sliding game implemented as a new widget class (WARNING: UNSTABLE)
+text-scroll	Automatic text view scrolling
+builder	Building a GUI from XML with GtkBuilder (GTK+ 2.12)
+tooltips	Fancy tooltips with GtkTooltip (GTK+ 2.12)
+searchentry	Icons and progress pulsing in a text entry
+spinner	Spinner widget for indicating indefinite progress
+fileCopier	Copy files (including downloading remote files) asynchronously
+httpd	A useless http server demonstrating R connections to sockets
