@@ -80,7 +80,7 @@ jobs:
           - { os: windows-latest, r: "devel" }
     env:
       TZ: "Pacific/Auckland"
-      GTK_PATH: "C://GTK"
+      GTK_PATH: "D://a//_temp//GTK"
     steps:
       - uses: actions/checkout@v2
         with:
