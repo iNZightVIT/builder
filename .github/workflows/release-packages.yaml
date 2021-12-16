@@ -77,7 +77,7 @@ jobs:
         config:
           - { os: windows-latest, r: "4.0" }
           - { os: windows-latest, r: "4.1" }
-          - { os: windows-latest, r: "devel" }
+          # - { os: windows-latest, r: "devel" }
     env:
       TZ: "Pacific/Auckland"
       GTK_PATH: "D:/a/_temp/GTK"
