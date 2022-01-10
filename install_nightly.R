@@ -99,6 +99,10 @@ install.packages(deps)
 
 # install iNZight packages
 sapply(pkgs, function(pkg) {
+    if (!file.exists(sprintf("%s.zip", pkg))) {
+        install.packages(pkg)
+        return()
+    }
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     utils::unzip(sprintf("%s.zip", pkg))
