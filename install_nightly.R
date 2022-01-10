@@ -79,6 +79,7 @@ pkgs <- gsub(".*/", "", pkgs)
 
 # query and install dependencies
 deps <- sapply(pkgs, function(pkg) {
+    if (!file.exists(sprintf("%s.zip", pkg))) return()
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     desc <- utils::unzip(
