@@ -16,7 +16,6 @@ jobs:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
-      GTK_PATH: "D:/a/_temp/GTK"
 
     steps:
       - uses: actions/checkout@v2
