@@ -4,7 +4,6 @@ echo "Installing gtk ..."
 curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
 md D:\a\_temp\GTK
 md gtk
-7z x gtk.zip -oD:\a\_temp\GTK > nul
 7z x gtk.zip -ogtk > nul
 del gtk.zip
 
