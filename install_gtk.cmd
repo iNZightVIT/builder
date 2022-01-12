@@ -6,9 +6,10 @@ md D:\a\_temp\GTK
 md gtk
 7z x gtk.zip -ox64 > nul
 del gtk.zip
+md x64 gtk\x64
 
 echo "Install RGtk2 ..."
-Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk/x64')); install.packages('RGtk2', repos = 'https://r.docker.stat.auckland.ac.nz')"
+Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('RGtk2', repos = 'https://r.docker.stat.auckland.ac.nz')"
 
 echo "Copying GTK binaries to RGtk2 package ..."
 mv gtk D:\a\_temp\Library\RGtk2\
