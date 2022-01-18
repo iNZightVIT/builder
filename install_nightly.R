@@ -9,7 +9,7 @@ options(
 )
 
 pkgs <- c(
-    "RGtk2",
+    # "RGtk2",
     "cairoDevice",
     "tmelliott/surveyspec",
     "iNZightTools",
@@ -38,6 +38,8 @@ sapply(pkgs, function(pkg) {
     # use that instead:
     x <- httr::GET(sprintf('https://api.github.com/repos/%s/%s/branches', pkg[1], pkg[2]))
     branches <- httr::content(x)
+    if (!is.null(branches$message)) return()
+
     names(branches) <- sapply(branches, function(z) z$name)
     releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
     branch <- "dev"
@@ -77,6 +79,7 @@ pkgs <- gsub(".*/", "", pkgs)
 
 # query and install dependencies
 deps <- sapply(pkgs, function(pkg) {
+    if (!file.exists(sprintf("%s.zip", pkg))) return()
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     desc <- utils::unzip(
@@ -97,6 +100,10 @@ install.packages(deps)
 
 # install iNZight packages
 sapply(pkgs, function(pkg) {
+    if (!file.exists(sprintf("%s.zip", pkg))) {
+        install.packages(pkg)
+        return()
+    }
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     utils::unzip(sprintf("%s.zip", pkg))
