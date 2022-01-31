@@ -29,6 +29,8 @@ pkgs <- c(
 curr <- as.character(installed.packages()[, "Package"])
 install.packages(c("httr", "lubridate"))
 
+print(curr)
+
 # download all
 sapply(pkgs, function(pkg) {
     pkg <- strsplit(pkg, "/")[[1]]
@@ -96,6 +98,7 @@ deps <- sapply(pkgs, function(pkg) {
 })
 deps <- unique(do.call(c, deps))
 deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
+print(deps)
 install.packages(deps)
 
 # install iNZight packages
