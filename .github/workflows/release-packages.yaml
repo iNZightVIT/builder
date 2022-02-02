@@ -407,16 +407,20 @@ jobs:
         working-directory: installers/win-installer
         run: Rscript install_inzight.R
 
+      - name: Save old VERSION
+        working-directory: downloads
+        run: cp VERSION  VERSION_old
+
       - name: Set iNZight version
         id: inzight
         run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
       - name: Download GTK+
         run: |
-          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-          mkdir -p gtk/i386
-          cd gtk/i386
-          7z x ../../gtk32.zip
+          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          mkdir -p gtk/x64
+          cd gtk/x64
+          7z x ../../gtk.zip
 
       - name: Add GTK+ to R library
         run: |
@@ -441,9 +445,13 @@ jobs:
       - name: Move installer and create symlink
         run: |
           mv installers/win-installer/iNZightVIT-installer.exe `
-            downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version}}.exe
-          ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
-            downloads/iNZightVIT-installer.exe
+            downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version}}_PREVIEW.exe
+          # ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
+          #   downloads/iNZightVIT-installer.exe
+
+      - name: Restore VERSION
+        working-directory: downloads
+        run: mv VERSION_old VERSION
 
       - name: Upload installer
         run: |
