@@ -451,7 +451,9 @@ jobs:
 
       - name: Restore VERSION
         working-directory: downloads
-        run: mv VERSION_old VERSION
+        run: |
+          rm VERSION
+          mv VERSION_old VERSION
 
       - name: Upload installer
         run: |
