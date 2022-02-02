@@ -377,7 +377,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: "4.0"
+          r-version: "4.1"
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -444,6 +444,7 @@ jobs:
 
       - name: Move installer and create symlink
         run: |
+          rm downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version}}_PREVIEW.exe
           mv installers/win-installer/iNZightVIT-installer.exe `
             downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version}}_PREVIEW.exe
           # ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
