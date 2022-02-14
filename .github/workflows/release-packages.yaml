@@ -77,10 +77,10 @@ jobs:
         config:
           - { os: windows-latest, r: "4.0" }
           - { os: windows-latest, r: "4.1" }
-          - { os: windows-latest, r: "devel" }
+          # - { os: windows-latest, r: "devel" }
     env:
-      # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
+      GTK_PATH: "D:/a/_temp/GTK"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -133,7 +133,7 @@ jobs:
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
       - name: Install RGtk2
-        run: library/iNZight/.github/install_gtk.cmd
+        run: ./install_gtk.cmd
         shell: bash
 
       - name: Add GTK to PATH
@@ -173,7 +173,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [4.0, 4.1]
+        # r: ["4.0", "4.1"]
+        r: ["4.1"]
     env:
       # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
@@ -368,7 +369,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip installer')"
     runs-on: windows-latest
     continue-on-error: true
-    # needs: clearcache
+    needs: clearcache
     steps:
       - uses: actions/checkout@v2
         with:
@@ -376,7 +377,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: "4.0"
+          r-version: "4.1"
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -406,16 +407,20 @@ jobs:
         working-directory: installers/win-installer
         run: Rscript install_inzight.R
 
+      # - name: Save old VERSION
+      #   working-directory: downloads
+      #   run: cp VERSION  VERSION_old
+
       - name: Set iNZight version
         id: inzight
         run: echo "::set-output name=version::$(Rscript inzversion.R)"
 
       - name: Download GTK+
         run: |
-          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-          mkdir -p gtk/i386
-          cd gtk/i386
-          7z x ../../gtk32.zip
+          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          mkdir -p gtk/x64
+          cd gtk/x64
+          7z x ../../gtk.zip
 
       - name: Add GTK+ to R library
         run: |
@@ -443,6 +448,12 @@ jobs:
             downloads/Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version}}.exe
           ln -s Windows/iNZightVIT-installer-${{ steps.inzight.outputs.version }}.exe `
             downloads/iNZightVIT-installer.exe
+
+      # - name: Restore VERSION
+      #   working-directory: downloads
+      #   run: |
+      #     rm VERSION
+      #     mv VERSION_old VERSION
 
       - name: Upload installer
         run: |
@@ -477,10 +488,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Send signal
-        run: |
-          curl -XPOST \
-            -u "${{ secrets.PAT_USERNAME }}:${{ secrets.PAT_SECRET }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/iNZightVIT/inzight-www/actions/workflows/update-version.yaml/dispatches \
-            --data '{"ref": "master"}'
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: iNZightVIT/inzight-www
+          event-type: update-website
+          client-payload: '{"ref": "master"}'

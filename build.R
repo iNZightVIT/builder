@@ -16,7 +16,7 @@ new_pkgs <- do.call(
 )
 
 if (os == "macOS") {
-    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate"), ]
+    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2", "cairoDevice"), ]
     new_pkgs <- new_pkgs[!grepl("^dem", new_pkgs[, 1]), ]
     new_pkgs <- new_pkgs[!grepl("^gWidgets", new_pkgs[, 1]), ]
 }
@@ -31,7 +31,7 @@ dir <- ifelse(sources,
 )
 
 if (!file.exists(file.path(dir, "PACKAGES"))) {
-    dir.create(dir, recursive = TRUE)
+    dir.create(dir, showWarnings = FALSE, recursive = TRUE)
     current_pkgs <- new_pkgs
     current_pkgs[, "Version"] <- rep("0.0.0.1", nrow(current_pkgs))
     NEW <- TRUE
@@ -100,7 +100,9 @@ if (any(pkgs$replace)) {
 
         # Move new binaries into place
         system(sprintf("mv *.%s %s", ifelse(os == "Windows", "zip", "tgz"), dir))
-        tools::write_PACKAGES(dir, verbose = TRUE)
+        tools::write_PACKAGES(dir, verbose = TRUE,
+            type = ifelse(os == "Windows", "win.binary", "mac.binary")
+        )
     }
 }
 

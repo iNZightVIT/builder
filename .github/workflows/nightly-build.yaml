@@ -8,6 +8,8 @@ on:
     paths:
       - "installers/win-installer"
       - ".github/workflows/nightly-build.yaml"
+      - "install_nightly.R"
+      - "install_gtk.cmd"
 
 jobs:
   build:
@@ -27,8 +29,12 @@ jobs:
         with:
           r-version: "release"
 
+      - name: Set R version env var
+        id: r-version
+        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+
       - name: Install RGtk2
-        run: library/iNZight/.github/install_gtk.cmd
+        run: ./install_gtk.cmd
         shell: bash
 
       - name: Add GTK to PATH
@@ -47,17 +53,17 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript nightly_version.R)"
 
-      - name: Download GTK+
-        run: |
-          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-          mkdir -p gtk/i386
-          cd gtk/i386
-          7z x ../../gtk32.zip
+      # - name: Download GTK+
+      #   run: |
+      #     curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
+      #     mkdir -p gtk/i386
+      #     cd gtk/i386
+      #     7z x ../../gtk32.zip
 
-      - name: Replace GTK+ with 32bit
-        run: |
-          rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
-          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
+      # - name: Replace GTK+ with 32bit
+      #   run: |
+      #     rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
+      #     mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Move R and library to build location
         working-directory: installers/win-installer
@@ -123,6 +129,45 @@ jobs:
           aws --profile saml s3 sync `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
+      # - name: Create dev dir
+      #   run: |
+      #     mkdir -p dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+
+      # - name: Zip binaries for our packages
+      #   run: |
+      #     pkgs_all <- list.files('library')
+      #     pkgs_keep <- list.files('installers/win-installer/library')
+      #     pkgs <- pkgs_all[pkgs_all %in% pkgs_keep]
+      #     rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
+      #       collapse = ".")
+      #     dir <- file.path('bin', 'windows', 'contrib', rv)
+      #     sapply(pkgs,
+      #       function(pkg) {
+      #         file.rename(
+      #           file.path('library', pkg),
+      #           file.path(dir, pkg)
+      #         )
+      #       }
+      #     )
+      #     tools::write_PACKAGES(dir, verbose = TRUE)
+      #   shell: Rscript {0}
+
+      # - name: Push dev repository
+      #   run: |
+      #     aws --profile saml s3 sync --delete `
+      #       bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
+      #       s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+
+      # - name: Generate dev index.html
+      #   run: |
+      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/dev/ > dev.txt
+      #     Rscript create_index.R dev
+
+      # - name: Push dev indices
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       dev s3://r.docker.stat.auckland.ac.nz/dev
+
       - name: Clear cache
         run: |
           aws --profile 'saml' `
@@ -138,10 +183,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Send signal
-        run: |
-          curl -XPOST \
-            -u "${{ secrets.PAT_USERNAME }}:${{ secrets.PAT_SECRET }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Content-Type: application/json" \
-            https://api.github.com/repos/iNZightVIT/inzight-www/actions/workflows/update-version.yaml/dispatches \
-            --data '{"ref": "master"}'
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: iNZightVIT/inzight-www
+          event-type: update-website
+          client-payload: '{"ref": "master"}'
