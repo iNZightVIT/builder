@@ -9,7 +9,10 @@ del gtk.zip
 mv x64 gtk\x64
 
 echo "Install RGtk2 ..."
-Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('RGtk2', repos = 'https://r.docker.stat.auckland.ac.nz')"
+curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.zip
+7z x RGtk2.zip > nul
+del RGtk2.zip
+Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
 
 echo "Copying GTK binaries to RGtk2 package ..."
 mv gtk D:\a\_temp\Library\RGtk2\
