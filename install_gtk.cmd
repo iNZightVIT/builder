@@ -12,7 +12,11 @@ echo "Install RGtk2 ..."
 curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.zip
 7z x RGtk2.zip > nul
 del RGtk2.zip
-Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
+set "GTK_PATH=%cd%\gtk\x64"
+Rscript -e "Sys.getenv('GTK_PATH')"
+R CMD BUILD RGtk2-master/RGtk2
+R CMD INSTALL RGtk2_*.tar.gz
+@REM Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
 
 echo "Copying GTK binaries to RGtk2 package ..."
 mv gtk D:\a\_temp\Library\RGtk2\
