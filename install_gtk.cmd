@@ -14,10 +14,11 @@ curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.
 del RGtk2.zip
 set "GTK_PATH=%cd%\gtk\x64"
 Rscript -e "install.packages('pkgbuild', repos = 'https://cran.rstudio.com')"
-Rscript -e "pkgbuild::build('RGtk2-master/RGtk2', binary = TRUE)"
+Rscript -e "pkgbuild::check_rtools()"
 dir
-@REM R CMD INSTALL RGtk2_2.20.40.tar.gz
-@REM Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
+R CMD build RGtk2-master\RGtk2
+R CMD INSTALL RGtk2_2.20.40.tar.gz
+Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
 
 echo "Copying GTK binaries to RGtk2 package ..."
 @REM mv gtk D:\a\_temp\Library\RGtk2\
