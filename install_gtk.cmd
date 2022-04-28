@@ -14,8 +14,8 @@ del RGtk2.zip
 
 rm RGtk2-master\RGtk2\src\RGtk2
 ln -s ..\inst\include\RGtk2 RGtk2-master\RGtk2\src\RGtk2
-R CMD build RGtk2-master\RGtk2 | exit 1
-R CMD INSTALL RGtk2_2.20.40.tar.gz | exit 1
+R CMD build RGtk2-master\RGtk2
+R CMD INSTALL RGtk2_2.20.40.tar.gz
 
 echo "Copying GTK binaries to RGtk2 package ..."
 @REM mv gtk D:\a\_temp\Library\RGtk2\
