@@ -6,6 +6,7 @@ md D:\a\_temp\GTK
 7z x gtk.zip -ox64 > nul
 del gtk.zip
 mv x64\ D:\a\_temp\GTK
+dir D:\a\_temp\GTK
 
 echo "Install RGtk2 ..."
 curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.zip
