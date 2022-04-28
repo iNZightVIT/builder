@@ -25,6 +25,7 @@ if (OS == "Windows") {
         install.packages("utf8", repos = "https://cran.rstudio.com")
     dempkgs <- pkgs[grepl("^dem", pkgs)]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
+    pkgs <- pkgs[!pkgs %in% c('RGtk2', 'cairoDevice')]
 }
 if (OS == "macOS") {
     pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2", "cairoDevice")]
@@ -42,6 +43,9 @@ install.packages("remotes")
 
 message('GTK_PATH: ', Sys.getenv('GTK_PATH'))
 message('PATH: ', Sys.getenv('PATH'))
+
+print(list.files(file.path('library')))
+print(list.files(.libPaths()[1]))
 
 for (pkg in pkgs) {
     remotes::install_local(
