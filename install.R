@@ -48,16 +48,19 @@ for (pkg in pkgs) {
 }
 if (OS == "Windows") {
     ap <- utils::available.packages()
-    dem_ap <- dempkgs %in% row.names(ap)
-    if (any(dem_ap)) {
-        # install available packages from repo
-        utils::install.packages(dempkgs[dem_ap])
-    }
-    if (any(!dem_ap)) {
-        # install unavailable packages from local
-        remotes::install_local(
-            file.path("library", dempkgs[!dem_ap]),
-            INSTALL_opts = "--no-multiarch"
-        )
+    
+    if (getRversion() < package_version('4.2')) {
+        dem_ap <- dempkgs %in% row.names(ap)
+        if (any(dem_ap)) {
+            # install available packages from repo
+            utils::install.packages(dempkgs[dem_ap])
+        }
+        if (any(!dem_ap)) {
+            # install unavailable packages from local
+            remotes::install_local(
+                file.path("library", dempkgs[!dem_ap]),
+                INSTALL_opts = "--no-multiarch"
+            )
+        }
     }
 }
