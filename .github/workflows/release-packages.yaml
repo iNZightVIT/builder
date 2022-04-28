@@ -81,7 +81,7 @@ jobs:
           - { os: windows-latest, r: "4.2", rtools: "42" }
     env:
       TZ: "Pacific/Auckland"
-      GTK_PATH: "D:/a/_temp/GTK"
+      GTK_PATH: "D:/a/_temp/GTK/x64"
       TMPDIR: "D:/a/_temp/Rtmp"
     steps:
       - uses: actions/checkout@v2
