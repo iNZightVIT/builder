@@ -25,6 +25,7 @@ if (OS == "Windows") {
         install.packages("utf8", repos = "https://cran.rstudio.com")
     dempkgs <- pkgs[grepl("^dem", pkgs)]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
+    pkgs <- pkgs[!pkgs %in% c("RGtk2", "cairoDevice")]
 }
 if (OS == "macOS") {
     pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2", "cairoDevice")]
