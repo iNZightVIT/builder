@@ -54,6 +54,16 @@ pkgs[, "Version_cur"] <-
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
+message('GTK_PATH: ', Sys.getenv('GTK_PATH'))
+message('PATH: ', Sys.getenv('PATH'))
+
+print(list.files(file.path('library')))
+print(list.files(.libPaths()[1]))
+
+print(list.files(Sys.getenv('GTK_PATH')))
+print(list.files(Sys.getenv('R_LIBS_USER')))
+print(list.files(file.path(Sys.getenv('R_LIBS_USER'), 'RGtk2', 'gtk', 'x64')))
+
 if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
