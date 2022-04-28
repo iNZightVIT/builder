@@ -17,7 +17,7 @@ Rscript -e "Sys.getenv('GTK_PATH')"
 cd RGtk2-master
 R CMD build RGtk2
 dir
-R CMD INSTALL RGtk2_*.tar.gz
+R CMD INSTALL RGtk2_2.20.40.tar.gz
 @REM Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
 
 echo "Copying GTK binaries to RGtk2 package ..."
