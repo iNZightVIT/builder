@@ -82,7 +82,7 @@ jobs:
     env:
       TZ: "Pacific/Auckland"
       GTK_PATH: "D:/a/_temp/GTK"
-      TEMPDIR: "D:/a/_temp/Rtmp"
+      TMPDIR: "D:/a/_temp/Rtmp"
     steps:
       - uses: actions/checkout@v2
         with:
