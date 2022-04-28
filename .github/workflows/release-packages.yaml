@@ -76,9 +76,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: windows-latest, r: "4.0" }
-          - { os: windows-latest, r: "4.1" }
-          - { os: windows-latest, r: "4.2" }
+          - { os: windows-latest, r: "4.0", rtools: "40" }
+          - { os: windows-latest, r: "4.1", rtools: "41" }
+          - { os: windows-latest, r: "4.2", rtools: "42" }
     env:
       TZ: "Pacific/Auckland"
       GTK_PATH: "D:/a/_temp/GTK"
@@ -90,6 +90,7 @@ jobs:
       - uses: r-lib/actions/setup-r@master
         with:
           r-version: ${{ matrix.config.r }}
+          rtools-version: ${{ matrix.config.rtools }}
 
       - name: Query packages
         run: |
