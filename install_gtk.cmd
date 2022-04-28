@@ -19,7 +19,7 @@ R CMD build RGtk2-master\RGtk2
 R CMD INSTALL RGtk2_2.20.40.tar.gz
 
 echo "Install cairoDevice ..."
-curl -L -o cairoDevice.zip https://github.com/lawremi/cairoDevice/archive/refs/heads/master.zip
+curl -L -o cairoDevice.zip https://github.com/tmelliott/cairoDevice/archive/refs/heads/master.zip
 7z x cairoDevice.zip > nul
 del cairoDevice.zip
 R CMD build cairoDevice-master
