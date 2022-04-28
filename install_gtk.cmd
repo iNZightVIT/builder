@@ -13,7 +13,7 @@ curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.
 7z x RGtk2.zip > nul
 del RGtk2.zip
 set "GTK_PATH=%cd%\gtk\x64"
-Rscript -e "install.packages('pkgbuild')"
+Rscript -e "install.packages('pkgbuild', repos = 'https://cran.rstudio.com')"
 Rscript -e "pkgbuild::build('RGtk2-master/RGtk2', binary = TRUE)"
 dir
 @REM R CMD INSTALL RGtk2_2.20.40.tar.gz
