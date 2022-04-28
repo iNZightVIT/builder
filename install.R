@@ -41,7 +41,7 @@ options(
 install.packages("remotes")
 
 message('GTK_PATH: ', Sys.getenv('GTK_PATH'))
-messagE('PATH: ', Sys.getenv('PATH'))
+message('PATH: ', Sys.getenv('PATH'))
 
 for (pkg in pkgs) {
     remotes::install_local(
