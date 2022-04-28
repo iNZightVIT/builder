@@ -13,7 +13,6 @@ echo "Install RGtk2 ..."
 curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.zip
 7z x RGtk2.zip > nul
 del RGtk2.zip
-
 md D:\a\_temp\Rtmp
 Rscript -e "print(tempdir())"
 R CMD build RGtk2-master\RGtk2
