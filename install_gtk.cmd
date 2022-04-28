@@ -13,7 +13,9 @@ curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.
 7z x RGtk2.zip > nul
 del RGtk2.zip
 set "GTK_PATH=%cd%\gtk\x64"
-Rscript -e "write('TMP = D:/a/_temp/Rtmp', file = '.Renviron')"
+md D:\a\_temp\Rtmp
+set "TEMPDIR=D:\a\_temp\Rtmp"
+Rscript -e "print(tempdir())"
 R CMD build RGtk2-master\RGtk2
 R CMD INSTALL RGtk2_2.20.40.tar.gz
 Rscript -e "Sys.setenv(GTK_PATH = file.path(getwd(), 'gtk', 'x64')); install.packages('./RGtk2-master/RGtk2', repos = NULL, type = 'source')"
