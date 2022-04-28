@@ -82,6 +82,7 @@ jobs:
     env:
       TZ: "Pacific/Auckland"
       GTK_PATH: "D:/a/_temp/GTK"
+      TEMPDIR: "D:/a/_temp/Rtmp"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -133,6 +134,9 @@ jobs:
           aws --profile saml s3 sync `
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
+
+      - name: Add GTK to PATH
+        run: echo "D:\a\_temp\GTK\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install RGtk2
         run: ./install_gtk.cmd
