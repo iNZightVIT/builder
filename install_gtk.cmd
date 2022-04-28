@@ -5,7 +5,9 @@ curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-
 md D:\a\_temp\GTK
 7z x gtk.zip -ox64 > nul
 del gtk.zip
-mv x64 D:\a\_temp\GTK
+cp -r x64 D:\a\_temp\GTK\x64
+md gtk
+mv x64 gtk
 
 echo "Install RGtk2 ..."
 curl -L -o RGtk2.zip https://github.com/lawremi/RGtk2/archive/refs/heads/master.zip
