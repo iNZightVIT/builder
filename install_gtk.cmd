@@ -16,7 +16,7 @@ del RGtk2.zip
 rm RGtk2-master\RGtk2\src\RGtk2
 ln -s ..\inst\include\RGtk2 RGtk2-master\RGtk2\src\RGtk2
 R CMD build RGtk2-master\RGtk2
-R CMD INSTALL RGtk2_2.20.40.tar.gz
+R CMD INSTALL --no-multiarch RGtk2_2.20.40.tar.gz
 
 echo "Copying GTK binaries to RGtk2 package ..."
 mv gtk D:\a\_temp\Library\RGtk2\
@@ -26,4 +26,4 @@ curl -L -o cairoDevice.zip https://github.com/tmelliott/cairoDevice/archive/refs
 7z x cairoDevice.zip > nul
 del cairoDevice.zip
 R CMD build cairoDevice-master
-R CMD INSTALL cairoDevice_2.31.tar.gz
+R CMD INSTALL --no-multiarch cairoDevice_2.31.tar.gz
