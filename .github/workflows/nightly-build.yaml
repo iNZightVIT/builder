@@ -25,7 +25,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: "release"
+          r-version: 4.1
 
       - name: Set R version env var
         id: r-version
@@ -189,7 +189,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: "release"
+          r-version: 4.1
 
       - name: Set R version env var
         id: r-version
