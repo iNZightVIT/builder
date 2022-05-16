@@ -32,18 +32,14 @@ jobs:
         id: r-version
         run: echo "::set-output name=ver::$(Rscript rversion.R)"
 
-#       - name: Install RGtk2
-#         run: ./install_gtk.cmd
-#         shell: bash
-
-#       - name: Add GTK to PATH
-#         run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-#       - name: Check RGtk2
-#         run: |
-#           library(RGtk2)
-#           gtkWindowNew()
-#         shell: Rscript {0}
+      - name: Install RGtk2 and cairoDevice
+        run: |
+          Rscript install_rgtk2.R
+          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          mkdir -p gtk/x64
+          cd gtk/x64
+          7z x ../../gtk.zip
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Install packages
         run: Rscript install_nightly.R
@@ -52,28 +48,6 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript nightly_version.R)"
         
-      - name: Download GTK+
-        run: |
-          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
-          mkdir -p gtk/x64
-          cd gtk/x64
-          7z x ../../gtk.zip
-      - name: Add GTK+ to R library
-        run: |
-          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
-
-      # - name: Download GTK+
-      #   run: |
-      #     curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
-      #     mkdir -p gtk/i386
-      #     cd gtk/i386
-      #     7z x ../../gtk32.zip
-
-      # - name: Replace GTK+ with 32bit
-      #   run: |
-      #     rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
-      #     mv gtk ${{ env.R_LIBS_USER }}/RGtk2
-
       - name: Move R and library to build location
         working-directory: installers/win-installer
         run: |
@@ -206,18 +180,14 @@ jobs:
         id: r-version
         run: echo "::set-output name=ver::$(Rscript rversion.R)"
 
-#       - name: Install RGtk2
-#         run: ./install_gtk.cmd
-#         shell: bash
-
-#       - name: Add GTK to PATH
-#         run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-#       - name: Check RGtk2
-#         run: |
-#           library(RGtk2)
-#           gtkWindowNew()
-#         shell: Rscript {0}
+      - name: Install RGtk2 and cairoDevice
+        run: |
+          Rscript install_rgtk2.R
+          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          mkdir -p gtk/x64
+          cd gtk/x64
+          7z x ../../gtk.zip
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Install packages
         run: Rscript install_nightly_guinz.R
@@ -226,17 +196,6 @@ jobs:
         id: inzight
         run: echo "::set-output name=version::$(Rscript nightly_version.R)"
         
-      - name: Download GTK+
-        run: |
-          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
-          mkdir -p gtk/x64
-          cd gtk/x64
-          7z x ../../gtk.zip
-          
-      - name: Add GTK+ to R library
-        run: |
-          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
-
       - name: Move R and library to build location
         working-directory: installers/win-installer
         run: |
