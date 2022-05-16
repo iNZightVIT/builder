@@ -7,6 +7,7 @@ on:
       - "installers/win-installer"
       - ".github/workflows/nightly-build.yaml"
       - "install_nightly.R"
+      - "install_nightly_guinz.R"
       - "install_gtk.cmd"
 
 jobs:
