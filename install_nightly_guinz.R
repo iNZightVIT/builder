@@ -44,8 +44,9 @@ sapply(pkgs, function(pkg) {
 
     names(branches) <- sapply(branches, function(z) z$name)
     releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
-    zz
+    branch <- "feature/guinz"
     if (is.null(branches[[branch]])) {
+        if (!is.null(branches$dev)) branch <- "dev"
         if (!is.null(branches$develop)) branch <- "develop"
         if (!is.null(branches$main)) branch <- "main"
         if (!is.null(branches$master)) branch <- "master"

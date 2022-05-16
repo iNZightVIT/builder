@@ -174,6 +174,116 @@ jobs:
             --distribution-id ${{ secrets.AWS_ID }} `
             --paths "/*"
 
+  build-guinz:
+    name: Build nightly GUINZ installer
+    runs-on: windows-latest
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: "release"
+
+      - name: Set R version env var
+        id: r-version
+        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+
+      - name: Install RGtk2
+        run: ./install_gtk.cmd
+        shell: bash
+
+      - name: Add GTK to PATH
+        run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Check RGtk2
+        run: |
+          library(RGtk2)
+          gtkWindowNew()
+        shell: Rscript {0}
+
+      - name: Install packages
+        run: Rscript install_nightly_guinz.R
+
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript nightly_version.R)"
+
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Pull downloads dir
+        run: |
+          aws --profile saml s3 sync `
+            --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
+            s3://r.docker.stat.auckland.ac.nz/downloads downloads
+
+      - name: Move installer and setup symlink
+        run: |
+          mv installers/win-installer/iNZightVIT-installer.exe `
+            downloads/iNZightVIT-installer-nightly-guinz.exe
+
+      - name: Upload installer
+        run: |
+          aws --profile saml s3 sync `
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      - name: Generate index.html
+        run: |
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+          Rscript create_index.R downloads downloads/Windows
+
+      - name: Push indices
+        run: |
+          aws --profile saml s3 sync `
+            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      - name: Clear cache
+        run: |
+          aws --profile 'saml' `
+            cloudfront `
+            create-invalidation `
+            --distribution-id ${{ secrets.AWS_ID }} `
+            --paths "/*"
+
   update-website:
     name: Update website
     needs: build
