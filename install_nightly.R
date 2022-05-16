@@ -9,8 +9,8 @@ options(
 )
 
 pkgs <- c(
-    "RGtk2",
-    "cairoDevice",
+    # "RGtk2",
+    # "cairoDevice",
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
