@@ -39,6 +39,7 @@ jobs:
           mkdir -p gtk/x64
           cd gtk/x64
           7z x ../../gtk.zip
+          cd ../..
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Install packages
@@ -187,6 +188,7 @@ jobs:
           mkdir -p gtk/x64
           cd gtk/x64
           7z x ../../gtk.zip
+          cd ../..
           mv gtk ${{ env.R_LIBS_USER }}/RGtk2
 
       - name: Install packages
