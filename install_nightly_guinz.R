@@ -8,9 +8,14 @@ options(
     install.packages.compile.from.source = "never"
 )
 
+if (!requireNamespace('RGtk2', quietly = TRUE)) 
+    install.packages("RGtk2")
+if (!requireNamespace('cairoDevice', quietly = TRUE)) 
+    install.packages("cairoDevice")
+
 pkgs <- c(
-    "RGtk2",
-    "cairoDevice",
+#     "RGtk2",
+#     "cairoDevice",
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
