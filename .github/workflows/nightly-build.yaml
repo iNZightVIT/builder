@@ -9,6 +9,7 @@ on:
       - "install_nightly.R"
       - "install_nightly_guinz.R"
       - "install_gtk.cmd"
+  workflow-dispatch:
 
 jobs:
   build:
@@ -48,7 +49,7 @@ jobs:
       - name: Set iNZight version
         id: inzight
         run: echo "::set-output name=version::$(Rscript nightly_version.R)"
-        
+
       - name: Move R and library to build location
         working-directory: installers/win-installer
         run: |
@@ -197,7 +198,7 @@ jobs:
       - name: Set iNZight version
         id: inzight
         run: echo "::set-output name=version::$(Rscript nightly_version.R)"
-        
+
       - name: Move R and library to build location
         working-directory: installers/win-installer
         run: |
