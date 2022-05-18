@@ -9,7 +9,7 @@ on:
       - "install_nightly.R"
       - "install_nightly_guinz.R"
       - "install_gtk.cmd"
-  workflow-dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
