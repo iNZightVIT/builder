@@ -51,6 +51,9 @@ sapply(pkgs, function(pkg) {
         if (!is.null(branches$main)) branch <- "main"
         if (!is.null(branches$master)) branch <- "master"
     }
+    print("========================================")
+    print(pkg)
+    print(branch)
     if (length(releaseBranches)) {
         devBranch <- branches[[branch]]
         devDate <- httr::content(httr::GET(devBranch$commit$url))$commit$author$date |>
