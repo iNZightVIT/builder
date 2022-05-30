@@ -47,13 +47,10 @@ sapply(pkgs, function(pkg) {
     branch <- "feature/guinz"
     if (is.null(branches[[branch]])) {
         if (!is.null(branches$dev)) branch <- "dev"
-        if (!is.null(branches$develop)) branch <- "develop"
-        if (!is.null(branches$main)) branch <- "main"
-        if (!is.null(branches$master)) branch <- "master"
+        else if (!is.null(branches$develop)) branch <- "develop"
+        else if (!is.null(branches$main)) branch <- "main"
+        else branch <- "master"
     }
-    print("========================================")
-    print(pkg)
-    print(branch)
     if (length(releaseBranches)) {
         devBranch <- branches[[branch]]
         devDate <- httr::content(httr::GET(devBranch$commit$url))$commit$author$date |>
