@@ -47,8 +47,8 @@ sapply(pkgs, function(pkg) {
     branch <- "dev"
     if (is.null(branches[[branch]])) {
         if (!is.null(branches$develop)) branch <- "develop"
-        if (!is.null(branches$main)) branch <- "main"
-        if (!is.null(branches$master)) branch <- "master"
+        else if (!is.null(branches$main)) branch <- "main"
+        else branch <- "master"
     }
     if (length(releaseBranches)) {
         devBranch <- branches[[branch]]
