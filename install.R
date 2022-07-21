@@ -16,7 +16,8 @@ pkgs <- c(
     "demdata",
     "dembase",
     "demest",
-    "demlife"
+    "demlife",
+    "objectProperties"
 )
 
 OS <- Sys.getenv("OS_TYPE")
