@@ -1,0 +1,139 @@
+name: GUINZ AWS Build
+on:
+  push:
+    branches:
+      - guinz-aws
+    paths:
+      - "library/**"
+      - "installers/**"
+      - "*.R"
+      - ".github/**"
+
+jobs:
+  guinz-installer:
+    name: Build GUINZ AWS installer
+    if: "!contains(github.event.head_commit.message, 'skip installer')"
+    runs-on: windows-latest
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: "4.0"
+
+      - name: Install iNZight
+        working-directory: installers/win-installer
+        run: Rscript install_inzight.R
+
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript inzversion.R)"
+
+      - name: Download GTK+
+        run: |
+          curl -L -o gtk.zip http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          mkdir -p gtk/x64
+          cd gtk/x64
+          7z x ../../gtk.zip
+
+      - name: Add GTK+ to R library
+        run: |
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
+
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: iNZightVIT-installer-guinz-aws.exe
+          path: installers/win-installer/iNZightVIT-installer.exe
+
+  guinz-aws-dev-installer:
+    name: Build GUINZ AWS installer (dev)
+    if: "!contains(github.event.head_commit.message, 'skip installer')"
+    runs-on: windows-latest
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      TZ: "Pacific/Auckland"
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: r-lib/actions/setup-r@master
+        with:
+          r-version: "release"
+
+      - name: Install RGtk2
+        run: library/iNZight/.github/install_gtk.cmd
+        shell: bash
+
+      - name: Add GTK to PATH
+        run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Check RGtk2
+        run: |
+          library(RGtk2)
+          gtkWindowNew()
+        shell: Rscript {0}
+
+      - name: Install packages
+        run: Rscript install_nightly.R
+
+      - name: Set iNZight version
+        id: inzight
+        run: echo "::set-output name=version::$(Rscript nightly_version.R)"
+
+      - name: Download GTK+
+        run: |
+          curl -L http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.22/gtk+-bundle_2.22.1-20101227_win32.zip -o gtk32.zip
+          mkdir -p gtk/i386
+          cd gtk/i386
+          7z x ../../gtk32.zip
+
+      - name: Replace GTK+ with 32bit
+        run: |
+          rm -r ${{ env.R_LIBS_USER }}/RGtk2/gtk
+          mv gtk ${{ env.R_LIBS_USER }}/RGtk2
+
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: iNZightVIT-installer-guinz-aws-dev.exe
+          path: installers/win-installer/iNZightVIT-installer.exe
