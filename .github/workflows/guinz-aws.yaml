@@ -85,10 +85,6 @@ jobs:
         with:
           r-version: "release"
 
-      - name: Install RGtk2
-        run: library/iNZight/.github/install_gtk.cmd
-        shell: bash
-
       - name: Install RGtk2 and cairoDevice
         run: |
           Rscript install_rgtk2.R
