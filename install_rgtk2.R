@@ -6,7 +6,9 @@ options(
     install.packages.compile.from.source = "never"
 )
 
-if (!requireNamespace('RGtk2', quietly = TRUE)) 
+if (!requireNamespace("RGtk2", quietly = TRUE)) {
     install.packages("RGtk2")
-if (!requireNamespace('cairoDevice', quietly = TRUE)) 
+}
+if (!requireNamespace("cairoDevice", quietly = TRUE)) {
     install.packages("cairoDevice")
+}
