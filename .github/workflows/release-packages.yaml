@@ -94,7 +94,8 @@ jobs:
           rtools-version: ${{ matrix.config.rtools }}
 
       - name: Fix RGtk2 dir
-        run: ln -sf ../RGtk2/RGtk2 library/RGtk2
+        run: ln -s ../RGtk2/RGtk2 library/RGtk2
+        shell: bash
 
       - name: Query packages
         run: |
