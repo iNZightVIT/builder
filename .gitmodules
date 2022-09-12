@@ -71,6 +71,6 @@
 [submodule "library/cairoDevice"]
 	path = library/cairoDevice
 	url = https://github.com/tmelliott/cairoDevice
-[submodule "RGtk2"]
-	path = RGtk2
+[submodule "src/RGtk2"]
+	path = src/RGtk2
 	url = https://github.com/lawremi/RGtk2

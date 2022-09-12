@@ -96,7 +96,7 @@ jobs:
       - name: Fix RGtk2 dir
         run: |
           rm library/RGtk2
-          ln -s ../RGtk2/RGtk2 library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
         shell: bash
 
       - name: Query packages
