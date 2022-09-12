@@ -93,6 +93,9 @@ jobs:
           r-version: ${{ matrix.config.r }}
           rtools-version: ${{ matrix.config.rtools }}
 
+      - name: Fix RGtk2 dir
+        run: ln -sf ../RGtk2/RGtk2 library/RGtk2
+
       - name: Query packages
         run: |
           saveRDS(system("cat library/*/DESCRIPTION", intern = TRUE), ".github/depends.Rds", version = 2)
