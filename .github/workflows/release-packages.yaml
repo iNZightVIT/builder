@@ -25,6 +25,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Fix RGtk2 dir
+        run: |
+          rm -rf library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
+        shell: bash
+
       - uses: r-lib/actions/setup-r@master
         with:
           r-version: release
@@ -191,6 +197,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+
+      - name: Fix RGtk2 dir
+        run: |
+          rm -rf library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
+        shell: bash
 
       - uses: r-lib/actions/setup-r@master
         with:
