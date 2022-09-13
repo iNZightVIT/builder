@@ -83,7 +83,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: "4.1"
+          r-version: "4.2"
 
       - name: Install RGtk2
         run: library/iNZight/.github/install_gtk.cmd
