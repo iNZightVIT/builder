@@ -68,3 +68,9 @@
 [submodule "library/surveyspec"]
 	path = library/surveyspec
 	url = https://github.com/tmelliott/surveyspec
+[submodule "library/cairoDevice"]
+	path = library/cairoDevice
+	url = https://github.com/tmelliott/cairoDevice
+[submodule "src/RGtk2"]
+	path = src/RGtk2
+	url = https://github.com/lawremi/RGtk2

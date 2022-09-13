@@ -2,12 +2,14 @@
 os <- Sys.getenv("OS_TYPE")
 sources <- os == "Linux"
 rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
-    collapse = ".")
+    collapse = "."
+)
 
 # newest versions:
 new_pkgs <- do.call(
     rbind,
-    lapply(list.files("library", full.names = TRUE),
+    lapply(
+        list.files("library", full.names = TRUE),
         function(f) {
             desc <- read.dcf(file.path(f, "DESCRIPTION"))
             desc[, c("Package", "Version")]
@@ -24,7 +26,8 @@ if (os == "macOS") {
 # current versions:
 dir <- ifelse(sources,
     "src/contrib",
-    sprintf("bin/%s/contrib/%s",
+    sprintf(
+        "bin/%s/contrib/%s",
         ifelse(os == "Windows", "windows", "macosx"),
         rv
     )
@@ -54,29 +57,21 @@ pkgs[, "Version_cur"] <-
     )
 pkgs$replace <- numeric_version(pkgs$Version_new) > numeric_version(pkgs$Version_cur)
 
-message('GTK_PATH: ', Sys.getenv('GTK_PATH'))
-message('PATH: ', Sys.getenv('PATH'))
-
-print(list.files(file.path('library')))
-print(list.files(.libPaths()[1]))
-
-print(list.files(Sys.getenv('GTK_PATH')))
-print(list.files(Sys.getenv('R_LIBS_USER')))
-print(list.files(file.path(Sys.getenv('R_LIBS_USER'), 'RGtk2', 'gtk', 'x64')))
-
 if (any(pkgs$replace)) {
     # the packages that need updating are:
     replace_pkgs <- as.character(pkgs$Package[pkgs$replace])
 
     message(" === Building sources ===")
-    for (pkg in replace_pkgs)
+    for (pkg in replace_pkgs) {
         x <- system(
-            sprintf("R CMD build --no-build-vignettes %s",
+            sprintf(
+                "R CMD build --no-build-vignettes %s",
                 file.path("library", pkg)
             )
         )
-        # `x` is a return code (0 = ok; 1 = fail)
-        if (x) stop("Failure")
+    }
+    # `x` is a return code (0 = ok; 1 = fail)
+    if (x) stop("Failure")
 
     if (sources) {
         # Delete old sources
@@ -105,12 +100,15 @@ if (any(pkgs$replace)) {
         }
 
         # Delete old binaries
-        unlink(paste0(file.path(dir, replace_pkgs),
-            ifelse(os == "Windows", "_*.zip", "_*.tgz")))
+        unlink(paste0(
+            file.path(dir, replace_pkgs),
+            ifelse(os == "Windows", "_*.zip", "_*.tgz")
+        ))
 
         # Move new binaries into place
         system(sprintf("mv *.%s %s", ifelse(os == "Windows", "zip", "tgz"), dir))
-        tools::write_PACKAGES(dir, verbose = TRUE,
+        tools::write_PACKAGES(dir,
+            verbose = TRUE,
             type = ifelse(os == "Windows", "win.binary", "mac.binary")
         )
     }

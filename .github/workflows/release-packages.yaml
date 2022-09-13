@@ -25,6 +25,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Fix RGtk2 dir
+        run: |
+          rm -rf library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
+        shell: bash
+
       - uses: r-lib/actions/setup-r@master
         with:
           r-version: release
@@ -78,7 +84,7 @@ jobs:
         config:
           # - { os: windows-latest, r: "4.0", rtools: "40" }
           - { os: windows-latest, r: "4.1", rtools: "41" }
-          # - { os: windows-latest, r: "4.2", rtools: "42" }
+          - { os: windows-latest, r: "4.2", rtools: "42" }
     env:
       TZ: "Pacific/Auckland"
       GTK_PATH: "D:/a/_temp/GTK/x64"
@@ -92,6 +98,12 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           rtools-version: ${{ matrix.config.rtools }}
+
+      - name: Fix RGtk2 dir
+        run: |
+          rm library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
+        shell: bash
 
       - name: Query packages
         run: |
@@ -185,6 +197,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+
+      - name: Fix RGtk2 dir
+        run: |
+          rm -rf library/RGtk2
+          ln -s ../src/RGtk2/RGtk2 library/RGtk2
+        shell: bash
 
       - uses: r-lib/actions/setup-r@master
         with:
