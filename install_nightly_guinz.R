@@ -9,8 +9,9 @@ options(
 )
 
 pkgs <- c(
-#     "RGtk2",
-#     "cairoDevice",
+    #     "RGtk2",
+    #     "cairoDevice",
+    "gdemin/expss",
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
@@ -38,18 +39,25 @@ sapply(pkgs, function(pkg) {
 
     # if there is a release- branch NEWER than the dev branch,
     # use that instead:
-    x <- httr::GET(sprintf('https://api.github.com/repos/%s/%s/branches', pkg[1], pkg[2]))
+    x <- httr::GET(sprintf("https://api.github.com/repos/%s/%s/branches", pkg[1], pkg[2]))
     branches <- httr::content(x)
-    if (!is.null(branches$message)) return()
+    if (!is.null(branches$message)) {
+        return()
+    }
 
     names(branches) <- sapply(branches, function(z) z$name)
     releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
     branch <- "feature/guinz"
     if (is.null(branches[[branch]])) {
-        if ("dev" %in% names(branches)) branch <- "dev"
-        else if ("develop" %in% names(branches)) branch <- "develop"
-        else if ("main" %in% names(branches)) branch <- "main"
-        else branch <- "master"
+        if ("dev" %in% names(branches)) {
+            branch <- "dev"
+        } else if ("develop" %in% names(branches)) {
+            branch <- "develop"
+        } else if ("main" %in% names(branches)) {
+            branch <- "main"
+        } else {
+            branch <- "master"
+        }
     }
     if (length(releaseBranches)) {
         devBranch <- branches[[branch]]
@@ -82,7 +90,9 @@ pkgs <- gsub(".*/", "", pkgs)
 
 # query and install dependencies
 deps <- sapply(pkgs, function(pkg) {
-    if (!file.exists(sprintf("%s.zip", pkg))) return()
+    if (!file.exists(sprintf("%s.zip", pkg))) {
+        return()
+    }
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
     on.exit(unlink(d, recursive = TRUE, force = TRUE))
     desc <- utils::unzip(
