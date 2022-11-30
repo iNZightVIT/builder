@@ -17,7 +17,7 @@ jobs:
   sources:
     name: source
     if: "!contains(github.event.head_commit.message, 'skip repo')"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       TZ: "Pacific/Auckland"
     steps:
@@ -278,7 +278,7 @@ jobs:
 
   cleanup-after-fail:
     name: Clean up tmp files if previous jobs fail
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: failure()
     needs: [sources, binaries, mac_binaries]
     steps:
@@ -324,7 +324,7 @@ jobs:
 
   clearcache:
     name: Clear AWS cache and update HTML
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [sources, binaries, mac_binaries]
     steps:
       - uses: actions/checkout@v2
@@ -505,7 +505,7 @@ jobs:
   update-website:
     name: Update website
     needs: windows-installer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Send signal
