@@ -114,45 +114,6 @@ jobs:
           aws --profile saml s3 sync `
             downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
-      # - name: Create dev dir
-      #   run: |
-      #     mkdir -p dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
-
-      # - name: Zip binaries for our packages
-      #   run: |
-      #     pkgs_all <- list.files('library')
-      #     pkgs_keep <- list.files('installers/win-installer/library')
-      #     pkgs <- pkgs_all[pkgs_all %in% pkgs_keep]
-      #     rv <- paste(strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
-      #       collapse = ".")
-      #     dir <- file.path('bin', 'windows', 'contrib', rv)
-      #     sapply(pkgs,
-      #       function(pkg) {
-      #         file.rename(
-      #           file.path('library', pkg),
-      #           file.path(dir, pkg)
-      #         )
-      #       }
-      #     )
-      #     tools::write_PACKAGES(dir, verbose = TRUE)
-      #   shell: Rscript {0}
-
-      # - name: Push dev repository
-      #   run: |
-      #     aws --profile saml s3 sync --delete `
-      #       bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
-      #       s3://r.docker.stat.auckland.ac.nz/dev/bin/windows/contrib/${{ steps.r-version.outputs.ver }}
-
-      # - name: Generate dev index.html
-      #   run: |
-      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/dev/ > dev.txt
-      #     Rscript create_index.R dev
-
-      # - name: Push dev indices
-      #   run: |
-      #     aws --profile saml s3 sync `
-      #       dev s3://r.docker.stat.auckland.ac.nz/dev
-
       - name: Clear cache
         run: |
           aws --profile 'saml' `
