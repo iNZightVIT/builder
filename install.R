@@ -4,7 +4,7 @@ pkgs <- c(
     "surveyspec",
     "iNZightTools",
     "iNZightMR",
-    "iNZightTS",
+    "iNZightTS@1.15.10",
     "iNZightPlots",
     "iNZightRegression",
     "iNZightMaps",
@@ -21,11 +21,12 @@ pkgs <- c(
 
 OS <- Sys.getenv("OS_TYPE")
 if (OS == "Windows") {
-    if (!requireNamespace('utf8', quietly = TRUE))
+    if (!requireNamespace("utf8", quietly = TRUE)) {
         install.packages("utf8", repos = "https://cran.rstudio.com")
+    }
     dempkgs <- pkgs[grepl("^dem", pkgs)]
     pkgs <- pkgs[!grepl("^dem", pkgs)]
-    pkgs <- pkgs[!pkgs %in% c('RGtk2', 'cairoDevice')]
+    pkgs <- pkgs[!pkgs %in% c("RGtk2", "cairoDevice")]
 }
 if (OS == "macOS") {
     pkgs <- pkgs[!pkgs %in% c("iNZight", "iNZightModules", "vit", "iNZightUpdate", "RGtk2", "cairoDevice")]
@@ -41,10 +42,10 @@ options(
 )
 install.packages("remotes")
 
-message('GTK_PATH: ', Sys.getenv('GTK_PATH'))
-message('PATH: ', Sys.getenv('PATH'))
+message("GTK_PATH: ", Sys.getenv("GTK_PATH"))
+message("PATH: ", Sys.getenv("PATH"))
 
-print(list.files(file.path('library')))
+print(list.files(file.path("library")))
 print(list.files(.libPaths()[1]))
 
 for (pkg in pkgs) {
@@ -55,8 +56,8 @@ for (pkg in pkgs) {
 }
 if (OS == "Windows") {
     ap <- utils::available.packages()
-    
-    if (getRversion() < package_version('4.2')) {
+
+    if (getRversion() < package_version("4.2")) {
         dem_ap <- dempkgs %in% row.names(ap)
         if (any(dem_ap)) {
             # install available packages from repo

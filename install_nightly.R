@@ -14,7 +14,7 @@ pkgs <- c(
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
-    "iNZightTS",
+    "iNZightTS@1.5.10",
     "iNZightPlots",
     "iNZightRegression",
     "iNZightMaps",
