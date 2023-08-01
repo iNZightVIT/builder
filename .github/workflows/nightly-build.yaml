@@ -22,7 +22,7 @@ jobs:
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
 
@@ -32,7 +32,7 @@ jobs:
 
       - name: Set R version env var
         id: r-version
-        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+        run: echo "ver=$(Rscript rversion.R)" >> $GITHUB_OUTPUT
 
       - name: Install RGtk2 and cairoDevice
         run: |
@@ -49,7 +49,7 @@ jobs:
 
       - name: Set iNZight version
         id: inzight
-        run: echo "::set-output name=version::$(Rscript nightly_version.R)"
+        run: echo "inzight_version=$(Rscript nightly_version.R)" >> $GITHUB_OUTPUT
 
       - name: Move R and library to build location
         working-directory: installers/win-installer
