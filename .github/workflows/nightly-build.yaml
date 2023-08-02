@@ -49,7 +49,7 @@ jobs:
 
       - name: Set iNZight version
         id: inzight
-        run: echo "inzight_version=$(Rscript nightly_version.R)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(Rscript nightly_version.R)" >> "$GITHUB_OUTPUT"
 
       - name: Move R and library to build location
         working-directory: installers/win-installer
