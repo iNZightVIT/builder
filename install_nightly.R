@@ -34,6 +34,14 @@ print(curr)
 
 # download all
 sapply(pkgs, function(pkg) {
+    branch <- "dev"
+    if (grepl("@", pkg)) {
+        pkg <- strsplit(pkg, "@")[[1]]
+        branch <- sprintf("refs/tags/%s", pkg[2])
+        pkg <- pkg[1]
+        return()
+    }
+
     pkg <- strsplit(pkg, "/")[[1]]
     if (length(pkg) == 1L) pkg <- c("iNZightVIT", pkg)
 
@@ -47,8 +55,7 @@ sapply(pkgs, function(pkg) {
 
     names(branches) <- sapply(branches, function(z) z$name)
     releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
-    branch <- "dev"
-    if (is.null(branches[[branch]])) {
+    if (branch == "dev" && is.null(branches[[branch]])) {
         if (!is.null(branches$develop)) {
             branch <- "develop"
         } else if (!is.null(branches$main)) {

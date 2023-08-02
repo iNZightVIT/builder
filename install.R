@@ -4,7 +4,7 @@ pkgs <- c(
     "surveyspec",
     "iNZightTools",
     "iNZightMR",
-    "iNZightTS@1.15.10",
+    "iNZightTS",
     "iNZightPlots",
     "iNZightRegression",
     "iNZightMaps",

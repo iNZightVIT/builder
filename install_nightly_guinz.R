@@ -14,7 +14,7 @@ pkgs <- c(
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",
-    "iNZightTS1.5.10",
+    "iNZightTS@1.5.10",
     "iNZightPlots",
     "iNZightRegression",
     "iNZightMaps",
@@ -34,6 +34,14 @@ print(curr)
 
 # download all
 sapply(pkgs, function(pkg) {
+    branch <- "feature/guinz"
+    if (grepl("@", pkg)) {
+        pkg <- strsplit(pkg, "@")[[1]]
+        branch <- sprintf("refs/tags/%s", pkg[2])
+        pkg <- pkg[1]
+        return()
+    }
+
     pkg <- strsplit(pkg, "/")[[1]]
     if (length(pkg) == 1L) pkg <- c("iNZightVIT", pkg)
 
@@ -47,8 +55,7 @@ sapply(pkgs, function(pkg) {
 
     names(branches) <- sapply(branches, function(z) z$name)
     releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
-    branch <- "feature/guinz"
-    if (is.null(branches[[branch]])) {
+    if (branch == "feature/guinz" && is.null(branches[[branch]])) {
         if ("dev" %in% names(branches)) {
             branch <- "dev"
         } else if ("develop" %in% names(branches)) {
