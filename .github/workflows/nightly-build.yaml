@@ -142,7 +142,7 @@ jobs:
 
       - name: Set R version env var
         id: r-version
-        run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT
+        run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
       - name: Install RGtk2 and cairoDevice
         run: |
