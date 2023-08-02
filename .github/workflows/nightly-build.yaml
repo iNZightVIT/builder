@@ -68,7 +68,7 @@ jobs:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.6
 
@@ -132,7 +132,7 @@ jobs:
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
 
@@ -142,7 +142,7 @@ jobs:
 
       - name: Set R version env var
         id: r-version
-        run: echo "::set-output name=ver::$(Rscript rversion.R)"
+        run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT
 
       - name: Install RGtk2 and cairoDevice
         run: |
@@ -159,7 +159,7 @@ jobs:
 
       - name: Set iNZight version
         id: inzight
-        run: echo "::set-output name=version::$(Rscript nightly_version.R)"
+        run: echo "version=$(Rscript nightly_version.R)" >> "$env:GITHUB_OUTPUT"
 
       - name: Move R and library to build location
         working-directory: installers/win-installer
@@ -178,7 +178,7 @@ jobs:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.6
 
@@ -235,7 +235,7 @@ jobs:
     needs: build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Send signal
         uses: peter-evans/repository-dispatch@v1
         with:
