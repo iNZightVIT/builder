@@ -119,7 +119,7 @@ jobs:
 
       - name: Set R version env var
         id: r-version
-        run: echo "ver=$(Rscript rversion.R)" >> $GITHUB_OUTPUT
+        run: echo "ver=$(Rscript rversion.R)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -222,7 +222,7 @@ jobs:
 
       - name: Set R version env var
         id: r-version
-        run: echo "ver=$(Rscript rversion.R)" >> $GITHUB_OUTPUT
+        run: echo "ver=$(Rscript rversion.R)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -434,7 +434,7 @@ jobs:
 
       - name: Set iNZight version
         id: inzight
-        run: echo "version=${{ steps.inzight.outputs.version }}" >> $GITHUB_OUTPUT"
+        run: echo "version=${{ steps.inzight.outputs.version }}" >> "$GITHUB_OUTPUT"
 
       - name: Download GTK+
         run: |
