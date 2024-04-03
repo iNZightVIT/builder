@@ -5,7 +5,7 @@ options(
         "https://r.docker.stat.auckland.ac.nz", # for some packages like gWidgets, etc ...
         "https://cran.rstudio.com"
     ),
-    install.packages.compile.from.source = "always"
+    install.packages.compile.from.source = "never"
 )
 
 pkgs <- c(
@@ -29,6 +29,7 @@ pkgs <- c(
 curr <- as.character(installed.packages()[, "Package"])
 install.packages(c("httr", "lubridate", "knitr"))
 install.packages("Matrix", type = "source")
+install.packages("progress", type = "source")
 
 print(curr)
 
