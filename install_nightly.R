@@ -5,7 +5,7 @@ options(
         "https://r.docker.stat.auckland.ac.nz", # for some packages like gWidgets, etc ...
         "https://cran.rstudio.com"
     ),
-    install.packages.compile.from.source = "never"
+    install.packages.compile.from.source = "always"
 )
 
 pkgs <- c(
