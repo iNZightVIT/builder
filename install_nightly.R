@@ -29,6 +29,7 @@ pkgs <- c(
 curr <- as.character(installed.packages()[, "Package"])
 install.packages(c("httr", "lubridate", "knitr"))
 install.packages("Matrix", type = "source")
+install.packages("estimability", type = "source")
 install.packages("progress", type = "source")
 
 print(curr)
