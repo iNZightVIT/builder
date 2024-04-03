@@ -27,7 +27,7 @@ pkgs <- c(
 )
 
 install.packages(c("httr", "lubridate", "knitr"))
-install.packages(c("Matrix", "rlang"), type = "source")
+install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools"), type = "source")
 install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
 install.packages("progress", type = "source")
 
