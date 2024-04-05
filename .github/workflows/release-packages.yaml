@@ -21,7 +21,7 @@ jobs:
     env:
       TZ: "Pacific/Auckland"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -36,7 +36,7 @@ jobs:
           r-version: release
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -90,7 +90,7 @@ jobs:
       GTK_PATH: "D:/a/_temp/GTK/x64"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -122,7 +122,7 @@ jobs:
         run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -193,7 +193,7 @@ jobs:
   #     # R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
   #     TZ: "Pacific/Auckland"
   #   steps:
-  #     - uses: actions/checkout@v3
+  #     - uses: actions/checkout@v4
   #       with:
   #         submodules: true
 
@@ -224,7 +224,7 @@ jobs:
   #       run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
   #     - name: Set up Python
-  #       uses: actions/setup-python@v4
+  #       uses: actions/setup-python@v5
   #       with:
   #         python-version: 3.6
 
@@ -281,10 +281,10 @@ jobs:
     if: failure()
     needs: [sources, binaries]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -326,10 +326,10 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [sources, binaries]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -391,7 +391,7 @@ jobs:
     continue-on-error: true
     needs: clearcache
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -400,7 +400,7 @@ jobs:
           r-version: "4.1"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -506,7 +506,7 @@ jobs:
     needs: windows-installer
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Send signal
         uses: peter-evans/repository-dispatch@v1
         with:

@@ -22,7 +22,7 @@ jobs:
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -68,7 +68,7 @@ jobs:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -132,7 +132,7 @@ jobs:
       R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -178,7 +178,7 @@ jobs:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.6
 
@@ -235,7 +235,7 @@ jobs:
     needs: build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Send signal
         uses: peter-evans/repository-dispatch@v1
         with:
