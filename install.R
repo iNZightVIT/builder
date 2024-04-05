@@ -42,8 +42,9 @@ options(
 )
 install.packages("remotes")
 
-source_pkgs <- c("scales", "Matrix", "htmltools", "rlang")
+source_pkgs <- c("scales", "Matrix", "htmltools", "rlang", "bslib")
 if (OS == "Windows") {
+    install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
     install.packages(source_pkgs, type = "source")
 }
 
