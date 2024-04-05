@@ -42,6 +42,11 @@ options(
 )
 install.packages("remotes")
 
+source_pkgs <- c("scales")
+if (OS == "Windows") {
+    install.packages(source_pkgs, type = "source")
+}
+
 message("GTK_PATH: ", Sys.getenv("GTK_PATH"))
 message("PATH: ", Sys.getenv("PATH"))
 
