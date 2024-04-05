@@ -42,7 +42,7 @@ options(
 )
 install.packages("remotes")
 
-source_pkgs <- c("scales")
+source_pkgs <- c("scales", "Matrix", "htmltools", "rlang")
 if (OS == "Windows") {
     install.packages(source_pkgs, type = "source")
 }
