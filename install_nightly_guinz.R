@@ -4,8 +4,8 @@ options(
     repos = c(
         "https://r.docker.stat.auckland.ac.nz", # for some packages like gWidgets, etc ...
         "https://cran.rstudio.com"
-    )
-    # install.packages.compile.from.source = "never"
+    ),
+    install.packages.compile.from.source = "never"
 )
 
 pkgs <- c(
@@ -27,7 +27,7 @@ pkgs <- c(
 )
 
 install.packages(c("httr", "lubridate", "knitr"))
-install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass"), type = "source")
+install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
 install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
 install.packages("progress", type = "source")
 
