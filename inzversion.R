@@ -59,9 +59,10 @@ if (length(vers) == 1L && is.na(vers)) {
         quit(status = 1)
     }
 }
-message(VERSION)
+
+message(sprintf("iNZight version is: %s", VERSION))
 # this will be uploaded with the installer (and not if build fails!)
 write.dcf(pkgs, file = file.path("downloads", "windows_versions"))
 writeLines(VERSION, vfile)
-print("Version: ", VERSION)
+# print("Version: ", VERSION)
 cat(VERSION)
