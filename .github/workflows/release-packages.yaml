@@ -433,7 +433,7 @@ jobs:
 
       - name: Set iNZight version
         id: inzight
-        run: echo "version=${{ steps.inzight.outputs.version }}" >> "$env:GITHUB_OUTPUT"
+        run: echo "version=$( Rscript inzversion.R )" >> "$env:GITHUB_OUTPUT"
 
       - name: Download GTK+
         run: |
