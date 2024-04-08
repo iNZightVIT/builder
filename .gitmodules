@@ -74,3 +74,6 @@
 [submodule "src/RGtk2"]
 	path = src/RGtk2
 	url = https://github.com/lawremi/RGtk2
+[submodule "library/estimability"]
+	path = library/estimability
+	url = https://github.com/rvlenth/estimability
