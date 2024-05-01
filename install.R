@@ -55,7 +55,7 @@ message("PATH: ", Sys.getenv("PATH"))
 print(list.files(file.path("library")))
 print(list.files(.libPaths()[1]))
 
-install.packages("pak")
+install.packages("pak", type = "source")
 pak::pak(paste0("local::", file.path("library", pkgs)))
 
 # for (pkg in pkgs) {

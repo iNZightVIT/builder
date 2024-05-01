@@ -26,6 +26,8 @@ pkgs <- c(
     "vit"
 )
 
+install.packages("pak", type = "source")
+pak::pak(c("httr", "lubridate"))
 # install.packages(c("httr", "lubridate", "knitr"))
 # install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
 # install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
