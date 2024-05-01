@@ -26,7 +26,9 @@ pkgs <- c(
     "vit"
 )
 
-install.packages("pak", type = "source")
+if (!requireNamespace("pak", quietly = TRUE)) {
+    install.packages("pak", type = "source")
+}
 pak::pak(c("httr", "lubridate"))
 # install.packages(c("httr", "lubridate", "knitr"))
 # install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
@@ -37,7 +39,7 @@ curr <- as.character(installed.packages()[, "Package"])
 print(curr)
 
 # download all
-sapply(pkgs, function(pkg) {
+deps <- sapply(pkgs, function(pkg) {
     branch <- "feature/guinz"
     if (grepl("@", pkg)) {
         pkg <- strsplit(pkg, "@")[[1]]
@@ -90,57 +92,60 @@ sapply(pkgs, function(pkg) {
         }
     }
 
-    utils::download.file(
-        sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
-        sprintf("%s.zip", pkg[2]),
-        quiet = TRUE
-    )
+    return(sprintf("%s/%s@%s", pkg[1], pkg[2], branch))
+    # utils::download.file(
+    #     sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
+    #     sprintf("%s.zip", pkg[2]),
+    #     quiet = TRUE
+    # )
 })
 
-pkgs <- gsub(".*/", "", pkgs)
+pak::pkg_install(deps)
 
-# query and install dependencies
-deps <- sapply(pkgs, function(pkg) {
-    if (!file.exists(sprintf("%s.zip", pkg))) {
-        return()
-    }
-    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
-    on.exit(unlink(d, recursive = TRUE, force = TRUE))
-    desc <- utils::unzip(
-        sprintf("%s.zip", pkg),
-        files = sprintf("%s/DESCRIPTION", d)
-    )
-    desc <- read.dcf(desc)
-    fields <- c("Imports", "Depends", "Suggests")
-    deps <- desc[, fields[fields %in% colnames(desc)]]
-    deps <- sapply(deps, strsplit, split = ",\n", fixed = TRUE)
-    deps <- as.character(do.call(c, deps))
-    deps <- unique(gsub("\ .+", "", deps))
-    deps[!deps %in% pkgs]
-})
-deps <- unique(do.call(c, deps))
-deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
-print(deps)
-install.packages(deps)
+# pkgs <- gsub(".*/", "", pkgs)
 
-# install iNZight packages
-sapply(pkgs, function(pkg) {
-    if (!file.exists(sprintf("%s.zip", pkg))) {
-        install.packages(pkg)
-        return()
-    }
-    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
-    on.exit(unlink(d, recursive = TRUE, force = TRUE))
-    utils::unzip(sprintf("%s.zip", pkg))
-    install.packages(d,
-        repos = NULL,
-        type = "source",
-        INSTALL_opts = "--no-multiarch"
-    )
-})
+# # query and install dependencies
+# deps <- sapply(pkgs, function(pkg) {
+#     if (!file.exists(sprintf("%s.zip", pkg))) {
+#         return()
+#     }
+#     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
+#     on.exit(unlink(d, recursive = TRUE, force = TRUE))
+#     desc <- utils::unzip(
+#         sprintf("%s.zip", pkg),
+#         files = sprintf("%s/DESCRIPTION", d)
+#     )
+#     desc <- read.dcf(desc)
+#     fields <- c("Imports", "Depends", "Suggests")
+#     deps <- desc[, fields[fields %in% colnames(desc)]]
+#     deps <- sapply(deps, strsplit, split = ",\n", fixed = TRUE)
+#     deps <- as.character(do.call(c, deps))
+#     deps <- unique(gsub("\ .+", "", deps))
+#     deps[!deps %in% pkgs]
+# })
+# deps <- unique(do.call(c, deps))
+# deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
+# print(deps)
+# install.packages(deps)
 
-# clean up
-unlink(paste0(pkgs, ".zip"))
+# # install iNZight packages
+# sapply(pkgs, function(pkg) {
+#     if (!file.exists(sprintf("%s.zip", pkg))) {
+#         install.packages(pkg)
+#         return()
+#     }
+#     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
+#     on.exit(unlink(d, recursive = TRUE, force = TRUE))
+#     utils::unzip(sprintf("%s.zip", pkg))
+#     install.packages(d,
+#         repos = NULL,
+#         type = "source",
+#         INSTALL_opts = "--no-multiarch"
+#     )
+# })
+
+# # clean up
+# unlink(paste0(pkgs, ".zip"))
 
 # create directories
 # dir.create(file.path(".cache", "R", "iNZight"), recursive = TRUE)
