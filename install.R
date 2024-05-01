@@ -8,16 +8,16 @@ pkgs <- c(
     "iNZightTS",
     "iNZightPlots",
     "iNZightRegression",
-    "iNZightMaps",
+    # "iNZightMaps",
     "FutureLearnData",
     "iNZight",
     "iNZightModules",
     "iNZightMultivariate",
-    "vit",
-    "demdata",
-    "dembase",
-    "demest",
-    "demlife"
+    "vit"
+    # "demdata",
+    # "dembase",
+    # "demest",
+    # "demlife"
 )
 
 OS <- Sys.getenv("OS_TYPE")
