@@ -41,7 +41,7 @@ curr <- as.character(installed.packages()[, "Package"])
 print(curr)
 
 # download all
-sapply(pkgs, function(pkg) {
+deps <- sapply(pkgs, function(pkg) {
     branch <- "dev"
     if (grepl("@", pkg)) {
         pkg <- strsplit(pkg, "@")[[1]]
@@ -92,59 +92,61 @@ sapply(pkgs, function(pkg) {
         }
     }
 
-    utils::download.file(
-        sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
-        sprintf("%s.zip", pkg[2]),
-        quiet = TRUE
-    )
+    return(paste(pkg, branch, sep = "/"))
+
+    # utils::download.file(
+    #     sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
+    #     sprintf("%s.zip", pkg[2]),
+    #     quiet = TRUE
+    # )
 })
 
-pkgs <- gsub(".*/", "", pkgs)
+# pkgs <- gsub(".*/", "", pkgs)
 
 # query and install dependencies
-deps <- sapply(pkgs, function(pkg) {
-    if (!file.exists(sprintf("%s.zip", pkg))) {
-        return()
-    }
-    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
-    on.exit(unlink(d, recursive = TRUE, force = TRUE))
-    desc <- utils::unzip(
-        sprintf("%s.zip", pkg),
-        files = sprintf("%s/DESCRIPTION", d)
-    )
-    desc <- read.dcf(desc)
-    fields <- c("Imports", "Depends", "Suggests")
-    deps <- desc[, fields[fields %in% colnames(desc)]]
-    deps <- sapply(deps, strsplit, split = ",\n", fixed = TRUE)
-    deps <- as.character(do.call(c, deps))
-    deps <- unique(gsub("\ .+", "", deps))
-    deps[!deps %in% pkgs]
-})
-deps <- unique(do.call(c, deps))
-deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
-print(deps)
-# install.packages(deps)
+# deps <- sapply(pkgs, function(pkg) {
+#     if (!file.exists(sprintf("%s.zip", pkg))) {
+#         return()
+#     }
+#     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
+#     on.exit(unlink(d, recursive = TRUE, force = TRUE))
+#     desc <- utils::unzip(
+#         sprintf("%s.zip", pkg),
+#         files = sprintf("%s/DESCRIPTION", d)
+#     )
+#     desc <- read.dcf(desc)
+#     fields <- c("Imports", "Depends", "Suggests")
+#     deps <- desc[, fields[fields %in% colnames(desc)]]
+#     deps <- sapply(deps, strsplit, split = ",\n", fixed = TRUE)
+#     deps <- as.character(do.call(c, deps))
+#     deps <- unique(gsub("\ .+", "", deps))
+#     deps[!deps %in% pkgs]
+# })
+# deps <- unique(do.call(c, deps))
+# deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
+# print(deps)
+# # install.packages(deps)
 pak::pkg_install(deps)
 
 # install iNZight packages
-sapply(pkgs, function(pkg) {
-    if (!file.exists(sprintf("%s.zip", pkg))) {
-        # install.packages(pkg)
-        pak::pkg_install(pkg)
-        return()
-    }
-    d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
-    on.exit(unlink(d, recursive = TRUE, force = TRUE))
-    utils::unzip(sprintf("%s.zip", pkg))
-    install.packages(d,
-        repos = NULL,
-        type = "source",
-        INSTALL_opts = "--no-multiarch"
-    )
-})
+# sapply(pkgs, function(pkg) {
+#     if (!file.exists(sprintf("%s.zip", pkg))) {
+#         # install.packages(pkg)
+#         pak::pkg_install(pkg)
+#         return()
+#     }
+#     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
+#     on.exit(unlink(d, recursive = TRUE, force = TRUE))
+#     utils::unzip(sprintf("%s.zip", pkg))
+#     install.packages(d,
+#         repos = NULL,
+#         type = "source",
+#         INSTALL_opts = "--no-multiarch"
+#     )
+# })
 
 # clean up
-unlink(paste0(pkgs, ".zip"))
+# unlink(paste0(pkgs, ".zip"))
 
 # create directories
 # dir.create(file.path(".cache", "R", "iNZight"), recursive = TRUE)
