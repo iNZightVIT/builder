@@ -26,10 +26,15 @@ pkgs <- c(
     "vit"
 )
 
-install.packages(c("httr", "lubridate", "knitr"))
-install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
-install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
-install.packages("progress", type = "source")
+install.packages("pak")
+pak::pkg_install(c("httr", "lubridate", "knitr", "Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"))
+pak::pkg_install("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz")
+pak::pkg_install("progress")
+
+# install.packages(c("httr", "lubridate", "knitr"))
+# install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
+# install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
+# install.packages("progress", type = "source")
 
 curr <- as.character(installed.packages()[, "Package"])
 print(curr)
@@ -117,12 +122,14 @@ deps <- sapply(pkgs, function(pkg) {
 deps <- unique(do.call(c, deps))
 deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
 print(deps)
-install.packages(deps)
+# install.packages(deps)
+pak::pkg_install(deps)
 
 # install iNZight packages
 sapply(pkgs, function(pkg) {
     if (!file.exists(sprintf("%s.zip", pkg))) {
-        install.packages(pkg)
+        # install.packages(pkg)
+        pak::pkg_install(pkg)
         return()
     }
     d <- gsub("/$", "", utils::unzip(sprintf("%s.zip", pkg), list = TRUE)[1, "Name"])
