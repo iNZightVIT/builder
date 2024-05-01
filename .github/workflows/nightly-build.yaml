@@ -28,7 +28,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: 4.1
+          r-version: 4.2
 
       - name: Set R version env var
         id: r-version
@@ -138,7 +138,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: 4.1
+          r-version: 4.2
 
       - name: Set R version env var
         id: r-version
