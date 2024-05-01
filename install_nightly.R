@@ -17,7 +17,7 @@ pkgs <- c(
     "iNZightTS",
     "iNZightPlots",
     "iNZightRegression",
-    "iNZightMaps",
+    # "iNZightMaps",
     "FutureLearnData",
     "iNZight",
     "iNZightModules",
