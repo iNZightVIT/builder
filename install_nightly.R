@@ -27,9 +27,9 @@ pkgs <- c(
 )
 
 install.packages("pak")
-pak::pkg_install(c("httr", "lubridate", "knitr", "Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"))
-pak::pkg_install("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz")
-pak::pkg_install("progress")
+# pak::pkg_install(c("httr", "lubridate", "knitr", "Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"))
+# pak::pkg_install("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz")
+# pak::pkg_install("progress")
 
 # install.packages(c("httr", "lubridate", "knitr"))
 # install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
