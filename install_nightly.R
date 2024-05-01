@@ -94,7 +94,7 @@ deps <- sapply(pkgs, function(pkg) {
         }
     }
 
-    return(paste(c(pkg, branch), collapse = "/"))
+    return(sprintf("%s/%s@%s", pkg[1], pkg[2], branch))
 
     # utils::download.file(
     #     sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
