@@ -26,7 +26,9 @@ pkgs <- c(
     "vit"
 )
 
-install.packages("pak", type = "source")
+if (!requireNamespace("pak", quietly = TRUE)) {
+    install.packages("pak", type = "source")
+}
 pak::pak(c("httr", "lubridate"))
 # pak::pkg_install(c("httr", "lubridate", "knitr", "Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"))
 # pak::pkg_install("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz")
@@ -92,7 +94,7 @@ deps <- sapply(pkgs, function(pkg) {
         }
     }
 
-    return(paste(pkg, branch, sep = "/"))
+    return(paste(c(pkg, branch), collapse = "/"))
 
     # utils::download.file(
     #     sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
