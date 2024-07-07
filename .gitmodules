@@ -77,3 +77,6 @@
 [submodule "library/estimability"]
 	path = library/estimability
 	url = https://github.com/rvlenth/estimability
+[submodule "library/iNZightTSLegacy"]
+	path = library/iNZightTSLegacy
+	url = git@github.com:iNZightVIT/iNZightTSLegacy
