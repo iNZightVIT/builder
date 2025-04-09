@@ -11,6 +11,7 @@ options(
 pkgs <- c(
     # "RGtk2",
     # "cairoDevice",
+    "tmelliott/translatr",
     "tmelliott/surveyspec",
     "iNZightTools",
     "iNZightMR",

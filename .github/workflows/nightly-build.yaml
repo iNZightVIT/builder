@@ -49,8 +49,8 @@ jobs:
         with:
           run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
-      # - name: Install packages
-      #   run: Rscript install_nightly.R
+      - name: Install packages
+        run: Rscript install_nightly.R
 
       # - name: Set iNZight version
       #   id: inzight
