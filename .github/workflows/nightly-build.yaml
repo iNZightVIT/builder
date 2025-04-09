@@ -28,17 +28,20 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: 4.4
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+          extra-repositories: "https://r.docker.stat.auckland.ac.nz"
+
+      - uses: r-lib/actions/setup-pandoc@v2
 
       - name: Set R version env var
         id: r-version
         run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
       - name: Install gtk binaries, and RGtk2 from source if needed
-        run: Rscript ./.github/install_gtk.R
+        run: Rscript ./install_gtk.R
 
       - name: Add GTK to PATH
-        if: runner.os == 'Windows'
         run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Check RGtk2
@@ -46,84 +49,84 @@ jobs:
         with:
           run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
-      - name: Install packages
-        run: Rscript install_nightly.R
+      # - name: Install packages
+      #   run: Rscript install_nightly.R
 
-      - name: Set iNZight version
-        id: inzight
-        run: echo "version=$(Rscript nightly_version.R)" >> "$env:GITHUB_OUTPUT"
+      # - name: Set iNZight version
+      #   id: inzight
+      #   run: echo "version=$(Rscript nightly_version.R)" >> "$env:GITHUB_OUTPUT"
 
-      - name: Move R and library to build location
-        working-directory: installers/win-installer
-        run: |
-          mv C:/R R
-          mv ${{ env.R_LIBS_USER }} library
+      # - name: Move R and library to build location
+      #   working-directory: installers/win-installer
+      #   run: |
+      #     mv C:/R R
+      #     mv ${{ env.R_LIBS_USER }} library
 
-      - name: Configure R GUI
-        working-directory: installers/win-installer
-        run: R\bin\Rscript.exe rgui_settings.R
+      # - name: Configure R GUI
+      #   working-directory: installers/win-installer
+      #   run: R\bin\Rscript.exe rgui_settings.R
 
-      - name: Build installer
-        working-directory: installers/win-installer
-        run: makensis.exe inzight_installer.nsi
-        env:
-          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      # - name: Build installer
+      #   working-directory: installers/win-installer
+      #   run: makensis.exe inzight_installer.nsi
+      #   env:
+      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.6
+      # - name: Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: 3.6
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+      # - name: Install python dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
+      # - name: Generate credentials
+      #   run: |
+      #     python aws_saml_login.py `
+      #       --user ${{ secrets.AWS_USER }} `
+      #       --password ${{ secrets.AWS_PASS}} `
+      #       --token ${{ secrets.AWS_TOKEN }} `
+      #       --idp iam.auckland.ac.nz
 
-      - name: Pull downloads dir
-        run: |
-          aws --profile saml s3 sync `
-            --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
-            s3://r.docker.stat.auckland.ac.nz/downloads downloads
+      # - name: Pull downloads dir
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       --exclude *.zip --exclude *.exe --exclude *.bz2 --exclude *.dmg `
+      #       s3://r.docker.stat.auckland.ac.nz/downloads downloads
 
-      - name: Move installer and setup symlink
-        run: |
-          mv installers/win-installer/iNZightVIT-installer.exe `
-            downloads/iNZightVIT-installer-nightly.exe
+      # - name: Move installer and setup symlink
+      #   run: |
+      #     mv installers/win-installer/iNZightVIT-installer.exe `
+      #       downloads/iNZightVIT-installer-nightly.exe
 
-      - name: Add Version file
-        run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
+      # - name: Add Version file
+      #   run: echo "${{ steps.inzight.outputs.version }}" > downloads/VERSION-nightly
 
-      - name: Upload installer
-        run: |
-          aws --profile saml s3 sync `
-            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+      # - name: Upload installer
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
-      - name: Generate index.html
-        run: |
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
-          Rscript create_index.R downloads downloads/Windows
+      # - name: Generate index.html
+      #   run: |
+      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+      #     aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+      #     Rscript create_index.R downloads downloads/Windows
 
-      - name: Push indices
-        run: |
-          aws --profile saml s3 sync `
-            downloads s3://r.docker.stat.auckland.ac.nz/downloads
+      # - name: Push indices
+      #   run: |
+      #     aws --profile saml s3 sync `
+      #       downloads s3://r.docker.stat.auckland.ac.nz/downloads
 
-      - name: Clear cache
-        run: |
-          aws --profile 'saml' `
-            cloudfront `
-            create-invalidation `
-            --distribution-id ${{ secrets.AWS_ID }} `
-            --paths "/*"
+      # - name: Clear cache
+      #   run: |
+      #     aws --profile 'saml' `
+      #       cloudfront `
+      #       create-invalidation `
+      #       --distribution-id ${{ secrets.AWS_ID }} `
+      #       --paths "/*"
 
   # build-guinz:
   #   name: Build nightly GUINZ installer
