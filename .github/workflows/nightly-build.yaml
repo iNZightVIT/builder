@@ -38,6 +38,13 @@ jobs:
         id: r-version
         run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
+      - name: Cache R packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-R-${{ steps.r-version.outputs.ver }}-1-
+          restore-keys: ${{ runner.os }}-R-${{ steps.r-version.outputs.ver }}-1-
+
       - name: Install gtk binaries, and RGtk2 from source if needed
         run: Rscript ./install_gtk.R
 
