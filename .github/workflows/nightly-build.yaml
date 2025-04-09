@@ -61,25 +61,25 @@ jobs:
         env:
           R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
-      # - name: Set iNZight version
-      #   id: inzight
-      #   run: echo "version=$(Rscript nightly_version.R)" >> "$env:GITHUB_OUTPUT"
+      - name: Set iNZight version
+        id: inzight
+        run: echo "version=$(Rscript nightly_version.R)" >> "$env:GITHUB_OUTPUT"
 
-      # - name: Move R and library to build location
-      #   working-directory: installers/win-installer
-      #   run: |
-      #     mv C:/R R
-      #     mv ${{ env.R_LIBS_USER }} library
+      - name: Move R and library to build location
+        working-directory: installers/win-installer
+        run: |
+          mv C:/R R
+          mv ${{ env.R_LIBS_USER }} library
 
-      # - name: Configure R GUI
-      #   working-directory: installers/win-installer
-      #   run: R\bin\Rscript.exe rgui_settings.R
+      - name: Configure R GUI
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
 
-      # - name: Build installer
-      #   working-directory: installers/win-installer
-      #   run: makensis.exe inzight_installer.nsi
-      #   env:
-      #     INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+      - name: Build installer
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       # - name: Set up Python
       #   uses: actions/setup-python@v5
