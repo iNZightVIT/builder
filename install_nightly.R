@@ -31,14 +31,6 @@ if (!requireNamespace("pak", quietly = TRUE)) {
     install.packages("pak", type = "source")
 }
 pak::pak(c("httr", "lubridate"))
-# pak::pkg_install(c("httr", "lubridate", "knitr", "Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"))
-# pak::pkg_install("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz")
-# pak::pkg_install("progress")
-
-# install.packages(c("httr", "lubridate", "knitr"))
-# install.packages(c("Matrix", "rlang", "tidyselect", "scales", "htmltools", "sass", "xfun"), type = "source")
-# install.packages("https://cran.r-project.org/src/contrib/Archive/estimability/estimability_1.4.1.tar.gz", repos = NULL, type = "source")
-# install.packages("progress", type = "source")
 
 curr <- as.character(installed.packages()[, "Package"])
 print(curr)
