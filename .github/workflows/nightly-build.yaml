@@ -58,6 +58,8 @@ jobs:
 
       - name: Install packages
         run: Rscript install_nightly.R
+        env:
+          R_COMPILE_AND_INSTALL_PACKAGES: "never"
 
       # - name: Set iNZight version
       #   id: inzight
