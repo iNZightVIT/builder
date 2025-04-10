@@ -68,8 +68,13 @@ jobs:
       - name: Move R and library to build location
         working-directory: installers/win-installer
         run: |
-          mv C:/R R
-          mv ${{ env.R_LIBS_USER }} library
+          cp -R C:/R R
+          cp -R ${{ env.R_LIBS_USER }} library
+
+      - name: List out files
+        run: |
+          ls -R R
+          ls -R library
 
       - name: Configure R GUI
         working-directory: installers/win-installer
