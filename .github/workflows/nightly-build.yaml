@@ -65,6 +65,7 @@ jobs:
           cp -R ${{ env.R_LIBS_USER }} library
 
       - name: List out files
+        working-directory: installers/win-installer
         run: |
           ls -R R
           ls -R library
