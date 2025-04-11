@@ -19,7 +19,7 @@ jobs:
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       TZ: "Pacific/Auckland"
-      # R_COMPILE_AND_INSTALL_PACKAGES: "never"
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
