@@ -22,7 +22,7 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 }
 if (!requireNamespace("RGtk2", quietly = TRUE)) {
     cat("Installing RGtk2 ...\n")
-    if (FALSE && .Platform$OS.type == "windows") {
+    if (.Platform$OS.type == "windows") {
         remotes::install_cran("RGtk2",
             INSTALL_opts = "--no-test-load"
         )
