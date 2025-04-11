@@ -8,7 +8,7 @@ on:
       - ".github/workflows/nightly-build.yaml"
       - "install_nightly.R"
       - "install_nightly_guinz.R"
-      - "install_gtk.cmd"
+      - "install_gtk.R"
       - "nightly_version.R"
   workflow_dispatch:
 
