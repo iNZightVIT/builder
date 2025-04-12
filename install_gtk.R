@@ -46,7 +46,8 @@ if (!requireNamespace("cairoDevice", quietly = TRUE)) {
 if (.Platform$OS.type == "windows") {
     if (!file.exists(file.path(system.file("", package = "RGtk2"), "gtk"))) {
         cat("Moving gtk binary to RGtk2 ...\n")
-        file.rename("gtk", file.path(system.file("", package = "RGtk2"), "gtk"))
+        dir.create(file.path(system.file("", package = "RGtk2"), "gtk"))
+        file.rename("gtk", file.path(system.file("", package = "RGtk2"), "gtk", "x64"))
     } else {
         unlink("gtk", recursive = TRUE)
     }
