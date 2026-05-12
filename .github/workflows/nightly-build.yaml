@@ -9,6 +9,9 @@ on:
       - "install_nightly.R"
       - "install_nightly_guinz.R"
       - "install_gtk.R"
+      - "install_gtk.cmd"
+      - "scripts/build_rgtk2_windows_artifacts.R"
+      - "build.R"
       - "nightly_version.R"
   workflow_dispatch:
 
@@ -38,7 +41,35 @@ jobs:
         id: r-version
         run: echo "ver=$(Rscript rversion.R)" >> "$env:GITHUB_OUTPUT"
 
-      - name: Install gtk binaries, and RGtk2 from source if needed
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.6
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Fetch curated RGtk2/cairoDevice zips (optional tier-2)
+        run: |
+          mkdir -p _rgtk2_zips
+          aws --profile saml s3 sync \
+            "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/" \
+            _rgtk2_zips/ || true
+        shell: bash
+
+      - name: Install GTK and RGtk2 (pre-built zips only)
+        env:
+          INZIGHT_RGTK2_ZIPS_DIR: ${{ github.workspace }}/_rgtk2_zips
         run: Rscript ./install_gtk.R
 
       - name: Add GTK to PATH
@@ -73,24 +104,6 @@ jobs:
         run: makensis.exe inzight_installer.nsi
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.6
-
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
-
-      - name: Generate credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
 
       - name: Pull downloads dir
         run: |

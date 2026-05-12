@@ -124,4 +124,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Local AWS / builder secrets (used by scripts/build_rgtk2_windows_artifacts.R)
+.env
+
+# Curator / helper caches under scripts/
+scripts/__pycache__/
+
 # End of https://www.toptal.com/developers/gitignore/api/r,linux,windows,macos,code

@@ -23,6 +23,10 @@ if (os == "macOS") {
     new_pkgs <- new_pkgs[!grepl("^gWidgets", new_pkgs[, 1]), ]
 }
 
+if (os == "Windows") {
+    new_pkgs <- new_pkgs[!new_pkgs[, 1] %in% c("RGtk2", "cairoDevice"), ]
+}
+
 # current versions:
 dir <- ifelse(sources,
     "src/contrib",
