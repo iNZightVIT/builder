@@ -1,5 +1,6 @@
 # GTK + RGtk2 + cairoDevice for Windows CI and local builds.
 # Curated win.binary zips only — no compilation of these packages on GHA.
+# R 4.2 CI workflows fetch those zips from Google Drive then sync to S3 (static/rgtk2-windows/R-4.2/).
 # Operator builds on Windows: scripts/build_rgtk2_windows_artifacts.R (optional .env + S3 upload).
 
 r_minor <- paste(

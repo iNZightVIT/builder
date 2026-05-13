@@ -59,18 +59,32 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Fetch curated RGtk2/cairoDevice zips (optional tier-2)
+      # Nightly uses R 4.2; curated win.binary zips are published on Google Drive (R 4.2).
+      - name: Fetch curated RGtk2/cairoDevice zips from Google Drive
         run: |
           mkdir -p _rgtk2_zips
-          aws --profile saml s3 sync \
-            "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/" \
-            _rgtk2_zips/ || true
+          pip install 'gdown>=4.6.0,<5'
+          rm -rf _rgtk2_gdrive_dl
+          gdown --folder "https://drive.google.com/drive/folders/1VSZRDWrBPpySIz99hNJElnUJGYhXUmDm" -O _rgtk2_gdrive_dl
+          find _rgtk2_gdrive_dl -type f -name '*.zip' | while read -r f; do
+            base=$(basename "$f")
+            case "$base" in
+              RGtk2_*.zip|cairoDevice_*.zip) mv -f "$f" _rgtk2_zips/ ;;
+            esac
+          done
+          rm -rf _rgtk2_gdrive_dl
         shell: bash
 
       - name: Install GTK and RGtk2 (pre-built zips only)
         env:
           INZIGHT_RGTK2_ZIPS_DIR: ${{ github.workspace }}/_rgtk2_zips
         run: Rscript ./install_gtk.R
+
+      - name: Upload curated RGtk2/cairoDevice zips to S3
+        run: |
+          aws --profile saml s3 sync _rgtk2_zips/ \
+            "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/"
+        shell: bash
 
       - name: Add GTK to PATH
         run: echo "${{env.R_LIBS_USER}}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
