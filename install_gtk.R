@@ -106,7 +106,7 @@ if (.Platform$OS.type == "windows") {
   cat("Downloading gtk ...\n")
   gtk_url <- Sys.getenv(
     "INZIGHT_GTK_BUNDLE_URL",
-    unset = "https://inzight.nz/data/gtk+-bundle_2.22.1-20101229_win64.zip"
+    unset = "http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
   )
   td_gtk <- tempfile("gtk-zip-")
   dir.create(td_gtk)
