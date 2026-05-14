@@ -5,7 +5,7 @@ pkgs <- c(
     "estimability",
     "iNZightTools",
     "iNZightMR",
-    "tidyverts/feasts@0.4.1",
+    "tidyverts/feasts@v0.4.1",
     "iNZightTS",
     "iNZightTSLegacy",
     "iNZightPlots",
