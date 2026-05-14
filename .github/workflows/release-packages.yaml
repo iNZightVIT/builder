@@ -353,13 +353,31 @@ jobs:
 
       - name: Move into place
         run: |
-          dirs <- c(list.dirs("bin/windows/contrib"), list.dirs("bin/macosx/contrib"))
-          dirs <- c(dirs[grepl("tmp", dirs)], "src/tmpcontrib")
-          for (dir in dirs) {
-            system(sprintf("rsync -avP --delete %s/ %s", dir, gsub("tmp", "", dir)))
-            unlink(dir, TRUE, TRUE)
-          }
-        shell: Rscript {0}
+          set -euo pipefail
+          paths=()
+          for base in bin/windows/contrib bin/macosx/contrib; do
+            if [[ -d "$base" ]]; then
+              while IFS= read -r d; do
+                [[ -n "$d" ]] && paths+=("$d")
+              done < <(find "$base" -type d 2>/dev/null | grep tmp || true)
+            fi
+          done
+          if [[ -d src/tmpcontrib ]]; then
+            paths+=("src/tmpcontrib")
+          fi
+          if ((${#paths[@]} == 0)); then
+            echo "No tmp staging dirs to promote."
+            exit 0
+          fi
+          mapfile -t sorted < <(printf '%s\n' "${paths[@]}" | sort -u | sort -r)
+          for dir in "${sorted[@]}"; do
+            [[ -d "$dir" ]] || continue
+            dest="${dir//tmp/}"
+            mkdir -p "$dest"
+            rsync -avP --delete "$dir/" "$dest/"
+            rm -rf "$dir"
+          done
+        shell: bash
 
       - name: Update HTML pages
         run: |
