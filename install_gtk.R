@@ -75,6 +75,24 @@ install_rgtk_cairo_from_repo <- function(lib) {
   install.packages(need, lib = lib, repos = repo, type = "win.binary")
 }
 
+## Move unpacked GTK tree into <rgtk2_root>/gtk/x64/ (Windows: file.rename() fails across
+## drive letters, e.g. %TEMP% on C: vs R library on D: on GHA — use copy then unlink.)
+layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root) {
+  gtk_dest <- file.path(rgtk2_root, "gtk", "x64")
+  dir.create(file.path(rgtk2_root, "gtk"), recursive = TRUE, showWarnings = FALSE)
+  if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
+  dir.create(gtk_dest, recursive = TRUE, showWarnings = FALSE)
+  items <- list.files(from, full.names = TRUE, all.files = TRUE)
+  items <- items[!basename(items) %in% c(".", "..")]
+  if (!length(items)) stop("empty GTK unpack at ", from)
+  ok <- file.copy(items, gtk_dest, recursive = TRUE, copy.date = TRUE)
+  if (length(ok) != length(items) || !all(ok)) {
+    stop("could not copy GTK bundle into ", gtk_dest)
+  }
+  unlink(from, recursive = TRUE)
+  invisible(gtk_dest)
+}
+
 if (.Platform$OS.type == "windows") {
   lib <- .libPaths()[1]
   urls <- resolve_windows_binary_zip_paths()
@@ -120,13 +138,10 @@ if (.Platform$OS.type == "windows") {
   file.remove(gtk_zip)
 
   rgtk2_root <- file.path(lib, "RGtk2")
-  gtk_dest <- file.path(rgtk2_root, "gtk", "x64")
-  if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
-  dir.create(file.path(rgtk2_root, "gtk"), recursive = TRUE)
   subs <- dir(gtk_stage, full.names = TRUE)
   subs <- subs[!is.na(file.info(subs)$isdir) & file.info(subs)$isdir]
   from <- if (length(subs) == 1L) subs else gtk_stage
-  file.rename(from, gtk_dest)
+  gtk_dest <- layout_unpacked_gtk_for_rgtk2(from, rgtk2_root)
 
   Sys.setenv(GTK_PATH = gtk_dest)
 

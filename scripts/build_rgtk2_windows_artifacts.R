@@ -74,6 +74,23 @@ gtk_url <- Sys.getenv(
   unset = "http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
 )
 
+## Same semantics as layout_unpacked_gtk_for_rgtk2 in install_gtk.R (cross-drive safe on Windows).
+layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root) {
+  gtk_dest <- file.path(rgtk2_root, "gtk", "x64")
+  dir.create(file.path(rgtk2_root, "gtk"), recursive = TRUE, showWarnings = FALSE)
+  if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
+  dir.create(gtk_dest, recursive = TRUE, showWarnings = FALSE)
+  items <- list.files(from, full.names = TRUE, all.files = TRUE)
+  items <- items[!basename(items) %in% c(".", "..")]
+  if (!length(items)) stop("empty GTK unpack at ", from)
+  ok <- file.copy(items, gtk_dest, recursive = TRUE, copy.date = TRUE)
+  if (length(ok) != length(items) || !all(ok)) {
+    stop("could not copy GTK bundle into ", gtk_dest)
+  }
+  unlink(from, recursive = TRUE)
+  invisible(gtk_dest)
+}
+
 zip_win_binary <- function(pkg, lib, out_dir) {
   desc <- read.dcf(file.path(lib, pkg, "DESCRIPTION"))
   ver <- desc[1, "Version"]
@@ -161,13 +178,10 @@ unzip(gtk_zip, exdir = gtk_stage)
 file.remove(gtk_zip)
 
 rgtk2_inst <- file.path(lib, "RGtk2")
-gtk_dest <- file.path(rgtk2_inst, "gtk", "x64")
-if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
-dir.create(file.path(rgtk2_inst, "gtk"), recursive = TRUE)
 subs <- dir(gtk_stage, full.names = TRUE)
 subs <- subs[!is.na(file.info(subs)$isdir) & file.info(subs)$isdir]
 from <- if (length(subs) == 1L) subs else gtk_stage
-file.rename(from, gtk_dest)
+layout_unpacked_gtk_for_rgtk2(from, rgtk2_inst)
 
 z1 <- zip_win_binary("RGtk2", lib, output_dir)
 
