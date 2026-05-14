@@ -1,23 +1,14 @@
 # GTK + RGtk2 + cairoDevice for Windows CI and local builds.
-# Curated win.binary zips only — no compilation of these packages on GHA.
-# R 4.2 CI workflows fetch those zips from Google Drive then sync to S3 (static/rgtk2-windows/R-4.2/).
+# Default (Windows): install.packages(type = "win.binary") from the iNZight package
+# repository (override with INZIGHT_BINARY_REPO, default https://r.docker.stat.auckland.ac.nz),
+# then unpack the GTK+ bundle beside RGtk2.
+# Override with INZIGHT_RGTK2_ZIPS_DIR or INZIGHT_RGTK2_ZIP_URL + INZIGHT_CAIRODEVICE_ZIP_URL
+# for local zip installs. No source compile of RGtk2/cairoDevice on CI when compile is disabled.
 # Operator builds on Windows: scripts/build_rgtk2_windows_artifacts.R (optional .env + S3 upload).
 
 r_minor <- paste(
   strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
   collapse = "."
-)
-
-## Tier 1: published mirror URLs per R minor (versions must exist on the mirror).
-mirror_binary_urls <- list(
-  "4.0" = list(
-    RGtk2 = "https://r.docker.stat.auckland.ac.nz/bin/windows/contrib/4.0/RGtk2_2.20.36.3.zip",
-    cairoDevice = "https://r.docker.stat.auckland.ac.nz/bin/windows/contrib/4.0/cairoDevice_2.28.2.2.zip"
-  ),
-  "4.1" = list(
-    RGtk2 = "https://r.docker.stat.auckland.ac.nz/bin/windows/contrib/4.1/RGtk2_2.20.36.3.zip",
-    cairoDevice = "https://r.docker.stat.auckland.ac.nz/bin/windows/contrib/4.1/cairoDevice_2.28.2.2.zip"
-  )
 )
 
 download_if_url <- function(src, dest) {
@@ -32,7 +23,8 @@ download_if_url <- function(src, dest) {
   dest
 }
 
-resolve_windows_binary_zips <- function() {
+## Returns list(RGtk2 = path, cairoDevice = path) for zip-based install, or NULL to use repo.
+resolve_windows_binary_zip_paths <- function() {
   zdir <- Sys.getenv("INZIGHT_RGTK2_ZIPS_DIR", unset = "")
   if (nzchar(zdir) && dir.exists(zdir)) {
     z <- list.files(zdir, pattern = "\\.zip$", full.names = TRUE, ignore.case = TRUE)
@@ -50,47 +42,78 @@ resolve_windows_binary_zips <- function() {
   if (nzchar(e1) && nzchar(e2)) {
     return(list(RGtk2 = e1, cairoDevice = e2))
   }
-  if (r_minor %in% names(mirror_binary_urls)) {
-    return(mirror_binary_urls[[r_minor]])
-  }
-  stop(
-    "No pre-built RGtk2/cairoDevice zips for R ", r_minor, ".\n",
-    "Options:\n",
-    "  - Sync zips into a directory and set INZIGHT_RGTK2_ZIPS_DIR, or\n",
-    "  - Set INZIGHT_RGTK2_ZIP_URL and INZIGHT_CAIRODEVICE_ZIP_URL (URLs or local paths), or\n",
-    "  - Publish zips under bin/windows/contrib/", r_minor, "/ on the mirror (tier 1 list in install_gtk.R).\n",
-    "Build zips on a physical Windows machine: Rscript scripts/build_rgtk2_windows_artifacts.R\n"
+  NULL
+}
+
+install_rgtk_cairo_from_repo <- function(lib) {
+  repo <- Sys.getenv("INZIGHT_BINARY_REPO", unset = "https://r.docker.stat.auckland.ac.nz")
+  o <- options(install.packages.compile.from.source = "never")
+  on.exit(options(o), add = TRUE)
+  ap <- tryCatch(
+    available.packages(repos = repo, type = "win.binary"),
+    error = function(e) {
+      matrix(nrow = 0L, ncol = 0L)
+    }
   )
+  need <- c("RGtk2", "cairoDevice")
+  miss <- need[!need %in% rownames(ap)]
+  if (length(miss)) {
+    stop(
+      "No win.binary ",
+      paste(miss, collapse = ", "),
+      " for R ",
+      r_minor,
+      " on ",
+      repo,
+      ".\nPublish binaries under bin/windows/contrib/",
+      r_minor,
+      "/ on that repository, or set INZIGHT_RGTK2_ZIPS_DIR / *_ZIP_URL for local zips.\n",
+      "Build zips on a physical Windows machine: Rscript scripts/build_rgtk2_windows_artifacts.R\n"
+    )
+  }
+  message("Installing RGtk2 and cairoDevice (win.binary) from ", repo)
+  install.packages(need, lib = lib, repos = repo, type = "win.binary")
 }
 
 if (.Platform$OS.type == "windows") {
-  urls <- resolve_windows_binary_zips()
-  td <- tempfile("rgtk2-zip-")
-  dir.create(td)
-  on.exit(unlink(td, recursive = TRUE), add = TRUE)
-
-  zip_name <- function(u) {
-    if (grepl("^https?://", u)) basename(u) else basename(normalizePath(u, winslash = "/"))
-  }
-  zr <- file.path(td, zip_name(urls$RGtk2))
-  zc <- file.path(td, zip_name(urls$cairoDevice))
-  download_if_url(urls$RGtk2, zr)
-  download_if_url(urls$cairoDevice, zc)
-
   lib <- .libPaths()[1]
-  message("Installing RGtk2 (win.binary) into ", lib)
-  install.packages(zr, lib = lib, repos = NULL, type = "win.binary")
-  message("Installing cairoDevice (win.binary) into ", lib)
-  install.packages(zc, lib = lib, repos = NULL, type = "win.binary")
+  urls <- resolve_windows_binary_zip_paths()
+
+  zr <- zc <- NA_character_
+  if (!is.null(urls)) {
+    td <- tempfile("rgtk2-zip-")
+    dir.create(td)
+    on.exit(unlink(td, recursive = TRUE), add = TRUE)
+
+    zip_name <- function(u) {
+      if (grepl("^https?://", u)) basename(u) else basename(normalizePath(u, winslash = "/"))
+    }
+    zr <- file.path(td, zip_name(urls$RGtk2))
+    zc <- file.path(td, zip_name(urls$cairoDevice))
+    download_if_url(urls$RGtk2, zr)
+    download_if_url(urls$cairoDevice, zc)
+
+    o <- options(install.packages.compile.from.source = "never")
+    on.exit(options(o), add = TRUE)
+    message("Installing RGtk2 (win.binary) into ", lib)
+    install.packages(zr, lib = lib, repos = NULL, type = "win.binary")
+    message("Installing cairoDevice (win.binary) into ", lib)
+    install.packages(zc, lib = lib, repos = NULL, type = "win.binary")
+  } else {
+    install_rgtk_cairo_from_repo(lib)
+  }
 
   cat("Downloading gtk ...\n")
   gtk_url <- Sys.getenv(
     "INZIGHT_GTK_BUNDLE_URL",
     unset = "https://inzight.nz/data/gtk+-bundle_2.22.1-20101229_win64.zip"
   )
-  gtk_zip <- file.path(td, "gtk.zip")
+  td_gtk <- tempfile("gtk-zip-")
+  dir.create(td_gtk)
+  on.exit(unlink(td_gtk, recursive = TRUE), add = TRUE)
+  gtk_zip <- file.path(td_gtk, "gtk.zip")
   download.file(gtk_url, destfile = gtk_zip, mode = "wb")
-  gtk_stage <- file.path(td, "gtk-unpack")
+  gtk_stage <- file.path(td_gtk, "gtk-unpack")
   dir.create(gtk_stage)
   unzip(gtk_zip, exdir = gtk_stage)
   file.remove(gtk_zip)
@@ -107,13 +130,13 @@ if (.Platform$OS.type == "windows") {
   Sys.setenv(GTK_PATH = gtk_dest)
 
   contrib <- file.path("bin", "windows", "contrib", r_minor)
-  if (dir.exists(contrib)) {
+  if (!is.null(urls) && dir.exists(contrib) && !is.na(zr) && file.exists(zr)) {
     message("Copying RGtk2/cairoDevice zips into ", contrib)
     file.copy(c(zr, zc), contrib, overwrite = TRUE)
     tools::write_PACKAGES(contrib, type = "win.binary", verbose = TRUE)
   }
 
-  invisible(list(RGtk2 = zr, cairoDevice = zc, contrib = contrib))
+  invisible(list(zip_sources = urls, contrib = contrib, from_repo = is.null(urls)))
 } else {
   if (!requireNamespace("remotes", quietly = TRUE)) {
     cat("Installing remotes ...\n")

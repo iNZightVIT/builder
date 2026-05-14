@@ -82,10 +82,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: windows-latest, r: "4.0", rtools: "40" }
-          - { os: windows-latest, r: "4.1", rtools: "40" }
           - { os: windows-latest, r: "4.2", rtools: "42" }
     env:
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
       TZ: "Pacific/Auckland"
 
     steps:
@@ -97,6 +96,7 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           rtools-version: ${{ matrix.config.rtools }}
+          extra-repositories: "https://r.docker.stat.auckland.ac.nz"
 
       - name: Fix RGtk2 dir
         run: |
@@ -146,40 +146,8 @@ jobs:
             s3://r.docker.stat.auckland.ac.nz/bin/windows/contrib/${{ steps.r-version.outputs.ver }} `
             bin/windows/contrib/${{ steps.r-version.outputs.ver }}
 
-      # R 4.2: canonical curated win.binary zips live on Google Drive (R 4.2 only).
-      # R 4.0/4.1: optional cache from S3 static/ or tier-1 mirror URLs in install_gtk.R.
-      - name: Fetch curated RGtk2/cairoDevice zips
-        run: |
-          mkdir -p _rgtk2_zips
-          if [ "${{ matrix.config.r }}" = "4.2" ]; then
-            pip install 'gdown>=4.6.0,<5'
-            rm -rf _rgtk2_gdrive_dl
-            gdown --folder "https://drive.google.com/drive/folders/1VSZRDWrBPpySIz99hNJElnUJGYhXUmDm" -O _rgtk2_gdrive_dl
-            find _rgtk2_gdrive_dl -type f -name '*.zip' | while read -r f; do
-              base=$(basename "$f")
-              case "$base" in
-                RGtk2_*.zip|cairoDevice_*.zip) mv -f "$f" _rgtk2_zips/ ;;
-              esac
-            done
-            rm -rf _rgtk2_gdrive_dl
-          else
-            aws --profile saml s3 sync \
-              "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/" \
-              _rgtk2_zips/ || true
-          fi
-        shell: bash
-
-      - name: Install RGtk2 and GTK (pre-built zips only)
-        env:
-          INZIGHT_RGTK2_ZIPS_DIR: ${{ github.workspace }}/_rgtk2_zips
+      - name: Install RGtk2 and GTK (win.binary from package repository)
         run: Rscript install_gtk.R
-        shell: bash
-
-      - name: Upload curated RGtk2/cairoDevice zips to S3 (R 4.2)
-        if: matrix.config.r == '4.2'
-        run: |
-          aws --profile saml s3 sync _rgtk2_zips/ \
-            "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/"
         shell: bash
 
       - name: Add GTK to PATH
@@ -421,6 +389,8 @@ jobs:
     runs-on: windows-latest
     continue-on-error: true
     needs: clearcache
+    env:
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -429,6 +399,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: "4.2"
+          extra-repositories: "https://r.docker.stat.auckland.ac.nz"
 
       - name: Set R minor (GTK bootstrap)
         id: r-version
@@ -452,31 +423,8 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Fetch curated RGtk2/cairoDevice zips (R 4.2 from Google Drive)
-        run: |
-          mkdir -p _rgtk2_zips
-          pip install 'gdown>=4.6.0,<5'
-          rm -rf _rgtk2_gdrive_dl
-          gdown --folder "https://drive.google.com/drive/folders/1VSZRDWrBPpySIz99hNJElnUJGYhXUmDm" -O _rgtk2_gdrive_dl
-          find _rgtk2_gdrive_dl -type f -name '*.zip' | while read -r f; do
-            base=$(basename "$f")
-            case "$base" in
-              RGtk2_*.zip|cairoDevice_*.zip) mv -f "$f" _rgtk2_zips/ ;;
-            esac
-          done
-          rm -rf _rgtk2_gdrive_dl
-        shell: bash
-
-      - name: Bootstrap RGtk2 and GTK
-        env:
-          INZIGHT_RGTK2_ZIPS_DIR: ${{ github.workspace }}/_rgtk2_zips
+      - name: Bootstrap RGtk2 and GTK (win.binary from package repository)
         run: Rscript install_gtk.R
-        shell: bash
-
-      - name: Upload curated RGtk2/cairoDevice zips to S3 (R 4.2)
-        run: |
-          aws --profile saml s3 sync _rgtk2_zips/ \
-            "s3://r.docker.stat.auckland.ac.nz/static/rgtk2-windows/R-${{ steps.r-version.outputs.ver }}/"
         shell: bash
 
       - name: Add GTK to PATH
