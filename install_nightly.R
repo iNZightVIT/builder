@@ -121,7 +121,7 @@ deps <- sapply(pkgs, function(pkg) {
 # })
 # deps <- unique(do.call(c, deps))
 # deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
-# print(deps)
+print(deps)
 # # install.packages(deps)
 pak::pkg_install(deps)
 
