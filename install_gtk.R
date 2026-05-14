@@ -103,6 +103,7 @@ if (.Platform$OS.type == "windows") {
     install_rgtk_cairo_from_repo(lib)
   }
 
+
   cat("Downloading gtk ...\n")
   gtk_url <- Sys.getenv(
     "INZIGHT_GTK_BUNDLE_URL",
