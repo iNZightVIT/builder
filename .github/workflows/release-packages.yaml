@@ -276,7 +276,7 @@ jobs:
 
   cleanup-after-fail:
     name: Clean up tmp files if previous jobs fail
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     if: failure()
     needs: [sources, binaries]
     steps:
@@ -322,7 +322,7 @@ jobs:
 
   clearcache:
     name: Clear AWS cache and update HTML
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [sources, binaries]
     steps:
       - uses: actions/checkout@v4
