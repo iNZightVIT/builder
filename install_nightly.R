@@ -41,10 +41,11 @@ print(curr)
 deps <- sapply(pkgs, function(pkg) {
     branch <- "dev"
     if (grepl("@", pkg)) {
-        pkg <- strsplit(pkg, "@")[[1]]
-        branch <- sprintf("refs/tags/%s", pkg[2])
-        pkg <- pkg[1]
-        return()
+        return(pkg)
+        # pkg <- strsplit(pkg, "@")[[1]]
+        # branch <- sprintf("refs/tags/%s", pkg[2])
+        # pkg <- pkg[1]
+        # return()
     }
 
     pkg <- strsplit(pkg, "/")[[1]]
