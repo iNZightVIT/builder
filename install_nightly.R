@@ -38,45 +38,87 @@ pak::pak(c("httr", "lubridate"))
 curr <- as.character(installed.packages()[, "Package"])
 print(curr)
 
-# download all
-deps <- sapply(pkgs, function(pkg) {
-    branch <- "dev"
-    if (grepl("@", pkg)) {
-        return(pkg)
-        # pkg <- strsplit(pkg, "@")[[1]]
-        # branch <- sprintf("refs/tags/%s", pkg[2])
-        # pkg <- pkg[1]
-        # return()
+# Expand shorthand package specs to owner/repo@ref for pak::pkg_install().
+# - Bare names default to iNZightVIT/<pkg>.
+# - If @ref is omitted, pick develop, else main, else master (via GitHub API),
+#   then optionally prefer a newer matching release* branch.
+expand_nightly_github_pkg <- function(pkg) {
+    default_org <- "iNZightVIT"
+    pkg <- trimws(pkg)
+    if (!nzchar(pkg)) {
+        return(NA_character_)
     }
 
-    pkg <- strsplit(pkg, "/")[[1]]
-    if (length(pkg) == 1L) pkg <- c("iNZightVIT", pkg)
-
-    # if there is a release- branch NEWER than the dev branch,
-    # use that instead:
-    x <- httr::GET(sprintf("https://api.github.com/repos/%s/%s/branches", pkg[1], pkg[2]))
-    branches <- httr::content(x)
-    if (!is.null(branches$message)) {
-        return()
-    }
-
-    names(branches) <- sapply(branches, function(z) z$name)
-    releaseBranches <- branches[sapply(names(branches), function(z) grepl("release", z))]
-    if (branch == "dev" && is.null(branches[[branch]])) {
-        if (!is.null(branches$develop)) {
-            branch <- "develop"
-        } else if (!is.null(branches$main)) {
-            branch <- "main"
+    at <- regexpr("@", pkg, fixed = TRUE)[1L]
+    if (at > 0L) {
+        repo_spec <- substring(pkg, 1L, at - 1L)
+        ref <- substring(pkg, at + 1L)
+        parts <- strsplit(repo_spec, "/", fixed = TRUE)[[1L]]
+        if (length(parts) == 1L) {
+            owner <- default_org
+            name <- parts[[1L]]
         } else {
-            branch <- "master"
+            owner <- parts[[1L]]
+            name <- paste(parts[-1L], collapse = "/")
+        }
+        return(sprintf("%s/%s@%s", owner, name, ref))
+    }
+
+    parts <- strsplit(pkg, "/", fixed = TRUE)[[1L]]
+    if (length(parts) == 1L) {
+        owner <- default_org
+        name <- parts[[1L]]
+    } else {
+        owner <- parts[[1L]]
+        name <- paste(parts[-1L], collapse = "/")
+    }
+
+    url <- sprintf("https://api.github.com/repos/%s/%s/branches", owner, name)
+    x <- httr::GET(url)
+    branches <- httr::content(x, as = "parsed")
+    if (httr::http_error(x) || (is.list(branches) && !is.null(branches$message))) {
+        err <- if (is.list(branches) && !is.null(branches$message)) {
+            as.character(branches$message)[1L]
+        } else {
+            paste0("HTTP ", httr::status_code(x))
+        }
+        warning("Could not list branches for ", owner, "/", name, ": ", err, call. = FALSE)
+        return(NA_character_)
+    }
+    if (!length(branches)) {
+        warning("No branches returned for ", owner, "/", name, call. = FALSE)
+        return(NA_character_)
+    }
+
+    branch_names <- vapply(branches, function(b) {
+        n <- b$name
+        if (is.null(n) || !nzchar(n)) NA_character_ else as.character(n)[1L]
+    }, character(1L))
+    names(branches) <- branch_names
+
+    branch <- NULL
+    for (cand in c("develop", "main", "master")) {
+        if (cand %in% branch_names) {
+            branch <- cand
+            break
         }
     }
-    if (length(releaseBranches)) {
-        devBranch <- branches[[branch]]
-        devDate <- httr::content(httr::GET(devBranch$commit$url))$commit$author$date |>
+    if (is.null(branch)) {
+        ok <- branch_names[!is.na(branch_names) & nzchar(branch_names)]
+        if (!length(ok)) {
+            warning("No usable branch names for ", owner, "/", name, call. = FALSE)
+            return(NA_character_)
+        }
+        branch <- ok[[1L]]
+    }
+
+    release_branches <- branches[grepl("release", branch_names, ignore.case = TRUE)]
+    if (length(release_branches)) {
+        dev_branch <- branches[[branch]]
+        dev_date <- httr::content(httr::GET(dev_branch$commit$url))$commit$author$date |>
             lubridate::ymd_hms()
 
-        releaseDates <- lapply(releaseBranches, function(b) {
+        release_dates <- lapply(release_branches, function(b) {
             data.frame(
                 branch = b$name,
                 date =
@@ -84,21 +126,18 @@ deps <- sapply(pkgs, function(pkg) {
                         lubridate::ymd_hms()
             )
         })
-        releaseDates <- do.call(rbind, releaseDates)
-        releaseBranch <- releaseDates[which.max(releaseDates$date), ]
-        if (releaseBranch$date > devDate) {
-            branch <- sprintf("refs/heads/%s", releaseBranch$branch)
+        release_dates <- do.call(rbind, release_dates)
+        release_row <- release_dates[which.max(release_dates$date), , drop = FALSE]
+        if (release_row$date > dev_date) {
+            branch <- sprintf("refs/heads/%s", release_row$branch)
         }
     }
 
-    return(sprintf("%s/%s@%s", pkg[1], pkg[2], branch))
+    sprintf("%s/%s@%s", owner, name, branch)
+}
 
-    # utils::download.file(
-    #     sprintf("https://github.com/%s/%s/archive/%s.zip", pkg[1], pkg[2], branch),
-    #     sprintf("%s.zip", pkg[2]),
-    #     quiet = TRUE
-    # )
-})
+# download all
+deps <- sapply(pkgs, expand_nightly_github_pkg)
 
 # pkgs <- gsub(".*/", "", pkgs)
 
