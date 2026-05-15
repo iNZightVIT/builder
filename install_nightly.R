@@ -17,7 +17,7 @@ pkgs <- c(
     "iNZightMR",
     "tidyverts/feasts@v0.4.1",
     "tidyverts/fabletools@v0.5.1",
-    "iNZightTS",
+    "iNZightTS@2.0.3",
     "iNZightTSLegacy",
     "iNZightPlots",
     "iNZightRegression",
