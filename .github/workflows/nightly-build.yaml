@@ -88,6 +88,18 @@ jobs:
         working-directory: installers/win-installer
         run: R\bin\Rscript.exe rgui_settings.R
 
+      # windows-latest is Windows Server 2025; NSIS is no longer on the image (was on 2022).
+      - name: Install NSIS
+        run: |
+          choco install nsis -y --no-progress
+          $candidates = @(
+            (Join-Path ${env:ProgramFiles(x86)} "NSIS"),
+            (Join-Path $env:ProgramFiles "NSIS")
+          )
+          $nsis = $candidates | Where-Object { Test-Path (Join-Path $_ "makensis.exe") } | Select-Object -First 1
+          if (-not $nsis) { throw "makensis.exe not found after NSIS install" }
+          echo $nsis | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build installer
         working-directory: installers/win-installer
         run: makensis.exe inzight_installer.nsi
