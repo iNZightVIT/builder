@@ -5,7 +5,10 @@ options(
         "https://r.docker.stat.auckland.ac.nz", # for some packages like gWidgets, etc ...
         "https://cran.rstudio.com"
     ),
-    install.packages.compile.from.source = "never"
+    install.packages.compile.from.source = "never",
+    # R <= 4.1 defaults to "both" (i386 + x64); our win.binaries are x64-only (cairoDevice, etc.).
+    pkg.windows_archs = "prefer-x64",
+    pkg.build = FALSE
 )
 
 pkgs <- c(
@@ -163,7 +166,6 @@ deps <- sapply(pkgs, expand_nightly_github_pkg)
 # deps <- unique(do.call(c, deps))
 # deps <- deps[!deps %in% curr] # don't try installing recommend packages (i.e., come with R)
 print(deps)
-# # install.packages(deps)
 pak::pkg_install(deps)
 
 # install iNZight packages
