@@ -143,8 +143,8 @@ jobs:
             --distribution-id ${{ secrets.AWS_ID }} \
             --paths "/bin/windows/contrib/*"
 
-  build-channel:
-    name: Build (${{ matrix.channel }})
+  build-channel-repo:
+    name: Repo (${{ matrix.channel }})
     needs: detect-channels
     if: >-
       needs.detect-channels.outputs.has_channels == 'true' &&
@@ -166,11 +166,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-
-      - name: Checkout win-installer submodule
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 installers/win-installer
 
       - name: Read channel R version
         id: channel-meta
@@ -246,37 +241,112 @@ jobs:
             "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
             "s3://r.docker.stat.auckland.ac.nz/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
 
+      - name: Record channel build hash
+        if: >-
+          success() &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        shell: bash
+        run: |
+          HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
+          echo "$HASH" | aws --profile saml s3 cp - "s3://r.docker.stat.auckland.ac.nz/channels/${INZIGHT_CHANNEL}.last-built"
+
+  build-channel-installer:
+    name: Installer (${{ matrix.channel }})
+    needs: [detect-channels, build-channel-repo, promote-repos]
+    if: >-
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+      !contains(github.event.head_commit.message, 'skip installer') &&
+      !contains(github.event.head_commit.message, 'skip repo') &&
+      needs.build-channel-repo.result == 'success' &&
+      needs.promote-repos.result == 'success'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: ${{ fromJSON(needs.detect-channels.outputs.channels) }}
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
+      TZ: "Pacific/Auckland"
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      INZIGHT_CI: "1"
+      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
+      INZIGHT_CHANNEL: ${{ matrix.channel }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Checkout win-installer submodule
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --depth 1 installers/win-installer
+
+      - name: Read channel R version
+        id: channel-meta
+        shell: bash
+        run: |
+          R_VER=$(grep '^r_version:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+          RTOOLS=$(grep '^rtools:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+          echo "r_version=${R_VER}" >> "$GITHUB_OUTPUT"
+          echo "rtools=${RTOOLS}" >> "$GITHUB_OUTPUT"
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ steps.channel-meta.outputs.r_version }}
+          rtools-version: ${{ steps.channel-meta.outputs.rtools }}
+          use-public-rspm: true
+          extra-repositories: https://r.docker.stat.auckland.ac.nz
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.6"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Install channel packages from promoted repos
+        run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
+
+      - name: Install GTK and RGtk2 (published win.binary + GTK bundle)
+        run: Rscript ./install_gtk.R
+
+      - name: Add GTK to PATH
+        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Check RGtk2 and cairoDevice
+        run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
+
       - name: Set installer version
         id: inzight
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         run: echo "version=$(Rscript scripts/channel_version.R --channel=${{ matrix.channel }})" >> "$env:GITHUB_OUTPUT"
 
       - name: Move R and library to build location
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         working-directory: installers/win-installer
         run: |
           cp -R C:/R R
           cp -R ${{ env.R_LIBS_USER }} library
 
       - name: Configure R GUI
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         working-directory: installers/win-installer
         run: R\bin\Rscript.exe rgui_settings.R
 
       - name: Install NSIS
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         run: |
           choco install nsis -y --no-progress
           $candidates = @(
@@ -288,20 +358,12 @@ jobs:
           echo $nsis | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build installer
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         working-directory: installers/win-installer
         run: makensis.exe inzight_installer.nsi
         env:
           INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
       - name: Upload installer artifact
-        if: >-
-          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-          !contains(github.event.head_commit.message, 'skip installer') &&
-          !contains(github.event.head_commit.message, 'skip repo')
         shell: bash
         run: |
           set -euo pipefail
@@ -336,15 +398,6 @@ jobs:
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
           Rscript create_index.R downloads downloads/Windows
           aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
-
-      - name: Record channel build hash
-        if: >-
-          success() &&
-          !contains(github.event.head_commit.message, 'skip repo')
-        shell: bash
-        run: |
-          HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
-          echo "$HASH" | aws --profile saml s3 cp - "s3://r.docker.stat.auckland.ac.nz/channels/${INZIGHT_CHANNEL}.last-built"
 
   reindex-repos:
     name: Reindex package repositories
@@ -387,12 +440,12 @@ jobs:
 
   promote-repos:
     name: Promote channel repositories
-    needs: [detect-channels, build-channel]
+    needs: [detect-channels, build-channel-repo]
     if: >-
       (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
       (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
       needs.detect-channels.outputs.has_channels == 'true' &&
-      needs.build-channel.result == 'success' &&
+      needs.build-channel-repo.result == 'success' &&
       !contains(github.event.head_commit.message, 'skip repo')
     runs-on: ubuntu-24.04
     env:
@@ -432,7 +485,7 @@ jobs:
   cleanup-after-fail:
     name: Clean up tmp repos on failure
     runs-on: ubuntu-24.04
-    needs: [detect-channels, build-channel, promote-repos]
+    needs: [detect-channels, build-channel-repo, promote-repos]
     if: >-
       failure() &&
       (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
@@ -476,11 +529,15 @@ jobs:
 
   update-website:
     name: Update website
-    needs: [detect-channels, build-channel]
+    needs: [detect-channels, build-channel-repo, promote-repos, build-channel-installer]
     if: >-
+      always() &&
+      !cancelled() &&
       (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
       needs.detect-channels.outputs.has_channels == 'true' &&
-      needs.build-channel.result == 'success'
+      needs.build-channel-repo.result == 'success' &&
+      (needs.promote-repos.result == 'success' || needs.promote-repos.result == 'skipped') &&
+      (needs.build-channel-installer.result == 'success' || needs.build-channel-installer.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
