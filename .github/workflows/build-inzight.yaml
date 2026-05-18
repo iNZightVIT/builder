@@ -131,7 +131,8 @@ jobs:
           INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
           INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
           INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
-        run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3
+          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
+        run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3 --gtk-free
 
       - name: Smoke test installed packages
         run: Rscript -e "library(RGtk2); library(cairoDevice)"
@@ -166,6 +167,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Checkout RGtk2 and cairoDevice sources
+        shell: bash
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
 
       - name: Read channel R version
         id: channel-meta
@@ -203,8 +210,13 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Install GTK and RGtk2 (published win.binary only)
-        run: Rscript ./install_gtk.R
+      - name: Build RGtk2 and cairoDevice from source
+        env:
+          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
+        run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
 
       - name: Add GTK to PATH
         run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -279,10 +291,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Checkout win-installer submodule
+      - name: Checkout submodules
+        shell: bash
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 installers/win-installer
+          git submodule update --init --depth 1 installers/win-installer src/RGtk2 library/cairoDevice
 
       - name: Read channel R version
         id: channel-meta
@@ -323,7 +336,13 @@ jobs:
       - name: Install channel packages from promoted repos
         run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
 
-      - name: Install GTK and RGtk2 (published win.binary + GTK bundle)
+      - name: Install RGtk2 and GTK (channel win.binary or source fallback)
+        env:
+          INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
+          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
         run: Rscript ./install_gtk.R
 
       - name: Add GTK to PATH

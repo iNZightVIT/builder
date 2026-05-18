@@ -19,6 +19,11 @@ HASH_INPUTS = [
     "R/channel_resolve.R",
     "scripts/install_channel.R",
     "scripts/build_binaries.R",
+    "scripts/build_rgtk2_channel.R",
+    "scripts/build_rgtk2_windows_artifacts.R",
+    "scripts/install_channel_from_repo.R",
+    "install_gtk.R",
+    "R/rgtk2_cairo_install.R",
     "scripts/promote_repos.py",
 ]
 S3_BUCKET = os.environ.get("INZIGHT_S3_BUCKET", "r.docker.stat.auckland.ac.nz")

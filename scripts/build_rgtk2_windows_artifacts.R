@@ -43,48 +43,19 @@ output_dir <- get_arg("output-dir", file.path(getwd(), "rgtk2-artifacts"))
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 output_dir <- normalizePath(output_dir, winslash = "/", mustWork = TRUE)
 
-lib <- get_arg("lib", file.path(tempdir(), "rgtk2-curator-lib"))
+default_lib <- Sys.getenv("R_LIBS_USER", unset = "")
+if (!nzchar(default_lib)) {
+  default_lib <- .libPaths()[1]
+}
+lib <- get_arg("lib", default_lib)
 if (!dir.exists(lib)) dir.create(lib, recursive = TRUE)
+lib <- normalizePath(lib, winslash = "/", mustWork = TRUE)
+gtk_free <- "--gtk-free" %in% args
 
 repo_root <- get_arg("root", Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd()))
-rgtk2_src <- Sys.getenv("INZIGHT_RGTK2_SOURCE", unset = "")
-cairo_src <- Sys.getenv("INZIGHT_CAIRODEVICE_SOURCE", unset = "")
+source(file.path(repo_root, "R", "rgtk2_cairo_install.R"), local = TRUE)
 
-resolve_rgtk2_src <- function(root) {
-  explicit <- Sys.getenv("INZIGHT_RGTK2_SOURCE", unset = "")
-  if (nzchar(explicit) && dir.exists(explicit)) {
-    return(normalizePath(explicit, winslash = "/", mustWork = TRUE))
-  }
-  for (p in c(
-    file.path(root, "src", "RGtk2", "RGtk2"),
-    file.path(root, "library", "RGtk2"),
-    file.path(root, "RGtk2", "RGtk2")
-  )) {
-    if (dir.exists(p)) {
-      return(normalizePath(p, winslash = "/", mustWork = TRUE))
-    }
-  }
-  NA_character_
-}
-
-if (!nzchar(rgtk2_src)) {
-  rgtk2_src <- resolve_rgtk2_src(repo_root)
-}
-if (!nzchar(cairo_src)) {
-  p <- file.path(repo_root, "library", "cairoDevice")
-  if (dir.exists(p)) cairo_src <- p
-}
-use_github_rgtk2 <-
-  is.na(rgtk2_src) || !nzchar(rgtk2_src) || !dir.exists(rgtk2_src)
-if (!nzchar(cairo_src) || !dir.exists(cairo_src)) {
-  stop(
-    "cairoDevice source not found. Set INZIGHT_CAIRODEVICE_SOURCE or init library/cairoDevice submodule."
-  )
-}
-
-if (!requireNamespace("remotes", quietly = TRUE)) {
-  install.packages("remotes", repos = "https://cloud.r-project.org")
-}
+ensure_remotes()
 
 gtk_url <- Sys.getenv(
   "INZIGHT_GTK_BUNDLE_URL",
@@ -108,15 +79,31 @@ layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root) {
   invisible(gtk_dest)
 }
 
-zip_win_binary <- function(pkg, lib, out_dir) {
+zip_win_binary <- function(pkg, lib, out_dir, gtk_free = FALSE) {
   desc <- read.dcf(file.path(lib, pkg, "DESCRIPTION"))
   ver <- desc[1, "Version"]
   zipname <- sprintf("%s_%s.zip", pkg, ver)
+  zpath <- file.path(out_dir, zipname)
+  if (file.exists(zpath)) file.remove(zpath)
+
+  if (gtk_free && pkg == "RGtk2") {
+    staging <- tempfile("rgtk2-zip-")
+    dir.create(staging)
+    on.exit(unlink(staging, recursive = TRUE), add = TRUE)
+    dest <- file.path(staging, pkg)
+    file.copy(file.path(lib, pkg), staging, recursive = TRUE)
+    gtk_dir <- file.path(dest, "gtk")
+    if (dir.exists(gtk_dir)) unlink(gtk_dir, recursive = TRUE)
+    ow <- getwd()
+    on.exit(setwd(ow), add = TRUE)
+    setwd(staging)
+    utils::zip(zpath, pkg)
+    return(normalizePath(zpath, winslash = "/", mustWork = TRUE))
+  }
+
   ow <- getwd()
   on.exit(setwd(ow), add = TRUE)
   setwd(lib)
-  zpath <- file.path(out_dir, zipname)
-  if (file.exists(zpath)) file.remove(zpath)
   utils::zip(zpath, pkg)
   normalizePath(zpath, winslash = "/", mustWork = TRUE)
 }
@@ -217,24 +204,7 @@ upload_zips_to_s3 <- function(files, r_minor, publish_contrib = TRUE) {
 }
 
 cat("Installing RGtk2 into curator library ...\n")
-if (use_github_rgtk2) {
-  ref <- Sys.getenv("INZIGHT_RGTK2_GITHUB", unset = "tmelliott/RGtk2/RGtk2")
-  message("No local RGtk2 source; installing from GitHub: ", ref)
-  remotes::install_github(
-    ref,
-    lib = lib,
-    upgrade = "never",
-    INSTALL_opts = c("--no-multiarch", "--no-test-load")
-  )
-} else {
-  remotes::install_local(
-    rgtk2_src,
-    lib = lib,
-    dependencies = NA,
-    upgrade = "never",
-    INSTALL_opts = c("--no-multiarch", "--no-test-load")
-  )
-}
+install_rgtk2_from_source(lib, repo_root)
 
 gtk_zip <- file.path(tempdir(), "gtk-bundle-curator.zip")
 download.file(gtk_url, destfile = gtk_zip, mode = "wb")
@@ -250,25 +220,24 @@ subs <- subs[!is.na(file.info(subs)$isdir) & file.info(subs)$isdir]
 from <- if (length(subs) == 1L) subs else gtk_stage
 layout_unpacked_gtk_for_rgtk2(from, rgtk2_inst)
 
-z1 <- zip_win_binary("RGtk2", lib, output_dir)
+z1 <- zip_win_binary("RGtk2", lib, output_dir, gtk_free = gtk_free)
 
 cat("Installing cairoDevice ...\n")
-remotes::install_local(
-  cairo_src,
-  lib = lib,
-  dependencies = NA,
-  upgrade = "never",
-  INSTALL_opts = c("--no-multiarch", "--no-test-load")
-)
+install_cairodevice_from_source(lib, repo_root)
 
 r_minor <- paste(
   strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
   collapse = "."
 )
 
-z2 <- zip_win_binary("cairoDevice", lib, output_dir)
+z2 <- zip_win_binary("cairoDevice", lib, output_dir, gtk_free = gtk_free)
 
 message("\n=== Artifacts ===\n", z1, "\n", z2)
+
+if (dir.exists(output_dir)) {
+  tools::write_PACKAGES(output_dir, type = "win.binary", verbose = TRUE)
+  message("Wrote PACKAGES in ", output_dir)
+}
 
 want_s3 <- any(args == "--upload-s3") ||
   tolower(Sys.getenv("INZIGHT_RGTK2_UPLOAD_S3", unset = "")) %in% c("1", "true", "yes")
