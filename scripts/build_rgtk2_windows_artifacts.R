@@ -56,28 +56,7 @@ repo_root <- get_arg("root", Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd())
 source(file.path(repo_root, "R", "rgtk2_cairo_install.R"), local = TRUE)
 
 ensure_remotes()
-
-gtk_url <- Sys.getenv(
-  "INZIGHT_GTK_BUNDLE_URL",
-  unset = "http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
-)
-
-## Same semantics as layout_unpacked_gtk_for_rgtk2 in install_gtk.R (cross-drive safe on Windows).
-layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root) {
-  gtk_dest <- file.path(rgtk2_root, "gtk", "x64")
-  dir.create(file.path(rgtk2_root, "gtk"), recursive = TRUE, showWarnings = FALSE)
-  if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
-  dir.create(gtk_dest, recursive = TRUE, showWarnings = FALSE)
-  items <- list.files(from, full.names = TRUE, all.files = TRUE)
-  items <- items[!basename(items) %in% c(".", "..")]
-  if (!length(items)) stop("empty GTK unpack at ", from)
-  ok <- file.copy(items, gtk_dest, recursive = TRUE, copy.date = TRUE)
-  if (length(ok) != length(items) || !all(ok)) {
-    stop("could not copy GTK bundle into ", gtk_dest)
-  }
-  unlink(from, recursive = TRUE)
-  invisible(gtk_dest)
-}
+assert_windows_x64()
 
 zip_win_binary <- function(pkg, lib, out_dir, gtk_free = FALSE) {
   desc <- read.dcf(file.path(lib, pkg, "DESCRIPTION"))
@@ -203,22 +182,11 @@ upload_zips_to_s3 <- function(files, r_minor, publish_contrib = TRUE) {
   }
 }
 
+gtk_root <- ensure_gtk64_devkit()
+
 cat("Installing RGtk2 into curator library ...\n")
 install_rgtk2_from_source(lib, repo_root)
-
-gtk_zip <- file.path(tempdir(), "gtk-bundle-curator.zip")
-download.file(gtk_url, destfile = gtk_zip, mode = "wb")
-gtk_stage <- file.path(tempdir(), "gtk-unpack")
-unlink(gtk_stage, recursive = TRUE)
-dir.create(gtk_stage)
-unzip(gtk_zip, exdir = gtk_stage)
-file.remove(gtk_zip)
-
-rgtk2_inst <- file.path(lib, "RGtk2")
-subs <- dir(gtk_stage, full.names = TRUE)
-subs <- subs[!is.na(file.info(subs)$isdir) & file.info(subs)$isdir]
-from <- if (length(subs) == 1L) subs else gtk_stage
-layout_unpacked_gtk_for_rgtk2(from, rgtk2_inst)
+layout_gtk_runtime_for_lib(lib, gtk_root = gtk_root)
 
 z1 <- zip_win_binary("RGtk2", lib, output_dir, gtk_free = gtk_free)
 

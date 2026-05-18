@@ -55,48 +55,8 @@ install_from_zip <- function(zip_path, pkg, lib) {
 }
 
 layout_gtk_if_missing <- function(lib) {
-  rgtk2_root <- file.path(lib, "RGtk2")
-  gtk_dest <- file.path(rgtk2_root, "gtk", "x64", "bin")
-  if (dir.exists(gtk_dest)) {
-    Sys.setenv(GTK_PATH = file.path(rgtk2_root, "gtk", "x64"))
-    return(invisible(gtk_dest))
-  }
-  gtk_url <- Sys.getenv(
-    "INZIGHT_GTK_BUNDLE_URL",
-    unset = "http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
-  )
-  cat("Downloading gtk ...\n")
-  td_gtk <- tempfile("gtk-zip-")
-  dir.create(td_gtk)
-  on.exit(unlink(td_gtk, recursive = TRUE), add = TRUE)
-  gtk_zip <- file.path(td_gtk, "gtk.zip")
-  download.file(gtk_url, destfile = gtk_zip, mode = "wb")
-  gtk_stage <- file.path(td_gtk, "gtk-unpack")
-  dir.create(gtk_stage)
-  unzip(gtk_zip, exdir = gtk_stage)
-  file.remove(gtk_zip)
-  subs <- dir(gtk_stage, full.names = TRUE)
-  subs <- subs[!is.na(file.info(subs)$isdir) & file.info(subs)$isdir]
-  from <- if (length(subs) == 1L) subs else gtk_stage
-  layout_unpacked_gtk_for_rgtk2(from, rgtk2_root)
-}
-
-## Move unpacked GTK tree into <rgtk2_root>/gtk/x64/ (Windows: file.rename() fails across
-## drive letters, e.g. %TEMP% on C: vs R library on D: on GHA — use copy then unlink.)
-layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root) {
-  gtk_dest <- file.path(rgtk2_root, "gtk", "x64")
-  dir.create(file.path(rgtk2_root, "gtk"), recursive = TRUE, showWarnings = FALSE)
-  if (dir.exists(gtk_dest)) unlink(gtk_dest, recursive = TRUE)
-  dir.create(gtk_dest, recursive = TRUE, showWarnings = FALSE)
-  items <- list.files(from, full.names = TRUE, all.files = TRUE)
-  items <- items[!basename(items) %in% c(".", "..")]
-  if (!length(items)) stop("empty GTK unpack at ", from)
-  ok <- file.copy(items, gtk_dest, recursive = TRUE, copy.date = TRUE)
-  if (length(ok) != length(items) || !all(ok)) {
-    stop("could not copy GTK bundle into ", gtk_dest)
-  }
-  unlink(from, recursive = TRUE)
-  invisible(gtk_dest)
+  cat("Layout GTK runtime for RGtk2 ...\n")
+  layout_gtk_runtime_for_lib(lib)
 }
 
 if (.Platform$OS.type == "windows") {

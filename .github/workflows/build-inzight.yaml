@@ -126,6 +126,9 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
+      - name: Add GTK64 devkit to PATH (compile)
+        run: echo "C:\GTK64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build and publish RGtk2 win.binaries
         env:
           INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
@@ -133,6 +136,9 @@ jobs:
           INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
           INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
         run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3 --gtk-free
+
+      - name: Add GTK runtime to PATH
+        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Smoke test installed packages
         run: Rscript -e "library(RGtk2); library(cairoDevice)"
@@ -210,6 +216,9 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
+      - name: Add GTK64 devkit to PATH (compile)
+        run: echo "C:\GTK64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build RGtk2 and cairoDevice from source
         env:
           INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
@@ -218,7 +227,7 @@ jobs:
           INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
         run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
 
-      - name: Add GTK to PATH
+      - name: Add GTK runtime to PATH
         run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Check RGtk2 and cairoDevice

@@ -1,5 +1,14 @@
 # Shared RGtk2 / cairoDevice install helpers (Windows CI and curator builds).
 
+.builder_root <- function() {
+  r <- Sys.getenv("INZIGHT_BUILDER_ROOT", unset = "")
+  if (nzchar(r)) {
+    return(r)
+  }
+  getwd()
+}
+source(file.path(.builder_root(), "R", "gtk_win64.R"), local = TRUE)
+
 DEFAULT_CRAN <- "https://cloud.r-project.org"
 
 resolve_rgtk2_src <- function(root = getwd()) {
@@ -77,6 +86,9 @@ install_rgtk2_from_source <- function(lib, root = getwd()) {
   if (requireNamespace("RGtk2", quietly = TRUE)) {
     return(invisible(TRUE))
   }
+  if (.Platform$OS.type == "windows") {
+    ensure_gtk64_devkit()
+  }
   ensure_remotes()
   rgtk2_src <- resolve_rgtk2_src(root)
   if (!is.na(rgtk2_src)) {
@@ -104,6 +116,9 @@ install_rgtk2_from_source <- function(lib, root = getwd()) {
 install_cairodevice_from_source <- function(lib, root = getwd()) {
   if (requireNamespace("cairoDevice", quietly = TRUE)) {
     return(invisible(TRUE))
+  }
+  if (.Platform$OS.type == "windows") {
+    ensure_gtk64_devkit()
   }
   ensure_remotes()
   cairo_src <- resolve_cairo_src(root)

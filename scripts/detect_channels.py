@@ -23,6 +23,7 @@ HASH_INPUTS = [
     "scripts/build_rgtk2_windows_artifacts.R",
     "scripts/install_channel_from_repo.R",
     "install_gtk.R",
+    "R/gtk_win64.R",
     "R/rgtk2_cairo_install.R",
     "scripts/promote_repos.py",
 ]
