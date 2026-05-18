@@ -71,7 +71,8 @@ hash_channel_inputs <- function(channel) {
     "channels/_shared.R",
     "R/channel_resolve.R",
     "scripts/install_channel.R",
-    "scripts/build_binaries.R"
+    "scripts/build_binaries.R",
+    "scripts/promote_repos.py"
   )
   missing <- files[!file.exists(files)]
   if (length(missing)) {

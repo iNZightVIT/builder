@@ -305,65 +305,10 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} \
             --idp iam.auckland.ac.nz
 
-      - name: Pull staged channel repositories
-        run: |
-          python - <<'PY'
-          import json, os, subprocess, yaml
-          channels = json.loads(os.environ["CHANNELS_JSON"])
-          for ch in channels:
-              deps = yaml.safe_load(open(f"channels/{ch}.deps"))
-              r_minor = deps["r_version"]
-              src = f"s3://r.docker.stat.auckland.ac.nz/{ch}/bin/windows/contrib/tmp{r_minor}"
-              dest = f"promote/{ch}/bin/windows/contrib/tmp{r_minor}"
-              os.makedirs(os.path.dirname(dest), exist_ok=True)
-              subprocess.run(
-                  ["aws", "--profile", "saml", "s3", "sync", src, dest],
-                  check=False,
-              )
-          PY
-
-      - name: Promote tmp directories
-        run: |
-          set -euo pipefail
-          shopt -s globstar nullglob
-          for dir in promote/**/contrib/tmp*/; do
-            [[ -d "$dir" ]] || continue
-            dest="${dir//tmp/}"
-            mkdir -p "$dest"
-            rsync -avP --delete "${dir}/" "${dest}/"
-            rm -rf "$dir"
-          done
-
-      - name: Mirror stable win.binary repo to flat root
-        run: |
-          if [ -d "promote/stable/bin" ]; then
-            mkdir -p promote/flat/bin
-            rsync -avP promote/stable/bin/ promote/flat/bin/
-          fi
-
-      - name: Update HTML pages
-        run: |
-          shopt -s globstar
-          for base in promote/**/bin; do
-            [[ -d "$base" ]] || continue
-            (cd "$(dirname "$base")" && python "$GITHUB_WORKSPACE/create_webpages.py" --path bin)
-          done
-
-      - name: Push repositories to S3
-        run: |
-          set -euo pipefail
-          for ch in $(python -c "import json,os; print(' '.join(json.loads(os.environ['CHANNELS_JSON'])))"); do
-            if [ -d "promote/${ch}/bin" ]; then
-              aws --profile saml s3 sync --delete \
-                "promote/${ch}/bin" \
-                "s3://r.docker.stat.auckland.ac.nz/${ch}/bin"
-            fi
-          done
-          if [ -d "promote/flat/bin" ]; then
-            aws --profile saml s3 sync --delete \
-              promote/flat/bin \
-              s3://r.docker.stat.auckland.ac.nz/bin
-          fi
+      - name: Promote repositories and regenerate indexes
+        env:
+          CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+        run: python scripts/promote_repos.py
 
       - name: Clear CloudFront cache
         run: |
