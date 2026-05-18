@@ -1,5 +1,9 @@
-install.packages("glue")
-install.packages("gdata")
+cran <- Sys.getenv("R_CRAN_MIRROR", unset = "https://cran.rstudio.com")
+for (pkg in c("glue", "gdata")) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg, repos = cran)
+  }
+}
 
 template <- paste(readLines("index.template"), collapse = "\n")
 exclude <- c("index.html", "windows_versions")
