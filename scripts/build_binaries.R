@@ -6,38 +6,94 @@ BINARY_DENYLIST <- c("RGtk2", "cairoDevice")
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+find_package_root <- function(dir) {
+  desc <- list.files(dir, pattern = "^DESCRIPTION$", recursive = TRUE, full.names = TRUE)
+  if (!length(desc)) {
+    return(NULL)
+  }
+  normalizePath(dirname(desc[[1L]]), winslash = "/", mustWork = TRUE)
+}
+
+untar_package_root <- function(archive) {
+  unpack <- tempfile("src-unpack-")
+  dir.create(unpack)
+  if (grepl("\\.zip$", archive, ignore.case = TRUE)) {
+    utils::unzip(archive, exdir = unpack)
+  } else {
+    utils::untar(archive, exdir = unpack)
+  }
+  root <- find_package_root(unpack)
+  if (is.null(root)) {
+    stop("No DESCRIPTION found after unpacking ", archive)
+  }
+  root
+}
+
+download_zipball <- function(url, dest_dir) {
+  archive <- file.path(dest_dir, "source.zip")
+  utils::download.file(url, archive, mode = "wb", quiet = TRUE)
+  untar_package_root(archive)
+}
+
 download_source_dir <- function(spec) {
-  if (grepl("/", spec) && requireNamespace("pak", quietly = TRUE)) {
-    dl <- pak::pkg_download(spec)
-    st <- dl$download_status[[1]]
-    path <- st$local$path %||% st$local$package_path
-    if (is.null(path) || !dir.exists(path)) {
-      stop("pak could not download source for ", spec)
+  pkg <- pkg_name_from_spec(spec)
+
+  if (requireNamespace("pak", quietly = TRUE)) {
+    dest_root <- tempfile("pak-dl-")
+    dir.create(dest_root)
+    on.exit(unlink(dest_root, recursive = TRUE), add = TRUE)
+
+    dl <- pak::pkg_download(spec, dest_dir = dest_root)
+    ft <- dl$fulltarget[[1L]] %||% dl$fulltarget[1L]
+
+    if (nzchar(ft) && file.exists(ft)) {
+      return(untar_package_root(ft))
     }
-    return(normalizePath(path, winslash = "/", mustWork = TRUE))
+
+    tree <- paste0(ft, "-t")
+    if (nzchar(ft) && dir.exists(tree)) {
+      root <- find_package_root(tree)
+      if (!is.null(root)) {
+        return(root)
+      }
+    }
+
+    srcs <- dl$sources[[1L]]
+    if (length(srcs) && nzchar(srcs[[1L]])) {
+      return(download_zipball(srcs[[1L]], dest_root))
+    }
   }
 
-  pkg <- pkg_name_from_spec(spec)
+  if (pkg %in% rownames(installed.packages())) {
+    desc <- utils::packageDescription(pkg)
+    if (!is.na(desc$RemoteType) && desc$RemoteType == "github") {
+      sha <- desc$RemoteSha
+      url <- sprintf(
+        "https://api.github.com/repos/%s/%s/zipball/%s",
+        desc$RemoteUsername,
+        desc$RemoteRepo,
+        sha
+      )
+      td <- tempfile("gh-src-")
+      dir.create(td)
+      on.exit(unlink(td, recursive = TRUE), add = TRUE)
+      return(download_zipball(url, td))
+    }
+  }
+
   td <- tempfile("cran-src-")
   dir.create(td)
   on.exit(unlink(td, recursive = TRUE), add = TRUE)
   ap <- available.packages(repos = DEFAULT_CRAN, type = "source")
   if (!pkg %in% rownames(ap)) {
-    stop("No CRAN source for ", pkg)
+    stop("No source found for ", spec, " (not in pak download, remotes, or CRAN)")
   }
   utils::download.packages(pkg, destdir = td, repos = DEFAULT_CRAN, type = "source")
   tgz <- list.files(td, pattern = "\\.tar\\.gz$", full.names = TRUE)
   if (length(tgz) != 1L) {
     stop("Expected one source tarball for ", pkg)
   }
-  unpack <- tempfile("cran-unpack-")
-  dir.create(unpack)
-  utils::untar(tgz, exdir = unpack)
-  dirs <- list.dirs(unpack, recursive = FALSE, full.names = TRUE)
-  if (length(dirs) != 1L) {
-    stop("Unexpected unpack layout for ", pkg)
-  }
-  normalizePath(dirs[[1]], winslash = "/", mustWork = TRUE)
+  untar_package_root(tgz[[1L]])
 }
 
 build_channel_binaries <- function(channel) {
