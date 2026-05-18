@@ -91,6 +91,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Checkout win-installer submodule
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --depth 1 installers/win-installer
+
       - name: Read channel R version
         id: channel-meta
         shell: bash
