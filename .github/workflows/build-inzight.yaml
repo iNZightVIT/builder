@@ -1,5 +1,9 @@
 name: Build iNZight
 
+# Node 24 for JS-based actions (checkout, setup-python); see GitHub changelog 2025-09-19.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: "0 14 * * *"
@@ -37,12 +41,12 @@ jobs:
       channels: ${{ steps.detect.outputs.channels }}
       has_channels: ${{ steps.detect.outputs.has_channels }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -89,7 +93,7 @@ jobs:
       INZIGHT_CHANNEL: ${{ matrix.channel }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Checkout win-installer submodule
         run: |
@@ -115,7 +119,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.6"
 
@@ -139,9 +143,7 @@ jobs:
         run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Check RGtk2 and cairoDevice
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
+        run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
 
       - name: Install channel packages
         if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
@@ -283,10 +285,10 @@ jobs:
     env:
       CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -377,10 +379,10 @@ jobs:
     env:
       CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -420,9 +422,9 @@ jobs:
       needs.build-channel.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Send signal
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
           repository: iNZightVIT/inzight-www
