@@ -1,0 +1,21 @@
+# Development channel: moving GitHub branches (develop/main + release bump).
+r_version: "4.1"
+rtools: "40"
+channel_type: development
+overrides_only: false
+packages:
+  - tmelliott/translatr
+  - tmelliott/surveyspec
+  - iNZightTools
+  - iNZightMR
+  - tidyverts/feasts@v0.4.1
+  - tidyverts/fabletools@v0.5.1
+  - iNZightTS@2.0.3
+  - iNZightTSLegacy
+  - iNZightPlots
+  - iNZightRegression
+  - FutureLearnData
+  - iNZight
+  - iNZightModules
+  - iNZightMultivariate
+  - vit

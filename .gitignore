@@ -130,4 +130,10 @@ $RECYCLE.BIN/
 # Curator / helper caches under scripts/
 scripts/__pycache__/
 
+# CI staging (channel win.binary builds)
+staging/
+tmp/
+promote/
+channels/*.lock
+
 # End of https://www.toptal.com/developers/gitignore/api/r,linux,windows,macos,code

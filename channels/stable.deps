@@ -1,0 +1,21 @@
+# Stable channel: explicit GitHub refs/tags + CRAN only (no library/ submodules).
+r_version: "4.1"
+rtools: "40"
+channel_type: stable
+overrides_only: false
+packages:
+  - iNZightVIT/iNZight@4.2.3
+  - iNZightVIT/iNZightTools@1.9.1
+  - iNZightVIT/iNZightMR@2.5.2
+  - iNZightVIT/iNZightPlots@2.5.2
+  - iNZightVIT/iNZightRegression@1.3.2
+  - iNZightVIT/iNZightTS@2.0.3
+  - iNZightVIT/iNZightTSLegacy@1.0.0
+  - iNZightVIT/iNZightModules@2.6.2
+  - iNZightVIT/iNZightMultivariate@1.0.2
+  - iNZightVIT/FutureLearnData@1.0.0
+  - iNZightVIT/vit@0.6.0
+  - tmelliott/translatr
+  - tmelliott/surveyspec
+  - tidyverts/feasts@0.4.1
+  - tidyverts/fabletools@0.5.1

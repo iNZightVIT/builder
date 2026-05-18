@@ -1,0 +1,422 @@
+name: Build iNZight
+
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  push:
+    branches:
+      - master
+    paths:
+      - "channels/**"
+      - "scripts/**"
+      - "R/**"
+      - ".github/workflows/build-inzight.yaml"
+      - "installers/**"
+      - "install_gtk.R"
+      - "install_gtk.cmd"
+  workflow_dispatch:
+    inputs:
+      channels:
+        description: "Comma-separated channel names (empty = all eligible)"
+        required: false
+        default: ""
+      rebuild_all:
+        description: "Rebuild all channels regardless of hash"
+        type: boolean
+        default: false
+      skip_installer:
+        description: "Skip NSIS installer build and download upload"
+        type: boolean
+        default: false
+
+jobs:
+  detect-channels:
+    name: Detect channels to build
+    runs-on: ubuntu-24.04
+    outputs:
+      channels: ${{ steps.detect.outputs.channels }}
+      has_channels: ${{ steps.detect.outputs.has_channels }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        if: github.event_name == 'schedule'
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Detect channels
+        id: detect
+        env:
+          INPUT_CHANNELS: ${{ github.event.inputs.channels }}
+          INPUT_REBUILD_ALL: ${{ github.event.inputs.rebuild_all }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: python scripts/detect_channels.py
+
+  build-channel:
+    name: Build (${{ matrix.channel }})
+    needs: detect-channels
+    if: needs.detect-channels.outputs.has_channels == 'true'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: ${{ fromJSON(needs.detect-channels.outputs.channels) }}
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_COMPILE_AND_INSTALL_PACKAGES: "never"
+      TZ: "Pacific/Auckland"
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      INZIGHT_CI: "1"
+      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
+      INZIGHT_CHANNEL: ${{ matrix.channel }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read channel R version
+        id: channel-meta
+        shell: bash
+        run: |
+          R_VER=$(grep '^r_version:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+          RTOOLS=$(grep '^rtools:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+          echo "r_version=${R_VER}" >> "$GITHUB_OUTPUT"
+          echo "rtools=${RTOOLS}" >> "$GITHUB_OUTPUT"
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ steps.channel-meta.outputs.r_version }}
+          rtools-version: ${{ steps.channel-meta.outputs.rtools }}
+          use-public-rspm: true
+          extra-repositories: https://r.docker.stat.auckland.ac.nz
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.6"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --use-feature=2020-resolver -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Install GTK and RGtk2 (published win.binary only)
+        run: Rscript ./install_gtk.R
+
+      - name: Add GTK to PATH
+        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Check RGtk2 and cairoDevice
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
+
+      - name: Install channel packages
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
+
+      - name: Build channel win.binaries
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
+
+      - name: Stage channel repository
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        shell: bash
+        run: |
+          R_MINOR=$(Rscript rversion.R)
+          SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
+          DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          mkdir -p "$DEST"
+          if [ -d "$SRC" ]; then
+            cp -a "$SRC/." "$DEST/"
+          fi
+
+      - name: Upload channel repository (staging)
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        shell: bash
+        run: |
+          R_MINOR=$(Rscript rversion.R)
+          aws --profile saml s3 sync --delete \
+            "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
+            "s3://r.docker.stat.auckland.ac.nz/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+
+      - name: Set installer version
+        id: inzight
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        run: echo "version=$(Rscript scripts/channel_version.R --channel=${{ matrix.channel }})" >> "$env:GITHUB_OUTPUT"
+
+      - name: Move R and library to build location
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        working-directory: installers/win-installer
+        run: |
+          cp -R C:/R R
+          cp -R ${{ env.R_LIBS_USER }} library
+
+      - name: Configure R GUI
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        working-directory: installers/win-installer
+        run: R\bin\Rscript.exe rgui_settings.R
+
+      - name: Install NSIS
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        run: |
+          choco install nsis -y --no-progress
+          $candidates = @(
+            (Join-Path ${env:ProgramFiles(x86)} "NSIS"),
+            (Join-Path $env:ProgramFiles "NSIS")
+          )
+          $nsis = $candidates | Where-Object { Test-Path (Join-Path $_ "makensis.exe") } | Select-Object -First 1
+          if (-not $nsis) { throw "makensis.exe not found after NSIS install" }
+          echo $nsis | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build installer
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        working-directory: installers/win-installer
+        run: makensis.exe inzight_installer.nsi
+        env:
+          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+
+      - name: Upload installer artifact
+        if: >-
+          (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+          !contains(github.event.head_commit.message, 'skip installer') &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.inzight.outputs.version }}"
+          CHANNEL="${INZIGHT_CHANNEL}"
+          EXE="installers/win-installer/iNZightVIT-installer.exe"
+          aws --profile saml s3 sync \
+            --exclude '*' --exclude '!*.html' --exclude '!VERSION*' \
+            s3://r.docker.stat.auckland.ac.nz/downloads downloads || mkdir -p downloads
+          mkdir -p downloads/Windows "downloads/${CHANNEL}"
+          case "$CHANNEL" in
+            development)
+              DEST="downloads/iNZightVIT-installer-nightly.exe"
+              echo "$VERSION" > downloads/VERSION-nightly
+              ;;
+            stable)
+              DEST="downloads/Windows/iNZightVIT-installer-${VERSION}.exe"
+              ln -sf "Windows/iNZightVIT-installer-${VERSION}.exe" downloads/iNZightVIT-installer.exe
+              echo "$VERSION" > downloads/VERSION
+              ;;
+            *)
+              DEST="downloads/${CHANNEL}/iNZightVIT-installer-${VERSION}.exe"
+              echo "$VERSION" > "downloads/${CHANNEL}/VERSION"
+              ;;
+          esac
+          cp "$EXE" "$DEST"
+          aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+          Rscript create_index.R downloads downloads/Windows
+          aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
+
+      - name: Record channel build hash
+        if: >-
+          success() &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        shell: bash
+        run: |
+          HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
+          echo "$HASH" | aws --profile saml s3 cp - "s3://r.docker.stat.auckland.ac.nz/channels/${INZIGHT_CHANNEL}.last-built"
+
+  promote-repos:
+    name: Promote channel repositories
+    needs: [detect-channels, build-channel]
+    if: >-
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      needs.build-channel.result == 'success' &&
+      !contains(github.event.head_commit.message, 'skip repo')
+    runs-on: ubuntu-24.04
+    env:
+      CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Pull staged channel repositories
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, yaml
+          channels = json.loads(os.environ["CHANNELS_JSON"])
+          for ch in channels:
+              deps = yaml.safe_load(open(f"channels/{ch}.deps"))
+              r_minor = deps["r_version"]
+              src = f"s3://r.docker.stat.auckland.ac.nz/{ch}/bin/windows/contrib/tmp{r_minor}"
+              dest = f"promote/{ch}/bin/windows/contrib/tmp{r_minor}"
+              os.makedirs(os.path.dirname(dest), exist_ok=True)
+              subprocess.run(
+                  ["aws", "--profile", "saml", "s3", "sync", src, dest],
+                  check=False,
+              )
+          PY
+
+      - name: Promote tmp directories
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          for dir in promote/**/contrib/tmp*/; do
+            [[ -d "$dir" ]] || continue
+            dest="${dir//tmp/}"
+            mkdir -p "$dest"
+            rsync -avP --delete "${dir}/" "${dest}/"
+            rm -rf "$dir"
+          done
+
+      - name: Mirror stable win.binary repo to flat root
+        run: |
+          if [ -d "promote/stable/bin" ]; then
+            mkdir -p promote/flat/bin
+            rsync -avP promote/stable/bin/ promote/flat/bin/
+          fi
+
+      - name: Update HTML pages
+        run: |
+          shopt -s globstar
+          for base in promote/**/bin; do
+            [[ -d "$base" ]] || continue
+            (cd "$(dirname "$base")" && python "$GITHUB_WORKSPACE/create_webpages.py" --path bin)
+          done
+
+      - name: Push repositories to S3
+        run: |
+          set -euo pipefail
+          for ch in $(python -c "import json,os; print(' '.join(json.loads(os.environ['CHANNELS_JSON'])))"); do
+            if [ -d "promote/${ch}/bin" ]; then
+              aws --profile saml s3 sync --delete \
+                "promote/${ch}/bin" \
+                "s3://r.docker.stat.auckland.ac.nz/${ch}/bin"
+            fi
+          done
+          if [ -d "promote/flat/bin" ]; then
+            aws --profile saml s3 sync --delete \
+              promote/flat/bin \
+              s3://r.docker.stat.auckland.ac.nz/bin
+          fi
+
+      - name: Clear CloudFront cache
+        run: |
+          aws --profile saml cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_ID }} \
+            --paths "/*"
+
+  cleanup-after-fail:
+    name: Clean up tmp repos on failure
+    runs-on: ubuntu-24.04
+    needs: [detect-channels, build-channel, promote-repos]
+    if: failure()
+    env:
+      CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Remove tmp staging prefixes
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, yaml
+          channels = json.loads(os.environ.get("CHANNELS_JSON") or "[]")
+          for ch in channels:
+              deps = yaml.safe_load(open(f"channels/{ch}.deps"))
+              r_minor = deps["r_version"]
+              key = f"s3://r.docker.stat.auckland.ac.nz/{ch}/bin/windows/contrib/tmp{r_minor}/"
+              subprocess.run(
+                  ["aws", "--profile", "saml", "s3", "rm", "--recursive", key],
+                  check=False,
+              )
+          PY
+
+  update-website:
+    name: Update website
+    needs: [detect-channels, build-channel]
+    if: >-
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      needs.build-channel.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send signal
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: iNZightVIT/inzight-www
+          event-type: update-website
+          client-payload: '{"ref": "master"}'

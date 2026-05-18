@@ -146,7 +146,14 @@ if (.Platform$OS.type == "windows") {
   Sys.setenv(GTK_PATH = gtk_dest)
 
   contrib <- file.path("bin", "windows", "contrib", r_minor)
-  if (!is.null(urls) && dir.exists(contrib) && !is.na(zr) && file.exists(zr)) {
+  ci <- nzchar(Sys.getenv("INZIGHT_CI", unset = ""))
+  if (
+    !ci &&
+      !is.null(urls) &&
+      dir.exists(contrib) &&
+      !is.na(zr) &&
+      file.exists(zr)
+  ) {
     message("Copying RGtk2/cairoDevice zips into ", contrib)
     file.copy(c(zr, zc), contrib, overwrite = TRUE)
     tools::write_PACKAGES(contrib, type = "win.binary", verbose = TRUE)
