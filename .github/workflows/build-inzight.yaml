@@ -241,19 +241,22 @@ jobs:
           case "$CHANNEL" in
             development)
               DEST="downloads/iNZightVIT-installer-nightly.exe"
+              cp "$EXE" "$DEST"
               echo "$VERSION" > downloads/VERSION-nightly
               ;;
             stable)
               DEST="downloads/Windows/iNZightVIT-installer-${VERSION}.exe"
-              ln -sf "Windows/iNZightVIT-installer-${VERSION}.exe" downloads/iNZightVIT-installer.exe
+              cp "$EXE" "$DEST"
+              # Copy, not symlink: Windows runners and S3 do not handle ln reliably.
+              cp "$EXE" "downloads/iNZightVIT-installer.exe"
               echo "$VERSION" > downloads/VERSION
               ;;
             *)
               DEST="downloads/${CHANNEL}/iNZightVIT-installer-${VERSION}.exe"
+              cp "$EXE" "$DEST"
               echo "$VERSION" > "downloads/${CHANNEL}/VERSION"
               ;;
           esac
-          cp "$EXE" "$DEST"
           aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
           aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
