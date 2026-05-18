@@ -6,14 +6,14 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "channels/**"
-      - "scripts/**"
-      - "R/**"
-      - ".github/workflows/build-inzight.yaml"
-      - "installers/**"
-      - "install_gtk.R"
-      - "install_gtk.cmd"
+    # paths:
+    #   - "channels/**"
+    #   - "scripts/**"
+    #   - "R/**"
+    #   - ".github/workflows/build-inzight.yaml"
+    #   - "installers/**"
+    #   - "install_gtk.R"
+    #   - "install_gtk.cmd"
   workflow_dispatch:
     inputs:
       channels:
