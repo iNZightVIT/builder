@@ -158,7 +158,10 @@ build_channel_binaries <- function(channel) {
     message(" === Building ", pkg, " (", spec, ") ===")
     srcdir <- download_source_dir(spec)
     setwd(tempdir())
-    status <- system2("R", c("CMD", "build", "--no-build-vignettes", shQuote(srcdir)))
+    status <- system2(
+      "R",
+      c("CMD", "build", "--no-build-vignettes", "--no-manual", shQuote(srcdir))
+    )
     if (status != 0) stop("R CMD build failed for ", pkg)
 
     tgz <- list.files(pattern = paste0("^", pkg, "_.*\\.tar\\.gz$"))
