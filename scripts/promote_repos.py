@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -23,14 +24,45 @@ def aws(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, check=check, text=True, capture_output=not check)
 
 
+def list_all_channels() -> list[str]:
+    return sorted(
+        p.stem
+        for p in (ROOT / "channels").glob("*.deps")
+        if not p.name.startswith("_")
+    )
+
+
+def resolve_channels() -> list[str]:
+    raw = os.environ.get("INPUT_CHANNELS", "").strip()
+    if raw:
+        return [c.strip() for c in raw.split(",") if c.strip()]
+    env_json = os.environ.get("CHANNELS_JSON", "").strip()
+    if env_json:
+        return json.loads(env_json)
+    return list_all_channels()
+
+
+def pull_channel_bin(ch: str) -> None:
+    bin_dir = PROMOTE / ch / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Pull s3://{BUCKET}/{ch}/bin -> {bin_dir}")
+    aws("s3", "sync", f"s3://{BUCKET}/{ch}/bin", str(bin_dir), check=False)
+
+
+def pull_flat_bin() -> None:
+    flat_bin = PROMOTE / "flat" / "bin"
+    flat_bin.mkdir(parents=True, exist_ok=True)
+    print(f"Pull s3://{BUCKET}/bin -> {flat_bin}")
+    aws("s3", "sync", f"s3://{BUCKET}/bin", str(flat_bin), check=False)
+
+
 def merge_channel(ch: str) -> None:
     deps = yaml.safe_load((ROOT / "channels" / f"{ch}.deps").read_text(encoding="utf-8"))
     r_minor = deps["r_version"]
     bin_dir = PROMOTE / ch / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
 
-    # Keep existing published packages and indexes.
-    aws("s3", "sync", f"s3://{BUCKET}/{ch}/bin", str(bin_dir), check=False)
+    pull_channel_bin(ch)
 
     tmp_s3 = f"s3://{BUCKET}/{ch}/bin/windows/contrib/tmp{r_minor}"
     tmp_local = bin_dir / "windows" / "contrib" / f"tmp{r_minor}"
@@ -49,7 +81,7 @@ def mirror_stable_flat(channels: list[str]) -> None:
         return
     flat_bin = PROMOTE / "flat" / "bin"
     flat_bin.mkdir(parents=True, exist_ok=True)
-    aws("s3", "sync", f"s3://{BUCKET}/bin", str(flat_bin), check=False)
+    pull_flat_bin()
     stable_bin = PROMOTE / "stable" / "bin"
     if stable_bin.is_dir():
         subprocess.run(["rsync", "-a", f"{stable_bin}/", f"{flat_bin}/"], check=True)
@@ -67,6 +99,7 @@ def write_indexes() -> None:
             targets.append(ch_dir)
 
     for base in targets:
+        print(f"Write index.html under {base / 'bin'}")
         subprocess.run(
             [sys.executable, str(script), "--path", "bin"],
             cwd=base,
@@ -79,23 +112,60 @@ def has_packages_tree(bin_dir: Path) -> bool:
     return contrib.is_dir() and any(contrib.rglob("PACKAGES"))
 
 
-def push_to_s3(channels: list[str]) -> None:
+def has_any_content(bin_dir: Path) -> bool:
+    return bin_dir.is_dir() and any(bin_dir.rglob("*"))
+
+
+def push_to_s3(channels: list[str], *, delete: bool) -> None:
+    delete_args = ["--delete"] if delete else []
+
     for ch in channels:
         bin_dir = PROMOTE / ch / "bin"
-        if has_packages_tree(bin_dir):
-            aws("s3", "sync", "--delete", str(bin_dir), f"s3://{BUCKET}/{ch}/bin")
-        else:
+        if delete and not has_packages_tree(bin_dir):
             print(f"Skip S3 push for {ch}: no PACKAGES under bin/windows/contrib", file=sys.stderr)
+            continue
+        if not delete and not has_any_content(bin_dir):
+            print(f"Skip S3 push for {ch}: empty bin tree", file=sys.stderr)
+            continue
+        print(f"Push {bin_dir} -> s3://{BUCKET}/{ch}/bin {'(delete)' if delete else '(indexes only)'}")
+        aws("s3", "sync", *delete_args, str(bin_dir), f"s3://{BUCKET}/{ch}/bin")
 
     flat_bin = PROMOTE / "flat" / "bin"
-    if has_packages_tree(flat_bin):
-        aws("s3", "sync", "--delete", str(flat_bin), f"s3://{BUCKET}/bin")
-    elif "stable" in channels:
-        print("Skip flat bin push: no PACKAGES tree", file=sys.stderr)
+    if flat_bin.is_dir() and has_any_content(flat_bin):
+        if delete and not has_packages_tree(flat_bin):
+            print("Skip flat bin push: no PACKAGES tree", file=sys.stderr)
+        else:
+            print(f"Push {flat_bin} -> s3://{BUCKET}/bin {'(delete)' if delete else '(indexes only)'}")
+            aws("s3", "sync", *delete_args, str(flat_bin), f"s3://{BUCKET}/bin")
 
 
-def main() -> int:
-    channels = json.loads(os.environ.get("CHANNELS_JSON", "[]"))
+def reindex_only(channels: list[str]) -> int:
+    if not channels:
+        channels = list_all_channels()
+    if not channels:
+        print("No channels to reindex", file=sys.stderr)
+        return 1
+
+    if PROMOTE.exists():
+        shutil.rmtree(PROMOTE)
+    PROMOTE.mkdir()
+
+    for ch in channels:
+        print(f"=== pull {ch} ===")
+        pull_channel_bin(ch)
+
+    print("=== pull flat /bin (legacy root) ===")
+    pull_flat_bin()
+
+    print("=== write index.html ===")
+    write_indexes()
+
+    print("=== push indexes to S3 (no --delete) ===")
+    push_to_s3(channels, delete=False)
+    return 0
+
+
+def promote(channels: list[str]) -> int:
     if not channels:
         print("No channels to promote", file=sys.stderr)
         return 1
@@ -109,8 +179,23 @@ def main() -> int:
     print("=== write index.html ===")
     write_indexes()
     print("=== push to S3 ===")
-    push_to_s3(channels)
+    push_to_s3(channels, delete=True)
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reindex-only",
+        action="store_true",
+        help="Pull published bin trees from S3, regenerate index.html, push without --delete",
+    )
+    args = parser.parse_args()
+
+    channels = resolve_channels()
+    if args.reindex_only:
+        return reindex_only(channels)
+    return promote(channels)
 
 
 if __name__ == "__main__":

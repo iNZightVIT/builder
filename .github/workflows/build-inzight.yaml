@@ -32,10 +32,15 @@ on:
         description: "Skip NSIS installer build and download upload"
         type: boolean
         default: false
+      reindex_only:
+        description: "Pull S3 package repos and regenerate index.html only (no builds)"
+        type: boolean
+        default: false
 
 jobs:
   detect-channels:
     name: Detect channels to build
+    if: github.event_name != 'workflow_dispatch' || inputs.reindex_only != true
     runs-on: ubuntu-24.04
     outputs:
       channels: ${{ steps.detect.outputs.channels }}
@@ -77,7 +82,9 @@ jobs:
   build-channel:
     name: Build (${{ matrix.channel }})
     needs: detect-channels
-    if: needs.detect-channels.outputs.has_channels == 'true'
+    if: >-
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -274,10 +281,47 @@ jobs:
           HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
           echo "$HASH" | aws --profile saml s3 cp - "s3://r.docker.stat.auckland.ac.nz/channels/${INZIGHT_CHANNEL}.last-built"
 
+  reindex-repos:
+    name: Reindex package repositories
+    if: github.event_name == 'workflow_dispatch' && inputs.reindex_only == true
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
+
+      - name: Pull repos and regenerate index.html
+        env:
+          INPUT_CHANNELS: ${{ github.event.inputs.channels }}
+        run: python scripts/promote_repos.py --reindex-only
+
+      - name: Clear CloudFront cache
+        run: |
+          aws --profile saml cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_ID }} \
+            --paths "/*"
+
   promote-repos:
     name: Promote channel repositories
     needs: [detect-channels, build-channel]
     if: >-
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
       needs.detect-channels.outputs.has_channels == 'true' &&
       needs.build-channel.result == 'success' &&
       !contains(github.event.head_commit.message, 'skip repo')
@@ -320,7 +364,9 @@ jobs:
     name: Clean up tmp repos on failure
     runs-on: ubuntu-24.04
     needs: [detect-channels, build-channel, promote-repos]
-    if: failure()
+    if: >-
+      failure() &&
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
     env:
       CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
     steps:
@@ -363,6 +409,7 @@ jobs:
     name: Update website
     needs: [detect-channels, build-channel]
     if: >-
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
       needs.detect-channels.outputs.has_channels == 'true' &&
       needs.build-channel.result == 'success'
     runs-on: ubuntu-latest
