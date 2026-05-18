@@ -37,13 +37,22 @@ Commit message tokens: `skip repo`, `skip installer`.
 
 ## RGtk2 / cairoDevice
 
-These are **never** built or uploaded in CI. Binaries are maintained manually on a physical Windows machine:
+Channel builds install published win.binaries from flat `bin/windows/contrib/<R minor>/` via `install_gtk.R`.
+
+To rebuild after loss or for a new R minor (Windows, matching CI R version — **4.1** today):
+
+**GitHub Actions:** Run workflow **Build iNZight** with **`rebuild_rgtk2`** enabled (Windows job, ~30–60 min compile).
+
+**Local Windows:**
 
 ```bash
-Rscript scripts/build_rgtk2_windows_artifacts.R
+Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3
+# INZIGHT_RGTK2_S3_USE_CLI=1 AWS_PROFILE=saml  (or .env + aws.s3)
 ```
 
-CI installs them from the flat repository via `install_gtk.R` (`INZIGHT_CI=1` disables local zip copy into contrib).
+Sources: `src/RGtk2/RGtk2` submodule, `library/cairoDevice`, or GitHub `tmelliott/RGtk2/RGtk2` if local tree missing. Upload publishes to `bin/windows/contrib/4.1/` (used by `install_gtk.R`) and archives under `static/rgtk2-windows/`.
+
+Then run workflow with **`reindex_only`** to refresh directory indexes.
 
 ## Local scripts
 

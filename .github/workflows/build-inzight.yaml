@@ -36,11 +36,17 @@ on:
         description: "Pull S3 package repos and regenerate index.html only (no builds)"
         type: boolean
         default: false
+      rebuild_rgtk2:
+        description: "Build RGtk2/cairoDevice from source (R 4.1) and publish to flat bin repo"
+        type: boolean
+        default: false
 
 jobs:
   detect-channels:
     name: Detect channels to build
-    if: github.event_name != 'workflow_dispatch' || inputs.reindex_only != true
+    if: >-
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
     runs-on: ubuntu-24.04
     outputs:
       channels: ${{ steps.detect.outputs.channels }}
@@ -79,12 +85,71 @@ jobs:
           GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: python scripts/detect_channels.py
 
+  rebuild-rgtk2:
+    name: Rebuild RGtk2 and cairoDevice (R 4.1)
+    if: github.event_name == 'workflow_dispatch' && inputs.rebuild_rgtk2 == true
+    runs-on: windows-latest
+    env:
+      INZIGHT_RGTK2_UPLOAD_S3: "1"
+      INZIGHT_RGTK2_S3_USE_CLI: "1"
+      AWS_PROFILE: saml
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Checkout RGtk2 and cairoDevice sources
+        shell: bash
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.1"
+          rtools-version: "40"
+          use-public-rspm: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
+
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py `
+            --user ${{ secrets.AWS_USER }} `
+            --password ${{ secrets.AWS_PASS}} `
+            --token ${{ secrets.AWS_TOKEN }} `
+            --idp iam.auckland.ac.nz
+
+      - name: Build and publish RGtk2 win.binaries
+        env:
+          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+        run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3
+
+      - name: Smoke test installed packages
+        run: Rscript -e "library(RGtk2); library(cairoDevice)"
+
+      - name: Clear CloudFront cache
+        shell: bash
+        run: |
+          aws --profile saml cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_ID }} \
+            --paths "/bin/windows/contrib/*"
+
   build-channel:
     name: Build (${{ matrix.channel }})
     needs: detect-channels
     if: >-
       needs.detect-channels.outputs.has_channels == 'true' &&
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
+      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -283,7 +348,10 @@ jobs:
 
   reindex-repos:
     name: Reindex package repositories
-    if: github.event_name == 'workflow_dispatch' && inputs.reindex_only == true
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.reindex_only == true &&
+      inputs.rebuild_rgtk2 != true
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -322,6 +390,7 @@ jobs:
     needs: [detect-channels, build-channel]
     if: >-
       (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
       needs.detect-channels.outputs.has_channels == 'true' &&
       needs.build-channel.result == 'success' &&
       !contains(github.event.head_commit.message, 'skip repo')

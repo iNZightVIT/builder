@@ -50,18 +50,35 @@ repo_root <- get_arg("root", Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd())
 rgtk2_src <- Sys.getenv("INZIGHT_RGTK2_SOURCE", unset = "")
 cairo_src <- Sys.getenv("INZIGHT_CAIRODEVICE_SOURCE", unset = "")
 
+resolve_rgtk2_src <- function(root) {
+  explicit <- Sys.getenv("INZIGHT_RGTK2_SOURCE", unset = "")
+  if (nzchar(explicit) && dir.exists(explicit)) {
+    return(normalizePath(explicit, winslash = "/", mustWork = TRUE))
+  }
+  for (p in c(
+    file.path(root, "src", "RGtk2", "RGtk2"),
+    file.path(root, "library", "RGtk2"),
+    file.path(root, "RGtk2", "RGtk2")
+  )) {
+    if (dir.exists(p)) {
+      return(normalizePath(p, winslash = "/", mustWork = TRUE))
+    }
+  }
+  NA_character_
+}
+
 if (!nzchar(rgtk2_src)) {
-  p <- file.path(repo_root, "library", "RGtk2")
-  if (dir.exists(p)) rgtk2_src <- p
+  rgtk2_src <- resolve_rgtk2_src(repo_root)
 }
 if (!nzchar(cairo_src)) {
   p <- file.path(repo_root, "library", "cairoDevice")
   if (dir.exists(p)) cairo_src <- p
 }
-if (!nzchar(rgtk2_src) || !nzchar(cairo_src)) {
+use_github_rgtk2 <-
+  is.na(rgtk2_src) || !nzchar(rgtk2_src) || !dir.exists(rgtk2_src)
+if (!nzchar(cairo_src) || !dir.exists(cairo_src)) {
   stop(
-    "Set INZIGHT_RGTK2_SOURCE and INZIGHT_CAIRODEVICE_SOURCE to package source dirs, ",
-    "or run from the builder repo with library/RGtk2 and library/cairoDevice present."
+    "cairoDevice source not found. Set INZIGHT_CAIRODEVICE_SOURCE or init library/cairoDevice submodule."
   )
 }
 
@@ -104,70 +121,120 @@ zip_win_binary <- function(pkg, lib, out_dir) {
   normalizePath(zpath, winslash = "/", mustWork = TRUE)
 }
 
-upload_zips_to_s3 <- function(files, r_minor) {
+publish_contrib_dir <- function(files, r_minor, root = getwd()) {
+  contrib <- file.path(root, "bin", "windows", "contrib", r_minor)
+  dir.create(contrib, recursive = TRUE, showWarnings = FALSE)
+  file.copy(files, contrib, overwrite = TRUE)
+  tools::write_PACKAGES(contrib, type = "win.binary", verbose = TRUE)
+  normalizePath(contrib, winslash = "/", mustWork = TRUE)
+}
+
+upload_with_cli <- function(local_path, s3_dest) {
+  aws <- Sys.which("aws")
+  if (!nzchar(aws)) {
+    stop("AWS CLI (`aws`) not on PATH; set INZIGHT_RGTK2_S3_USE_CLI=1 only when aws is available.")
+  }
+  prof <- trimws(Sys.getenv("AWS_PROFILE", unset = ""))
+  argv <- c("s3", "sync", local_path, s3_dest)
+  if (nzchar(prof)) {
+    argv <- c(argv, "--profile", prof)
+  }
+  message("aws ", paste(argv, collapse = " "))
+  st <- system2(aws, argv)
+  if (!identical(st, 0L)) {
+    stop("aws s3 sync failed (exit ", st, "): ", s3_dest)
+  }
+  invisible(NULL)
+}
+
+upload_zips_to_s3 <- function(files, r_minor, publish_contrib = TRUE) {
   bucket <- Sys.getenv("INZIGHT_RGTK2_S3_BUCKET", unset = "r.docker.stat.auckland.ac.nz")
-  base <- sprintf("s3://%s/static/rgtk2-windows/R-%s", bucket, r_minor)
   use_cli <- tolower(Sys.getenv("INZIGHT_RGTK2_S3_USE_CLI", unset = "")) %in% c("1", "true", "yes")
 
-  if (use_cli) {
-    aws <- Sys.which("aws")
-    if (!nzchar(aws)) {
-      stop("INZIGHT_RGTK2_S3_USE_CLI is set but AWS CLI (`aws`) not on PATH.")
+  if (publish_contrib) {
+    contrib <- publish_contrib_dir(files, r_minor, root = getwd())
+    dest <- sprintf("s3://%s/bin/windows/contrib/%s", bucket, r_minor)
+    if (use_cli) {
+      upload_with_cli(contrib, dest)
+      message("Published win.binary repo at ", dest, "/")
+    } else {
+      if (!requireNamespace("aws.s3", quietly = TRUE)) {
+        install.packages("aws.s3", repos = "https://cloud.r-project.org")
+      }
+      for (f in files) {
+        key <- sprintf("bin/windows/contrib/%s/%s", r_minor, basename(f))
+        aws.s3::put_object(
+          file = normalizePath(f, winslash = "/", mustWork = TRUE),
+          object = key,
+          bucket = bucket,
+          multipart = TRUE
+        )
+        message("Uploaded s3://", bucket, "/", key)
+      }
+      packs <- file.path(contrib, "PACKAGES")
+      if (file.exists(packs)) {
+        aws.s3::put_object(
+          file = packs,
+          object = sprintf("bin/windows/contrib/%s/PACKAGES", r_minor),
+          bucket = bucket
+        )
+      }
     }
-    prof <- trimws(Sys.getenv("AWS_PROFILE", unset = ""))
+  }
+
+  archive_base <- sprintf("s3://%s/static/rgtk2-windows/R-%s", bucket, r_minor)
+  if (use_cli) {
     for (f in files) {
-      dest <- paste0(base, "/", basename(f))
+      dest <- paste0(archive_base, "/", basename(f))
       fp <- normalizePath(f, winslash = "/", mustWork = TRUE)
       argv <- c("s3", "cp", fp, dest)
-      if (nzchar(prof)) {
-        argv <- c(argv, "--profile", prof)
-      }
-      message(paste(c(shQuote(aws, type = "cmd"), argv), collapse = " "))
+      prof <- trimws(Sys.getenv("AWS_PROFILE", unset = ""))
+      if (nzchar(prof)) argv <- c(argv, "--profile", prof)
       st <- system2(aws, argv)
-      if (!identical(st, 0L)) {
-        stop("aws s3 cp failed for ", basename(f), " (exit ", st, ")")
-      }
+      if (!identical(st, 0L)) stop("aws s3 cp failed for ", basename(f))
     }
-    message("Uploaded to ", base, "/")
+    message("Archived copies at ", archive_base, "/")
     return(invisible(NULL))
   }
 
   if (!requireNamespace("aws.s3", quietly = TRUE)) {
-    ip <- list(pkgs = "aws.s3", repos = "https://cloud.r-project.org")
-    if (.Platform$OS.type == "windows") {
-      ip$INSTALL_opts <- "--no-multiarch"
-    }
-    do.call(install.packages, ip)
+    install.packages("aws.s3", repos = "https://cloud.r-project.org")
   }
-
   region <- trimws(Sys.getenv("AWS_DEFAULT_REGION", unset = ""))
   if (!nzchar(region)) {
-    region <- "ap-southeast-2"
-    Sys.setenv(AWS_DEFAULT_REGION = region)
+    Sys.setenv(AWS_DEFAULT_REGION = "ap-southeast-2")
   }
-
   for (f in files) {
     key <- sprintf("static/rgtk2-windows/R-%s/%s", r_minor, basename(f))
-    fp <- normalizePath(f, winslash = "/", mustWork = TRUE)
     aws.s3::put_object(
-      file = fp,
+      file = normalizePath(f, winslash = "/", mustWork = TRUE),
       object = key,
       bucket = bucket,
       multipart = TRUE
     )
-    message("Uploaded s3://", bucket, "/", key)
+    message("Archived s3://", bucket, "/", key)
   }
-  message("Done: ", base, "/")
 }
 
 cat("Installing RGtk2 into curator library ...\n")
-remotes::install_local(
-  rgtk2_src,
-  lib = lib,
-  dependencies = NA,
-  upgrade = "never",
-  INSTALL_opts = c("--no-multiarch", "--no-test-load")
-)
+if (use_github_rgtk2) {
+  ref <- Sys.getenv("INZIGHT_RGTK2_GITHUB", unset = "tmelliott/RGtk2/RGtk2")
+  message("No local RGtk2 source; installing from GitHub: ", ref)
+  remotes::install_github(
+    ref,
+    lib = lib,
+    upgrade = "never",
+    INSTALL_opts = c("--no-multiarch", "--no-test-load")
+  )
+} else {
+  remotes::install_local(
+    rgtk2_src,
+    lib = lib,
+    dependencies = NA,
+    upgrade = "never",
+    INSTALL_opts = c("--no-multiarch", "--no-test-load")
+  )
+}
 
 gtk_zip <- file.path(tempdir(), "gtk-bundle-curator.zip")
 download.file(gtk_url, destfile = gtk_zip, mode = "wb")
@@ -205,12 +272,15 @@ message("\n=== Artifacts ===\n", z1, "\n", z2)
 
 want_s3 <- any(args == "--upload-s3") ||
   tolower(Sys.getenv("INZIGHT_RGTK2_UPLOAD_S3", unset = "")) %in% c("1", "true", "yes")
+no_contrib <- any(args == "--no-publish-contrib")
 if (want_s3) {
-  upload_zips_to_s3(c(z1, z2), r_minor)
+  upload_zips_to_s3(c(z1, z2), r_minor, publish_contrib = !no_contrib)
 } else {
+  contrib <- publish_contrib_dir(c(z1, z2), r_minor, root = getwd())
+  message("\nLocal contrib dir: ", contrib)
   message(
     "\nOptional S3 upload: add to .env INZIGHT_RGTK2_UPLOAD_S3=1 and AWS_* keys\n",
-    "(aws.s3 / https://github.com/cloudyr/aws.s3 ), or pass --upload-s3.\n",
-    "Use INZIGHT_RGTK2_S3_USE_CLI=1 to use the `aws` CLI instead (e.g. AWS_PROFILE).\n"
+    "or pass --upload-s3. Use INZIGHT_RGTK2_S3_USE_CLI=1 for aws CLI (e.g. AWS_PROFILE=saml).\n",
+    "Upload publishes to bin/windows/contrib/<R minor>/ (install_gtk.R) plus static archive.\n"
   )
 }

@@ -68,7 +68,10 @@ install_rgtk_cairo_from_repo <- function(lib) {
       ".\nPublish binaries under bin/windows/contrib/",
       r_minor,
       "/ on that repository, or set INZIGHT_RGTK2_ZIPS_DIR / *_ZIP_URL for local zips.\n",
-      "Build zips on a physical Windows machine: Rscript scripts/build_rgtk2_windows_artifacts.R\n"
+      "Rebuild from source: GitHub Actions -> Build iNZight -> rebuild_rgtk2, or\n",
+      "  Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3 (Windows, R ",
+      r_minor,
+      ")\n"
     )
   }
   message("Installing RGtk2 and cairoDevice (win.binary) from ", repo)
