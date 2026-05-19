@@ -1,12 +1,8 @@
 name: Build iNZight
 
-# Node 24 for JS-based actions (checkout, setup-python); see GitHub changelog 2025-09-19.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
-  schedule:
-    - cron: "0 14 * * *"
+  # schedule:
+  #   - cron: "0 14 * * *"
   push:
     branches:
       - master
@@ -18,35 +14,38 @@ on:
     #   - "installers/**"
     #   - "install_gtk.R"
     #   - "install_gtk.cmd"
-  workflow_dispatch:
-    inputs:
-      channels:
-        description: "Comma-separated channel names (empty = all eligible)"
-        required: false
-        default: ""
-      rebuild_all:
-        description: "Rebuild all channels regardless of hash"
-        type: boolean
-        default: false
-      skip_installer:
-        description: "Skip NSIS installer build and download upload"
-        type: boolean
-        default: false
-      reindex_only:
-        description: "Pull S3 package repos and regenerate index.html only (no builds)"
-        type: boolean
-        default: false
-      rebuild_rgtk2:
-        description: "Build RGtk2/cairoDevice from source (R 4.1) and publish to flat bin repo"
-        type: boolean
-        default: false
+  # workflow_dispatch:
+  #   inputs:
+  #     channels:
+  #       description: "Comma-separated channel names (empty = all eligible)"
+  #       required: false
+  #       default: ""
+  #     rebuild_all:
+  #       description: "Rebuild all channels regardless of hash"
+  #       type: boolean
+  #       default: false
+  #     skip_installer:
+  #       description: "Skip NSIS installer build and download upload"
+  #       type: boolean
+  #       default: false
+  #     reindex_only:
+  #       description: "Pull S3 package repos and regenerate index.html only (no builds)"
+  #       type: boolean
+  #       default: false
+  #     rebuild_rgtk2:
+  #       description: "Build RGtk2/cairoDevice from source (R 4.1) and publish to flat bin repo"
+  #       type: boolean
+  #       default: false
+
+env:
+  INZIGHT_CRAN_REPO: https://r.docker.stat.auckland.ac.nz
 
 jobs:
   detect-channels:
     name: Detect channels to build
-    if: >-
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
+    # if: >-
+    #   (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+    #   (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
     runs-on: ubuntu-24.04
     outputs:
       channels: ${{ steps.detect.outputs.channels }}
@@ -85,78 +84,78 @@ jobs:
           GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: python scripts/detect_channels.py
 
-  rebuild-rgtk2:
-    name: Rebuild RGtk2 and cairoDevice (R 4.1)
-    if: github.event_name == 'workflow_dispatch' && inputs.rebuild_rgtk2 == true
-    runs-on: windows-latest
-    env:
-      INZIGHT_RGTK2_UPLOAD_S3: "1"
-      INZIGHT_RGTK2_S3_USE_CLI: "1"
-      AWS_PROFILE: saml
-    steps:
-      - uses: actions/checkout@v5
+  # rebuild-rgtk2:
+  #   name: Rebuild RGtk2 and cairoDevice (R 4.1)
+  #   if: github.event_name == 'workflow_dispatch' && inputs.rebuild_rgtk2 == true
+  #   runs-on: windows-latest
+  #   env:
+  #     INZIGHT_RGTK2_UPLOAD_S3: "1"
+  #     INZIGHT_RGTK2_S3_USE_CLI: "1"
+  #     AWS_PROFILE: saml
+  #   steps:
+  #     - uses: actions/checkout@v5
 
-      - name: Checkout RGtk2 and cairoDevice sources
-        shell: bash
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
+  #     - name: Checkout RGtk2 and cairoDevice sources
+  #       shell: bash
+  #       run: |
+  #         git config --global url."https://github.com/".insteadOf "git@github.com:"
+  #         git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: "4.1"
-          rtools-version: "40"
-          use-public-rspm: true
+  #     - uses: r-lib/actions/setup-r@v2
+  #       with:
+  #         r-version: "4.1"
+  #         rtools-version: "40"
+  #         use-public-rspm: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.12"
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ./requirements.txt
+  #     - name: Install Python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r ./requirements.txt
 
-      - name: Generate AWS credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
+  #     - name: Generate AWS credentials
+  #       run: |
+  #         python aws_saml_login.py `
+  #           --user ${{ secrets.AWS_USER }} `
+  #           --password ${{ secrets.AWS_PASS}} `
+  #           --token ${{ secrets.AWS_TOKEN }} `
+  #           --idp iam.auckland.ac.nz
 
-      - name: Add GTK64 devkit to PATH (compile)
-        run: echo "C:\GTK64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+  #     - name: Add GTK64 devkit to PATH (compile)
+  #       run: echo "C:\GTK64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Build and publish RGtk2 win.binaries
-        env:
-          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
-          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
-        run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3 --gtk-free
+  #     - name: Build and publish RGtk2 win.binaries
+  #       env:
+  #         INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+  #         INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+  #         INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+  #         INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
+  #       run: Rscript scripts/build_rgtk2_windows_artifacts.R --upload-s3 --gtk-free
 
-      - name: Add GTK runtime to PATH
-        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+  #     - name: Add GTK runtime to PATH
+  #       run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Smoke test installed packages
-        run: Rscript -e "library(RGtk2); library(cairoDevice)"
+  #     - name: Smoke test installed packages
+  #       run: Rscript -e "library(RGtk2); library(cairoDevice)"
 
-      - name: Clear CloudFront cache
-        shell: bash
-        run: |
-          aws --profile saml cloudfront create-invalidation \
-            --distribution-id ${{ secrets.AWS_ID }} \
-            --paths "/bin/windows/contrib/*"
+  #     - name: Clear CloudFront cache
+  #       shell: bash
+  #       run: |
+  #         aws --profile saml cloudfront create-invalidation \
+  #           --distribution-id ${{ secrets.AWS_ID }} \
+  #           --paths "/bin/windows/contrib/*"
 
   build-channel-repo:
     name: Repo (${{ matrix.channel }})
     needs: detect-channels
-    if: >-
-      needs.detect-channels.outputs.has_channels == 'true' &&
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
+    if: needs.detect-channels.outputs.has_channels == 'true'
+      # &&
+      # (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      # (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true)
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -168,8 +167,9 @@ jobs:
       TZ: "Pacific/Auckland"
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       INZIGHT_CI: "1"
-      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
+      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
+      # GTK_PATH: "D:/a/_temp/GTK/x64"
 
     steps:
       - uses: actions/checkout@v5
@@ -194,7 +194,7 @@ jobs:
           r-version: ${{ steps.channel-meta.outputs.r_version }}
           rtools-version: ${{ steps.channel-meta.outputs.rtools }}
           use-public-rspm: true
-          extra-repositories: https://r.docker.stat.auckland.ac.nz
+          extra-repositories: ${{ env.INZIGHT_CRAN_REPO }}
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -216,307 +216,315 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} `
             --idp iam.auckland.ac.nz
 
-      - name: Add GTK64 devkit to PATH (compile)
-        run: echo "C:\GTK64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Build RGtk2 and cairoDevice from source
-        env:
-          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
-          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
-        run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
-
-      - name: Add GTK runtime to PATH
-        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Check RGtk2 and cairoDevice
-        run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
-
-      - name: Install channel packages
-        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-        run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
-
-      - name: Build channel win.binaries
-        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-        run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
-
-      - name: Stage channel repository
-        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-        shell: bash
+      # all this does is downloads the zip, then extracts it to GTK_PATH;
+      # then add the bin directory to the PATH
+      - name: Install GTK runtime and configure
         run: |
-          R_MINOR=$(Rscript rversion.R)
-          SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
-          DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
-          mkdir -p "$DEST"
-          if [ -d "$SRC" ]; then
-            cp -a "$SRC/." "$DEST/"
-          fi
+          curl -L -o gtk.zip https://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          md D:\a\_temp\GTK
+          7z x gtk.zip -ox64 > nul
+          del gtk.zip
+          cp -r x64 D:\a\_temp\GTK\x64
+          echo "D:\a\_temp\GTK\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Upload channel repository (staging)
-        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-        shell: bash
-        run: |
-          R_MINOR=$(Rscript rversion.R)
-          aws --profile saml s3 sync --delete \
-            "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
-            "s3://r.docker.stat.auckland.ac.nz/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+      # - name: Build RGtk2 and cairoDevice from source
+      #   env:
+      #     INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+      #     INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+      #     INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+      #     INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
+      #   run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
 
-      - name: Record channel build hash
-        if: >-
-          success() &&
-          !contains(github.event.head_commit.message, 'skip repo')
-        shell: bash
-        run: |
-          HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
-          echo "$HASH" | aws --profile saml s3 cp - "s3://r.docker.stat.auckland.ac.nz/channels/${INZIGHT_CHANNEL}.last-built"
+      # - name: Add GTK runtime to PATH
+      #   run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-  build-channel-installer:
-    name: Installer (${{ matrix.channel }})
-    needs: [detect-channels, build-channel-repo, promote-repos]
-    if: >-
-      needs.detect-channels.outputs.has_channels == 'true' &&
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
-      (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
-      !contains(github.event.head_commit.message, 'skip installer') &&
-      !contains(github.event.head_commit.message, 'skip repo') &&
-      needs.build-channel-repo.result == 'success' &&
-      needs.promote-repos.result == 'success'
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        channel: ${{ fromJSON(needs.detect-channels.outputs.channels) }}
-    env:
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      R_COMPILE_AND_INSTALL_PACKAGES: "never"
-      TZ: "Pacific/Auckland"
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      INZIGHT_CI: "1"
-      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
-      INZIGHT_CHANNEL: ${{ matrix.channel }}
+      # - name: Check RGtk2 and cairoDevice
+      #   run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
 
-    steps:
-      - uses: actions/checkout@v5
+      # - name: Install channel packages
+      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+      #   run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
 
-      - name: Checkout submodules
-        shell: bash
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 installers/win-installer src/RGtk2 library/cairoDevice
+      # - name: Build channel win.binaries
+      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+      #   run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
 
-      - name: Read channel R version
-        id: channel-meta
-        shell: bash
-        run: |
-          R_VER=$(grep '^r_version:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
-          RTOOLS=$(grep '^rtools:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
-          echo "r_version=${R_VER}" >> "$GITHUB_OUTPUT"
-          echo "rtools=${RTOOLS}" >> "$GITHUB_OUTPUT"
+      # - name: Stage channel repository
+      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+      #   shell: bash
+      #   run: |
+      #     R_MINOR=$(Rscript rversion.R)
+      #     SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
+      #     DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+      #     mkdir -p "$DEST"
+      #     if [ -d "$SRC" ]; then
+      #       cp -a "$SRC/." "$DEST/"
+      #     fi
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: ${{ steps.channel-meta.outputs.r_version }}
-          rtools-version: ${{ steps.channel-meta.outputs.rtools }}
-          use-public-rspm: true
-          extra-repositories: https://r.docker.stat.auckland.ac.nz
+      # - name: Upload channel repository (staging)
+      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+      #   shell: bash
+      #   run: |
+      #     R_MINOR=$(Rscript rversion.R)
+      #     aws --profile saml s3 sync --delete \
+      #       "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
+      #       "s3://${{ env.INZIGHT_CRAN_REPO }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
 
-      - uses: r-lib/actions/setup-pandoc@v2
+      # - name: Record channel build hash
+      #   if: >-
+      #     success() &&
+      #     !contains(github.event.head_commit.message, 'skip repo')
+      #   shell: bash
+      #   run: |
+      #     HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
+      #     echo "$HASH" | aws --profile saml s3 cp - "s3://${{ env.INZIGHT_CRAN_REPO }}/channels/${INZIGHT_CHANNEL}.last-built"
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.6"
+  # build-channel-installer:
+  #   name: Installer (${{ matrix.channel }})
+  #   needs: [detect-channels, build-channel-repo, promote-repos]
+  #   if: >-
+  #     needs.detect-channels.outputs.has_channels == 'true' &&
+  #     (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+  #     (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
+  #     (github.event_name != 'workflow_dispatch' || inputs.skip_installer != true) &&
+  #     !contains(github.event.head_commit.message, 'skip installer') &&
+  #     !contains(github.event.head_commit.message, 'skip repo') &&
+  #     needs.build-channel-repo.result == 'success' &&
+  #     needs.promote-repos.result == 'success'
+  #   runs-on: windows-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       channel: ${{ fromJSON(needs.detect-channels.outputs.channels) }}
+  #   env:
+  #     R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+  #     R_COMPILE_AND_INSTALL_PACKAGES: "never"
+  #     TZ: "Pacific/Auckland"
+  #     GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  #     INZIGHT_CI: "1"
+  #     INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
+  #     INZIGHT_CHANNEL: ${{ matrix.channel }}
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+  #   steps:
+  #     - uses: actions/checkout@v5
 
-      - name: Generate AWS credentials
-        run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
-            --idp iam.auckland.ac.nz
+  #     - name: Checkout submodules
+  #       shell: bash
+  #       run: |
+  #         git config --global url."https://github.com/".insteadOf "git@github.com:"
+  #         git submodule update --init --depth 1 installers/win-installer src/RGtk2 library/cairoDevice
 
-      - name: Install channel packages from promoted repos
-        run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
+  #     - name: Read channel R version
+  #       id: channel-meta
+  #       shell: bash
+  #       run: |
+  #         R_VER=$(grep '^r_version:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+  #         RTOOLS=$(grep '^rtools:' "channels/${INZIGHT_CHANNEL}.deps" | sed 's/.*"\(.*\)".*/\1/')
+  #         echo "r_version=${R_VER}" >> "$GITHUB_OUTPUT"
+  #         echo "rtools=${RTOOLS}" >> "$GITHUB_OUTPUT"
 
-      - name: Install RGtk2 and GTK (channel win.binary or source fallback)
-        env:
-          INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
-          INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
-          INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
-          INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
-        run: Rscript ./install_gtk.R
+  #     - uses: r-lib/actions/setup-r@v2
+  #       with:
+  #         r-version: ${{ steps.channel-meta.outputs.r_version }}
+  #         rtools-version: ${{ steps.channel-meta.outputs.rtools }}
+  #         use-public-rspm: true
+  #         extra-repositories: ${{ env.INZIGHT_CRAN_REPO }}
 
-      - name: Add GTK to PATH
-        run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+  #     - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Check RGtk2 and cairoDevice
-        run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.6"
 
-      - name: Set installer version
-        id: inzight
-        run: echo "version=$(Rscript scripts/channel_version.R --channel=${{ matrix.channel }})" >> "$env:GITHUB_OUTPUT"
+  #     - name: Install Python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install --use-feature=2020-resolver -r ./requirements.txt
 
-      - name: Move R and library to build location
-        working-directory: installers/win-installer
-        run: |
-          cp -R C:/R R
-          cp -R ${{ env.R_LIBS_USER }} library
+  #     - name: Generate AWS credentials
+  #       run: |
+  #         python aws_saml_login.py `
+  #           --user ${{ secrets.AWS_USER }} `
+  #           --password ${{ secrets.AWS_PASS}} `
+  #           --token ${{ secrets.AWS_TOKEN }} `
+  #           --idp iam.auckland.ac.nz
 
-      - name: Configure R GUI
-        working-directory: installers/win-installer
-        run: R\bin\Rscript.exe rgui_settings.R
+  #     - name: Install channel packages from promoted repos
+  #       run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
 
-      - name: Install NSIS
-        run: |
-          choco install nsis -y --no-progress
-          $candidates = @(
-            (Join-Path ${env:ProgramFiles(x86)} "NSIS"),
-            (Join-Path $env:ProgramFiles "NSIS")
-          )
-          $nsis = $candidates | Where-Object { Test-Path (Join-Path $_ "makensis.exe") } | Select-Object -First 1
-          if (-not $nsis) { throw "makensis.exe not found after NSIS install" }
-          echo $nsis | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+  #     - name: Install RGtk2 and GTK (channel win.binary or source fallback)
+  #       env:
+  #         INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
+  #         INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+  #         INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
+  #         INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
+  #         INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
+  #       run: Rscript ./install_gtk.R
 
-      - name: Build installer
-        working-directory: installers/win-installer
-        run: makensis.exe inzight_installer.nsi
-        env:
-          INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
+  #     - name: Add GTK to PATH
+  #       run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Upload installer artifact
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION="${{ steps.inzight.outputs.version }}"
-          CHANNEL="${INZIGHT_CHANNEL}"
-          EXE="installers/win-installer/iNZightVIT-installer.exe"
-          aws --profile saml s3 sync \
-            --exclude '*' --exclude '!*.html' --exclude '!VERSION*' \
-            s3://r.docker.stat.auckland.ac.nz/downloads downloads || mkdir -p downloads
-          mkdir -p downloads/Windows "downloads/${CHANNEL}"
-          case "$CHANNEL" in
-            development)
-              DEST="downloads/iNZightVIT-installer-nightly.exe"
-              cp "$EXE" "$DEST"
-              echo "$VERSION" > downloads/VERSION-nightly
-              ;;
-            stable)
-              DEST="downloads/Windows/iNZightVIT-installer-${VERSION}.exe"
-              cp "$EXE" "$DEST"
-              # Copy, not symlink: Windows runners and S3 do not handle ln reliably.
-              cp "$EXE" "downloads/iNZightVIT-installer.exe"
-              echo "$VERSION" > downloads/VERSION
-              ;;
-            *)
-              DEST="downloads/${CHANNEL}/iNZightVIT-installer-${VERSION}.exe"
-              cp "$EXE" "$DEST"
-              echo "$VERSION" > "downloads/${CHANNEL}/VERSION"
-              ;;
-          esac
-          aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
-          Rscript create_index.R downloads downloads/Windows
-          aws --profile saml s3 sync downloads s3://r.docker.stat.auckland.ac.nz/downloads
+  #     - name: Check RGtk2 and cairoDevice
+  #       run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
 
-  reindex-repos:
-    name: Reindex package repositories
-    if: >-
-      github.event_name == 'workflow_dispatch' &&
-      inputs.reindex_only == true &&
-      inputs.rebuild_rgtk2 != true
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
+  #     - name: Set installer version
+  #       id: inzight
+  #       run: echo "version=$(Rscript scripts/channel_version.R --channel=${{ matrix.channel }})" >> "$env:GITHUB_OUTPUT"
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+  #     - name: Move R and library to build location
+  #       working-directory: installers/win-installer
+  #       run: |
+  #         cp -R C:/R R
+  #         cp -R ${{ env.R_LIBS_USER }} library
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ./requirements.txt
+  #     - name: Configure R GUI
+  #       working-directory: installers/win-installer
+  #       run: R\bin\Rscript.exe rgui_settings.R
 
-      - name: Generate AWS credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS }} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Install NSIS
+  #       run: |
+  #         choco install nsis -y --no-progress
+  #         $candidates = @(
+  #           (Join-Path ${env:ProgramFiles(x86)} "NSIS"),
+  #           (Join-Path $env:ProgramFiles "NSIS")
+  #         )
+  #         $nsis = $candidates | Where-Object { Test-Path (Join-Path $_ "makensis.exe") } | Select-Object -First 1
+  #         if (-not $nsis) { throw "makensis.exe not found after NSIS install" }
+  #         echo $nsis | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Pull repos and regenerate index.html
-        env:
-          INPUT_CHANNELS: ${{ github.event.inputs.channels }}
-        run: python scripts/promote_repos.py --reindex-only
+  #     - name: Build installer
+  #       working-directory: installers/win-installer
+  #       run: makensis.exe inzight_installer.nsi
+  #       env:
+  #         INSTALLER_VERSION: ${{ steps.inzight.outputs.version }}
 
-      - name: Clear CloudFront cache
-        run: |
-          aws --profile saml cloudfront create-invalidation \
-            --distribution-id ${{ secrets.AWS_ID }} \
-            --paths "/*"
+  #     - name: Upload installer artifact
+  #       shell: bash
+  #       run: |
+  #         set -euo pipefail
+  #         VERSION="${{ steps.inzight.outputs.version }}"
+  #         CHANNEL="${INZIGHT_CHANNEL}"
+  #         EXE="installers/win-installer/iNZightVIT-installer.exe"
+  #         aws --profile saml s3 sync \
+  #           --exclude '*' --exclude '!*.html' --exclude '!VERSION*' \
+  #           s3://${{ env.INZIGHT_CRAN_REPO }}/downloads downloads || mkdir -p downloads
+  #         mkdir -p downloads/Windows "downloads/${CHANNEL}"
+  #         case "$CHANNEL" in
+  #           development)
+  #             DEST="downloads/iNZightVIT-installer-nightly.exe"
+  #             cp "$EXE" "$DEST"
+  #             echo "$VERSION" > downloads/VERSION-nightly
+  #             ;;
+  #           stable)
+  #             DEST="downloads/Windows/iNZightVIT-installer-${VERSION}.exe"
+  #             cp "$EXE" "$DEST"
+  #             # Copy, not symlink: Windows runners and S3 do not handle ln reliably.
+  #             cp "$EXE" "downloads/iNZightVIT-installer.exe"
+  #             echo "$VERSION" > downloads/VERSION
+  #             ;;
+  #           *)
+  #             DEST="downloads/${CHANNEL}/iNZightVIT-installer-${VERSION}.exe"
+  #             cp "$EXE" "$DEST"
+  #             echo "$VERSION" > "downloads/${CHANNEL}/VERSION"
+  #             ;;
+  #         esac
+  #         aws --profile saml s3 sync downloads s3://${{ env.INZIGHT_CRAN_REPO }}/downloads
+  #         aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
+  #         aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+  #         Rscript create_index.R downloads downloads/Windows
+  #         aws --profile saml s3 sync downloads s3://${{ env.INZIGHT_CRAN_REPO }}/downloads
 
-  promote-repos:
-    name: Promote channel repositories
-    needs: [detect-channels, build-channel-repo]
-    if: >-
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-      (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
-      needs.detect-channels.outputs.has_channels == 'true' &&
-      needs.build-channel-repo.result == 'success' &&
-      !contains(github.event.head_commit.message, 'skip repo')
-    runs-on: ubuntu-24.04
-    env:
-      CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
-    steps:
-      - uses: actions/checkout@v5
+  # reindex-repos:
+  #   name: Reindex package repositories
+  #   if: >-
+  #     github.event_name == 'workflow_dispatch' &&
+  #     inputs.reindex_only == true &&
+  #     inputs.rebuild_rgtk2 != true
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.12"
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ./requirements.txt
+  #     - name: Install Python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r ./requirements.txt
 
-      - name: Generate AWS credentials
-        run: |
-          python aws_saml_login.py \
-            --user ${{ secrets.AWS_USER }} \
-            --password ${{ secrets.AWS_PASS }} \
-            --token ${{ secrets.AWS_TOKEN }} \
-            --idp iam.auckland.ac.nz
+  #     - name: Generate AWS credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS }} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
 
-      - name: Promote repositories and regenerate indexes
-        env:
-          CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
-        run: python scripts/promote_repos.py
+  #     - name: Pull repos and regenerate index.html
+  #       env:
+  #         INPUT_CHANNELS: ${{ github.event.inputs.channels }}
+  #       run: python scripts/promote_repos.py --reindex-only
 
-      - name: Clear CloudFront cache
-        run: |
-          aws --profile saml cloudfront create-invalidation \
-            --distribution-id ${{ secrets.AWS_ID }} \
-            --paths "/*"
+  #     - name: Clear CloudFront cache
+  #       run: |
+  #         aws --profile saml cloudfront create-invalidation \
+  #           --distribution-id ${{ secrets.AWS_ID }} \
+  #           --paths "/*"
+
+  # promote-repos:
+  #   name: Promote channel repositories
+  #   needs: [detect-channels, build-channel-repo]
+  #   if: >-
+  #     (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+  #     (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
+  #     needs.detect-channels.outputs.has_channels == 'true' &&
+  #     needs.build-channel-repo.result == 'success' &&
+  #     !contains(github.event.head_commit.message, 'skip repo')
+  #   runs-on: ubuntu-24.04
+  #   env:
+  #     CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+  #   steps:
+  #     - uses: actions/checkout@v5
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.12"
+
+  #     - name: Install Python dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -r ./requirements.txt
+
+  #     - name: Generate AWS credentials
+  #       run: |
+  #         python aws_saml_login.py \
+  #           --user ${{ secrets.AWS_USER }} \
+  #           --password ${{ secrets.AWS_PASS }} \
+  #           --token ${{ secrets.AWS_TOKEN }} \
+  #           --idp iam.auckland.ac.nz
+
+  #     - name: Promote repositories and regenerate indexes
+  #       env:
+  #         CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+  #       run: python scripts/promote_repos.py
+
+  #     - name: Clear CloudFront cache
+  #       run: |
+  #         aws --profile saml cloudfront create-invalidation \
+  #           --distribution-id ${{ secrets.AWS_ID }} \
+  #           --paths "/*"
 
   cleanup-after-fail:
     name: Clean up tmp repos on failure
     runs-on: ubuntu-24.04
     needs: [detect-channels, build-channel-repo, promote-repos]
-    if: >-
-      failure() &&
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
+    # TODO: make this only run on failure once job working
+    # if: failure()
+    # (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
     env:
       CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
     steps:
@@ -555,24 +563,24 @@ jobs:
               )
           PY
 
-  update-website:
-    name: Update website
-    needs: [detect-channels, build-channel-repo, promote-repos, build-channel-installer]
-    if: >-
-      always() &&
-      !cancelled() &&
-      (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-      needs.detect-channels.outputs.has_channels == 'true' &&
-      needs.build-channel-repo.result == 'success' &&
-      (needs.promote-repos.result == 'success' || needs.promote-repos.result == 'skipped') &&
-      (needs.build-channel-installer.result == 'success' || needs.build-channel-installer.result == 'skipped')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Send signal
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          repository: iNZightVIT/inzight-www
-          event-type: update-website
-          client-payload: '{"ref": "master"}'
+  # update-website:
+  #   name: Update website
+  #   needs: [detect-channels, build-channel-repo, promote-repos, build-channel-installer]
+  #   if: >-
+  #     always() &&
+  #     !cancelled() &&
+  #     (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+  #     needs.detect-channels.outputs.has_channels == 'true' &&
+  #     needs.build-channel-repo.result == 'success' &&
+  #     (needs.promote-repos.result == 'success' || needs.promote-repos.result == 'skipped') &&
+  #     (needs.build-channel-installer.result == 'success' || needs.build-channel-installer.result == 'skipped')
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: Send signal
+  #       uses: peter-evans/repository-dispatch@v4
+  #       with:
+  #         token: ${{ secrets.PAT_TOKEN }}
+  #         repository: iNZightVIT/inzight-www
+  #         event-type: update-website
+  #         client-payload: '{"ref": "master"}'

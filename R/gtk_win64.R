@@ -3,7 +3,7 @@
 default_gtk_bundle_url <- function() {
   Sys.getenv(
     "INZIGHT_GTK_BUNDLE_URL",
-    unset = "http://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
+    unset = "https://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip"
   )
 }
 
@@ -72,9 +72,8 @@ copy_gtk_tree_into_root <- function(from, gtk_root) {
 }
 
 ensure_gtk64_devkit <- function(
-  gtk_root = Sys.getenv("INZIGHT_GTK64_ROOT", unset = "C:/GTK64"),
-  gtk_url = default_gtk_bundle_url()
-) {
+    gtk_root = Sys.getenv("INZIGHT_GTK64_ROOT", unset = "C:/GTK64"),
+    gtk_url = default_gtk_bundle_url()) {
   assert_windows_x64()
   gtk_root <- gsub("\\\\", "/", gtk_root)
   if (!gtk64_devkit_ready(gtk_root)) {
@@ -115,10 +114,9 @@ layout_unpacked_gtk_for_rgtk2 <- function(from, rgtk2_root, remove_source = FALS
 }
 
 layout_gtk_runtime_for_lib <- function(
-  lib,
-  gtk_url = default_gtk_bundle_url(),
-  gtk_root = Sys.getenv("INZIGHT_GTK64_ROOT", unset = "C:/GTK64")
-) {
+    lib,
+    gtk_url = default_gtk_bundle_url(),
+    gtk_root = Sys.getenv("INZIGHT_GTK64_ROOT", unset = "C:/GTK64")) {
   rgtk2_root <- file.path(lib, "RGtk2")
   gtk_bin <- file.path(rgtk2_root, "gtk", "x64", "bin")
   if (dir.exists(gtk_bin)) {
