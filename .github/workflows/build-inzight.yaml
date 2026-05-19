@@ -169,7 +169,6 @@ jobs:
       INZIGHT_CI: "1"
       INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
-      # GTK_PATH: "D:/a/_temp/GTK/x64"
 
     steps:
       - uses: actions/checkout@v5
