@@ -228,35 +228,33 @@ jobs:
         run: |
           install.packages("remotes")
           remotes::install_local(file.path("src", "RGtk2", "RGtk2"),
-            INSTALL_opts = c("--no-multiarch", "--no-test-load")
+            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
           )
           remotes::install_local(file.path("library", "cairoDevice"),
-            INSTALL_opts = c("--no-multiarch", "--no-test-load")
+            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
           )
         shell: Rscript {0}
 
       - name: Check RGtk2
         run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
-      # - name: Install channel packages
-      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-      #   run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
+      - name: Install channel packages
+        run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
 
-      # - name: Build channel win.binaries
-      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-      #   run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
+      - name: Build channel win.binaries
+        run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
 
-      # - name: Stage channel repository
-      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-      #   shell: bash
-      #   run: |
-      #     R_MINOR=$(Rscript rversion.R)
-      #     SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
-      #     DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
-      #     mkdir -p "$DEST"
-      #     if [ -d "$SRC" ]; then
-      #       cp -a "$SRC/." "$DEST/"
-      #     fi
+      - name: Stage channel repository
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        shell: bash
+        run: |
+          R_MINOR=$(Rscript rversion.R)
+          SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
+          DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          mkdir -p "$DEST"
+          if [ -d "$SRC" ]; then
+            cp -a "$SRC/." "$DEST/"
+          fi
 
       # - name: Upload channel repository (staging)
       #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
