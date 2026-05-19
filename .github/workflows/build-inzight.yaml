@@ -174,8 +174,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        # with:
-        #   submodules: true
+        with:
+          submodules: true
 
       - name: Read channel R version
         id: channel-meta
@@ -227,7 +227,7 @@ jobs:
       - name: Install RGtk2
         run: |
           install.packages("remotes")
-          remotes::install_github("lawremi/RGtk2/RGtk2",
+          remotes::install_local(file.path("src", "RGtk2", "RGtk2"),
             INSTALL_opts = c("--no-multiarch", "--no-test-load")
           )
         shell: Rscript {0}
