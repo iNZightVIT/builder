@@ -226,7 +226,11 @@ jobs:
 
       - name: Install RGtk2
         run: |
-          R CMD INSTALL --no-multiarch -l src/RGtk2/RGtk2
+          install.packages("remotes")
+          remotes::install_github("lawremi/RGtk2/RGtk2",
+            INSTALL_opts = c("--no-multiarch", "--no-test-load")
+          )
+        shell: Rscript {0}
 
       # - name: Build RGtk2 and cairoDevice from source
       #   env:
