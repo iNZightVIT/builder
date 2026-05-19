@@ -39,6 +39,7 @@ on:
 
 env:
   INZIGHT_CRAN_REPO: https://r.docker.stat.auckland.ac.nz
+  INZIGHT_S3_BUCKET: r.docker.stat.auckland.ac.nz
 
 jobs:
   detect-channels:
@@ -263,7 +264,7 @@ jobs:
           R_MINOR=$(Rscript rversion.R)
           aws --profile saml s3 sync --delete \
             "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
-            "s3://${{ env.INZIGHT_CRAN_REPO }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+            "s3://${{ env.INZIGHT_S3_BUCKET }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
 
       - name: Record channel build hash
         if: >-
@@ -272,7 +273,7 @@ jobs:
         shell: bash
         run: |
           HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
-          echo "$HASH" | aws --profile saml s3 cp - "s3://${{ env.INZIGHT_CRAN_REPO }}/channels/${INZIGHT_CHANNEL}.last-built"
+          echo "$HASH" | aws --profile saml s3 cp - "s3://${{ env.INZIGHT_S3_BUCKET }}/channels/${INZIGHT_CHANNEL}.last-built"
 
   # build-channel-installer:
   #   name: Installer (${{ matrix.channel }})
@@ -503,10 +504,46 @@ jobs:
             --token ${{ secrets.AWS_TOKEN }} \
             --idp iam.auckland.ac.nz
 
-      - name: Promote repositories and regenerate indexes
+      - name: Promote tmp repos, regenerate indexes, push to S3
         env:
           CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
-        run: python scripts/promote_repos.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUCKET="${{ env.INZIGHT_S3_BUCKET }}"
+          AWS=(aws --profile saml)
+
+          for ch in $(echo "$CHANNELS_JSON" | jq -r '.[]'); do
+            R_MINOR=$(grep '^r_version:' "channels/${ch}.deps" | sed 's/.*"\(.*\)".*/\1/')
+            TMP="s3://${BUCKET}/${ch}/bin/windows/contrib/tmp${R_MINOR}"
+            FINAL="s3://${BUCKET}/${ch}/bin/windows/contrib/${R_MINOR}"
+            echo "=== promote ${ch}: tmp -> ${R_MINOR} ==="
+            "${AWS[@]}" s3 sync "${TMP}/" "${FINAL}/"
+            "${AWS[@]}" s3 rm --recursive "${TMP}"
+          done
+
+          if echo "$CHANNELS_JSON" | jq -e 'index("stable")' > /dev/null; then
+            echo "=== mirror stable/bin -> /bin ==="
+            "${AWS[@]}" s3 sync "s3://${BUCKET}/stable/bin" "s3://${BUCKET}/bin"
+          fi
+
+          for ch in $(echo "$CHANNELS_JSON" | jq -r '.[]'); do
+            WORK="work/${ch}"
+            mkdir -p "${WORK}"
+            echo "=== index.html ${ch} ==="
+            "${AWS[@]}" s3 sync "s3://${BUCKET}/${ch}/bin" "${WORK}/bin"
+            (cd "${WORK}" && python "${GITHUB_WORKSPACE}/create_webpages.py" --path bin)
+            "${AWS[@]}" s3 sync "${WORK}/bin" "s3://${BUCKET}/${ch}/bin"
+          done
+
+          if echo "$CHANNELS_JSON" | jq -e 'index("stable")' > /dev/null; then
+            WORK="work/flat"
+            mkdir -p "${WORK}"
+            echo "=== index.html /bin (flat) ==="
+            "${AWS[@]}" s3 sync "s3://${BUCKET}/bin" "${WORK}/bin"
+            (cd "${WORK}" && python "${GITHUB_WORKSPACE}/create_webpages.py" --path bin)
+            "${AWS[@]}" s3 sync "${WORK}/bin" "s3://${BUCKET}/bin"
+          fi
 
       - name: Clear CloudFront cache
         run: |
@@ -517,11 +554,12 @@ jobs:
   cleanup-after-fail:
     name: Clean up tmp repos on failure
     runs-on: ubuntu-24.04
-    # needs: [detect-channels, build-channel-repo, promote-repos]
-    needs: [detect-channels, build-channel-repo]
-    # TODO: make this only run on failure once job working
-    # if: failure()
-    # (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
+    needs: [detect-channels, build-channel-repo, promote-repos]
+    if: >-
+      always() &&
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      (needs.build-channel-repo.result == 'failure' ||
+       needs.promote-repos.result == 'failure')
     env:
       CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
     steps:
@@ -546,19 +584,18 @@ jobs:
             --idp iam.auckland.ac.nz
 
       - name: Remove tmp staging prefixes
+        shell: bash
         run: |
-          python - <<'PY'
-          import json, os, subprocess, yaml
-          channels = json.loads(os.environ.get("CHANNELS_JSON") or "[]")
-          for ch in channels:
-              deps = yaml.safe_load(open(f"channels/{ch}.deps"))
-              r_minor = deps["r_version"]
-              key = f"s3://r.docker.stat.auckland.ac.nz/{ch}/bin/windows/contrib/tmp{r_minor}/"
-              subprocess.run(
-                  ["aws", "--profile", "saml", "s3", "rm", "--recursive", key],
-                  check=False,
-              )
-          PY
+          set -euo pipefail
+          BUCKET="${{ env.INZIGHT_S3_BUCKET }}"
+          AWS=(aws --profile saml)
+          for ch in $(echo "$CHANNELS_JSON" | jq -r '.[]'); do
+            R_MINOR=$(grep '^r_version:' "channels/${ch}.deps" | sed 's/.*"\(.*\)".*/\1/')
+            echo "Remove ${ch} tmp${R_MINOR}"
+            "${AWS[@]}" s3 rm --recursive \
+              "s3://${BUCKET}/${ch}/bin/windows/contrib/tmp${R_MINOR}" \
+              || true
+          done
 
   # update-website:
   #   name: Update website
