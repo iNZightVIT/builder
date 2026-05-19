@@ -527,22 +527,44 @@ jobs:
             "${AWS[@]}" s3 sync "s3://${BUCKET}/stable/bin" "s3://${BUCKET}/bin"
           fi
 
+          write_indexes() {
+            local s3_bin="$1"
+            local bin_dir="$2"
+            local r_minor="$3"
+            echo "Pull ${s3_bin} -> ${bin_dir}"
+            rm -rf "${bin_dir}"
+            mkdir -p "${bin_dir}"
+            "${AWS[@]}" s3 cp --recursive "${s3_bin}/" "${bin_dir}/"
+            local n_zips
+            n_zips=$(find "${bin_dir}/windows/contrib/${r_minor}" -maxdepth 1 -name '*.zip' 2>/dev/null | wc -l)
+            echo "Found ${n_zips} zip(s) under windows/contrib/${r_minor}"
+            if [ "${n_zips}" -eq 0 ]; then
+              echo "ERROR: no packages under ${bin_dir}/windows/contrib/${r_minor}" >&2
+              find "${bin_dir}" -type f | head -20 >&2 || true
+              exit 1
+            fi
+            python "${GITHUB_WORKSPACE}/create_webpages.py" --path "${bin_dir}"
+            echo "Push index.html files to ${s3_bin}"
+            "${AWS[@]}" s3 sync "${bin_dir}/" "${s3_bin}/" \
+              --exclude '*' \
+              --include '**/index.html'
+          }
+
           for ch in $(echo "$CHANNELS_JSON" | jq -r '.[]'); do
-            WORK="work/${ch}"
-            mkdir -p "${WORK}"
+            R_MINOR=$(grep '^r_version:' "channels/${ch}.deps" | sed 's/.*"\(.*\)".*/\1/')
             echo "=== index.html ${ch} ==="
-            "${AWS[@]}" s3 sync "s3://${BUCKET}/${ch}/bin" "${WORK}/bin"
-            (cd "${WORK}" && python "${GITHUB_WORKSPACE}/create_webpages.py" --path bin)
-            "${AWS[@]}" s3 sync "${WORK}/bin" "s3://${BUCKET}/${ch}/bin"
+            write_indexes \
+              "s3://${BUCKET}/${ch}/bin" \
+              "${GITHUB_WORKSPACE}/work/${ch}/bin" \
+              "${R_MINOR}"
           done
 
           if echo "$CHANNELS_JSON" | jq -e 'index("stable")' > /dev/null; then
-            WORK="work/flat"
-            mkdir -p "${WORK}"
             echo "=== index.html /bin (flat) ==="
-            "${AWS[@]}" s3 sync "s3://${BUCKET}/bin" "${WORK}/bin"
-            (cd "${WORK}" && python "${GITHUB_WORKSPACE}/create_webpages.py" --path bin)
-            "${AWS[@]}" s3 sync "${WORK}/bin" "s3://${BUCKET}/bin"
+            write_indexes \
+              "s3://${BUCKET}/bin" \
+              "${GITHUB_WORKSPACE}/work/flat/bin" \
+              "$(grep '^r_version:' channels/stable.deps | sed 's/.*"\(.*\)".*/\1/')"
           fi
 
       - name: Clear CloudFront cache
