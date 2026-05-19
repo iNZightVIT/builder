@@ -231,40 +231,60 @@ jobs:
         if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
         shell: bash
         run: |
+          set -euo pipefail
           R_MINOR=$(Rscript rversion.R)
           SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
           DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
           mkdir -p "$DEST"
-          if [ -d "$SRC" ]; then
-            cp -a "$SRC/." "$DEST/"
+          if [ ! -d "$SRC" ]; then
+            echo "ERROR: build output missing: $SRC" >&2
+            find staging -type f 2>/dev/null | head -20 >&2 || true
+            exit 1
           fi
+          cp -a "$SRC/." "$DEST/"
+          echo "Staged $(find "$DEST" -maxdepth 1 -name '*.zip' | wc -l) zip(s) and PACKAGES:"
+          ls -la "$DEST"
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.6"
+          python-version: "3.12"
 
       - name: Install Python dependencies
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install --use-feature=2020-resolver -r ./requirements.txt
+          pip install -r ./requirements.txt
 
       - name: Generate AWS credentials
+        shell: bash
         run: |
-          python aws_saml_login.py `
-            --user ${{ secrets.AWS_USER }} `
-            --password ${{ secrets.AWS_PASS}} `
-            --token ${{ secrets.AWS_TOKEN }} `
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
             --idp iam.auckland.ac.nz
 
       - name: Upload channel repository (staging)
         if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
         shell: bash
         run: |
+          set -euo pipefail
           R_MINOR=$(Rscript rversion.R)
-          aws --profile saml s3 sync --delete \
-            "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
-            "s3://${{ env.INZIGHT_S3_BUCKET }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          LOCAL="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          S3_URI="s3://${{ env.INZIGHT_S3_BUCKET }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          if [ ! -f "${LOCAL}/PACKAGES" ]; then
+            echo "ERROR: ${LOCAL}/PACKAGES missing — refusing to upload empty repo" >&2
+            exit 1
+          fi
+          N_ZIPS=$(find "${LOCAL}" -maxdepth 1 -name '*.zip' | wc -l)
+          if [ "${N_ZIPS}" -eq 0 ]; then
+            echo "ERROR: no .zip files in ${LOCAL}" >&2
+            exit 1
+          fi
+          echo "Uploading ${N_ZIPS} package(s) to ${S3_URI}"
+          aws --profile saml s3 sync --delete "${LOCAL}/" "${S3_URI}/"
+          aws --profile saml s3 ls "${S3_URI}/" | head -20
 
       - name: Record channel build hash
         if: >-
@@ -518,7 +538,13 @@ jobs:
             TMP="s3://${BUCKET}/${ch}/bin/windows/contrib/tmp${R_MINOR}"
             FINAL="s3://${BUCKET}/${ch}/bin/windows/contrib/${R_MINOR}"
             echo "=== promote ${ch}: tmp -> ${R_MINOR} ==="
+            if ! "${AWS[@]}" s3 ls "${TMP}/PACKAGES" > /dev/null 2>&1; then
+              echo "ERROR: ${TMP}/PACKAGES not on S3 — build upload may have failed" >&2
+              "${AWS[@]}" s3 ls "${TMP}/" >&2 || echo "(tmp prefix empty or missing)" >&2
+              exit 1
+            fi
             "${AWS[@]}" s3 sync "${TMP}/" "${FINAL}/"
+            "${AWS[@]}" s3 ls "${FINAL}/" | head -20
             "${AWS[@]}" s3 rm --recursive "${TMP}"
           done
 
