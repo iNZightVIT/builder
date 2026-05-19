@@ -101,6 +101,8 @@ build_channel_binaries <- function(channel) {
 
   contrib_dir <- channel_contrib_dir(channel)
   dir.create(contrib_dir, recursive = TRUE, showWarnings = FALSE)
+  # Absolute path: setwd(tempdir()) during R CMD build/install must not relocate output.
+  contrib_dir <- normalizePath(contrib_dir, winslash = "/", mustWork = FALSE)
 
   resolved <- resolve_channel_packages(deps)
   pkg_names <- unique(vapply(resolved, pkg_name_from_spec, character(1)))
@@ -144,6 +146,7 @@ build_channel_binaries <- function(channel) {
   }
 
   message("Building win.binary for: ", paste(to_build, collapse = ", "))
+  message("Output directory: ", contrib_dir)
 
   spec_for_pkg <- function(pkg) {
     hits <- resolved[vapply(resolved, function(s) pkg_name_from_spec(s) == pkg, logical(1))]
