@@ -521,7 +521,8 @@ jobs:
   cleanup-after-fail:
     name: Clean up tmp repos on failure
     runs-on: ubuntu-24.04
-    needs: [detect-channels, build-channel-repo, promote-repos]
+    # needs: [detect-channels, build-channel-repo, promote-repos]
+    needs: [detect-channels, build-channel-repo]
     # TODO: make this only run on failure once job working
     # if: failure()
     # (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true)
