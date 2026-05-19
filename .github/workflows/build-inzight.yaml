@@ -235,6 +235,8 @@ jobs:
           R_MINOR=$(Rscript rversion.R)
           SRC="staging/${INZIGHT_CHANNEL}/bin/windows/contrib/${R_MINOR}"
           DEST="tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+          echo "SRC: $SRC"
+          ls -la "$SRC"
           mkdir -p "$DEST"
           if [ ! -d "$SRC" ]; then
             echo "ERROR: build output missing: $SRC" >&2
