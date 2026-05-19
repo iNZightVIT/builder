@@ -224,27 +224,19 @@ jobs:
           cp -r x64 ${{ env.GTK_PATH }}
           echo "${{ env.GTK_PATH }}/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Install RGtk2
+      - name: Install RGtk2 and cairoDevice
         run: |
           install.packages("remotes")
           remotes::install_local(file.path("src", "RGtk2", "RGtk2"),
             INSTALL_opts = c("--no-multiarch", "--no-test-load")
           )
+          remotes::install_local(file.path("library", "cairoDevice"),
+            INSTALL_opts = c("--no-multiarch", "--no-test-load")
+          )
         shell: Rscript {0}
 
-      # - name: Build RGtk2 and cairoDevice from source
-      #   env:
-      #     INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
-      #     INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
-      #     INZIGHT_RGTK2_GITHUB: tmelliott/RGtk2/RGtk2
-      #     INZIGHT_CAIRODEVICE_GITHUB: tmelliott/cairoDevice
-      #   run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
-
-      # - name: Add GTK runtime to PATH
-      #   run: echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      # - name: Check RGtk2 and cairoDevice
-      #   run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice)"
+      - name: Check RGtk2
+        run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
       # - name: Install channel packages
       #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
