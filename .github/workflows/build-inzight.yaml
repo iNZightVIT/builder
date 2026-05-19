@@ -256,23 +256,23 @@ jobs:
             cp -a "$SRC/." "$DEST/"
           fi
 
-      # - name: Upload channel repository (staging)
-      #   if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
-      #   shell: bash
-      #   run: |
-      #     R_MINOR=$(Rscript rversion.R)
-      #     aws --profile saml s3 sync --delete \
-      #       "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
-      #       "s3://${{ env.INZIGHT_CRAN_REPO }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
+      - name: Upload channel repository (staging)
+        if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
+        shell: bash
+        run: |
+          R_MINOR=$(Rscript rversion.R)
+          aws --profile saml s3 sync --delete \
+            "tmp/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}" \
+            "s3://${{ env.INZIGHT_CRAN_REPO }}/${INZIGHT_CHANNEL}/bin/windows/contrib/tmp${R_MINOR}"
 
-      # - name: Record channel build hash
-      #   if: >-
-      #     success() &&
-      #     !contains(github.event.head_commit.message, 'skip repo')
-      #   shell: bash
-      #   run: |
-      #     HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
-      #     echo "$HASH" | aws --profile saml s3 cp - "s3://${{ env.INZIGHT_CRAN_REPO }}/channels/${INZIGHT_CHANNEL}.last-built"
+      - name: Record channel build hash
+        if: >-
+          success() &&
+          !contains(github.event.head_commit.message, 'skip repo')
+        shell: bash
+        run: |
+          HASH=$(Rscript -e "source('channels/_shared.R'); cat(hash_channel_inputs('${INZIGHT_CHANNEL}'))")
+          echo "$HASH" | aws --profile saml s3 cp - "s3://${{ env.INZIGHT_CRAN_REPO }}/channels/${INZIGHT_CHANNEL}.last-built"
 
   # build-channel-installer:
   #   name: Installer (${{ matrix.channel }})
@@ -432,10 +432,10 @@ jobs:
 
   # reindex-repos:
   #   name: Reindex package repositories
-  #   if: >-
-  #     github.event_name == 'workflow_dispatch' &&
-  #     inputs.reindex_only == true &&
-  #     inputs.rebuild_rgtk2 != true
+  #   # if: >-
+  #   #   github.event_name == 'workflow_dispatch' &&
+  #   #   inputs.reindex_only == true &&
+  #   #   inputs.rebuild_rgtk2 != true
   #   runs-on: ubuntu-24.04
   #   steps:
   #     - uses: actions/checkout@v5
@@ -469,49 +469,50 @@ jobs:
   #           --distribution-id ${{ secrets.AWS_ID }} \
   #           --paths "/*"
 
-  # promote-repos:
-  #   name: Promote channel repositories
-  #   needs: [detect-channels, build-channel-repo]
-  #   if: >-
-  #     (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
-  #     (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
-  #     needs.detect-channels.outputs.has_channels == 'true' &&
-  #     needs.build-channel-repo.result == 'success' &&
-  #     !contains(github.event.head_commit.message, 'skip repo')
-  #   runs-on: ubuntu-24.04
-  #   env:
-  #     CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
-  #   steps:
-  #     - uses: actions/checkout@v5
+  promote-repos:
+    name: Promote channel repositories
+    needs: [detect-channels, build-channel-repo]
+      # (github.event_name != 'workflow_dispatch' || inputs.reindex_only != true) &&
+      # (github.event_name != 'workflow_dispatch' || inputs.rebuild_rgtk2 != true) &&
+    if: >-
+      needs.detect-channels.outputs.has_channels == 'true' &&
+      needs.build-channel-repo.result == 'success'
+    #  &&
+      # !contains(github.event.head_commit.message, 'skip repo')
+    runs-on: ubuntu-24.04
+    env:
+      CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+    steps:
+      - uses: actions/checkout@v5
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version: "3.12"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-  #     - name: Install Python dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install -r ./requirements.txt
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt
 
-  #     - name: Generate AWS credentials
-  #       run: |
-  #         python aws_saml_login.py \
-  #           --user ${{ secrets.AWS_USER }} \
-  #           --password ${{ secrets.AWS_PASS }} \
-  #           --token ${{ secrets.AWS_TOKEN }} \
-  #           --idp iam.auckland.ac.nz
+      - name: Generate AWS credentials
+        run: |
+          python aws_saml_login.py \
+            --user ${{ secrets.AWS_USER }} \
+            --password ${{ secrets.AWS_PASS }} \
+            --token ${{ secrets.AWS_TOKEN }} \
+            --idp iam.auckland.ac.nz
 
-  #     - name: Promote repositories and regenerate indexes
-  #       env:
-  #         CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
-  #       run: python scripts/promote_repos.py
+      - name: Promote repositories and regenerate indexes
+        env:
+          CHANNELS_JSON: ${{ needs.detect-channels.outputs.channels }}
+        run: python scripts/promote_repos.py
 
-  #     - name: Clear CloudFront cache
-  #       run: |
-  #         aws --profile saml cloudfront create-invalidation \
-  #           --distribution-id ${{ secrets.AWS_ID }} \
-  #           --paths "/*"
+      - name: Clear CloudFront cache
+        run: |
+          aws --profile saml cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_ID }} \
+            --paths "/*"
 
   cleanup-after-fail:
     name: Clean up tmp repos on failure

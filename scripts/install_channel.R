@@ -22,7 +22,10 @@ install_channel <- function(channel) {
   )
 
   if (!requireNamespace("pak", quietly = TRUE)) {
-    install.packages("pak", repos = DEFAULT_CRAN, type = "source")
+    install.packages("pak",
+      repos = DEFAULT_CRAN, type = "source",
+      INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
+    )
   }
 
   if (deps$channel_type == "development") {
