@@ -169,16 +169,13 @@ jobs:
       INZIGHT_CI: "1"
       # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
+      # GTK_PATH: "D:/a/_temp/GTK/x64"
 
 
     steps:
       - uses: actions/checkout@v5
-
-      # - name: Checkout RGtk2 and cairoDevice sources
-      #   shell: bash
-      #   run: |
-      #     git config --global url."https://github.com/".insteadOf "git@github.com:"
-      #     git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
+        with:
+          submodules: true
 
       - name: Read channel R version
         id: channel-meta
@@ -229,9 +226,7 @@ jobs:
 
       - name: Install RGtk2
         run: |
-          install.packages('pak')
-          pak::pak('lawremi/RGtk2/RGtk2')
-        shell: Rscript {0}
+          R CMD INSTALL --no-multiarch -l src/RGtk2/RGtk2
 
       # - name: Build RGtk2 and cairoDevice from source
       #   env:
