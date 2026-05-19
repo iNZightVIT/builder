@@ -174,8 +174,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: true
+        # with:
+        #   submodules: true
 
       - name: Read channel R version
         id: channel-meta
