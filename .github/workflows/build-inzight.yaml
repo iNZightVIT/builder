@@ -174,11 +174,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Checkout RGtk2 and cairoDevice sources
-        shell: bash
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
+      # - name: Checkout RGtk2 and cairoDevice sources
+      #   shell: bash
+      #   run: |
+      #     git config --global url."https://github.com/".insteadOf "git@github.com:"
+      #     git submodule update --init --depth 1 src/RGtk2 library/cairoDevice
 
       - name: Read channel R version
         id: channel-meta
@@ -226,6 +226,12 @@ jobs:
           del gtk.zip
           cp -r x64 D:\a\_temp\GTK\x64
           echo "D:\a\_temp\GTK\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install RGtk2
+        run: |
+          install.packages('pak')
+          pak::pak('lawremi/RGtk2/RGtk2')
+        shell: Rscript {0}
 
       # - name: Build RGtk2 and cairoDevice from source
       #   env:
