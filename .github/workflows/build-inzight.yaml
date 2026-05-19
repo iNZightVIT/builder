@@ -169,7 +169,7 @@ jobs:
       INZIGHT_CI: "1"
       # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
-      # GTK_PATH: "D:/a/_temp/GTK/x64"
+      GTK_PATH: "D:/a/_temp/GTK/x64"
 
 
     steps:
@@ -221,8 +221,8 @@ jobs:
           md D:\a\_temp\GTK
           7z x gtk.zip -ox64 > nul
           del gtk.zip
-          cp -r x64 D:\a\_temp\GTK\x64
-          echo "D:\a\_temp\GTK\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          cp -r x64 ${{ env.GTK_PATH }}
+          echo "${{ env.GTK_PATH }}/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install RGtk2
         run: |
