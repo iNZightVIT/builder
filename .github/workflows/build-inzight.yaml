@@ -289,7 +289,7 @@ jobs:
           fi
           echo "Uploading ${N_ZIPS} package(s) to ${S3_URI}"
           aws --profile saml s3 sync --delete "${LOCAL}/" "${S3_URI}/"
-          aws --profile saml s3 ls "${S3_URI}/" | head -20
+          aws --profile saml s3 ls "${S3_URI}/" | head -20 || true
 
       - name: Record channel build hash
         if: >-
@@ -550,7 +550,9 @@ jobs:
               exit 1
             fi
             "${AWS[@]}" s3 sync "${TMP}/" "${FINAL}/"
-            "${AWS[@]}" s3 ls "${FINAL}/" | head -20
+            n_objs=$("${AWS[@]}" s3 ls "${FINAL}/" | wc -l)
+            echo "Promoted ${n_objs} object(s); first 20:"
+            "${AWS[@]}" s3 ls "${FINAL}/" | head -20 || true
             "${AWS[@]}" s3 rm --recursive "${TMP}"
           done
 
