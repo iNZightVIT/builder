@@ -2,6 +2,7 @@
 install_channel <- function(channel) {
   source("channels/_shared.R", local = TRUE)
   source("R/channel_resolve.R", local = TRUE)
+  source("scripts/channel_library.R")
 
   deps <- read_channel_deps(channel)
 
@@ -31,6 +32,9 @@ install_channel <- function(channel) {
   if (deps$channel_type == "development") {
     pak::pak(c("httr", "lubridate"))
   }
+
+  message("Installing bundled library/ packages (gWidgets stack) ...")
+  install_channel_library()
 
   resolved <- resolve_channel_packages(deps)
   message("Installing ", length(resolved), " package(s) for channel '", channel, "':")

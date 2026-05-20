@@ -18,6 +18,7 @@ HASH_INPUTS = [
     "channels/_shared.R",
     "R/channel_resolve.R",
     "scripts/install_channel.R",
+    "scripts/init_build_submodules.sh",
     "scripts/build_binaries.R",
     "scripts/build_rgtk2_channel.R",
     "scripts/build_rgtk2_windows_artifacts.R",
