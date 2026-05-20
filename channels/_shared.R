@@ -55,8 +55,9 @@ channel_binary_repo_url <- function(channel) {
 
 channel_install_repos <- function(channel) {
   base <- channel_binary_repo_url(channel)
+  # paste0 not file.path — file.path can emit backslashes on Windows and break URLs.
   c(
-    file.path(base, channel),
+    paste0(base, "/", channel),
     base,
     DEFAULT_CRAN
   )

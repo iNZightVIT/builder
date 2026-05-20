@@ -6,12 +6,50 @@ install_channel_from_repo <- function(channel) {
 
   deps <- read_channel_deps(channel)
   repos <- channel_install_repos(channel)
+  lib <- Sys.getenv("R_LIBS_USER", unset = "")
+  if (!nzchar(lib)) {
+    lib <- .libPaths()[1]
+  }
+  lib <- normalizePath(lib, winslash = "/", mustWork = TRUE)
 
   options(
     repos = repos,
     install.packages.compile.from.source = "never",
     pkg.windows_archs = "prefer-x64"
   )
+
+  message("Channel repos:\n", paste0("  ", repos, collapse = "\n"))
+  message("R library: ", lib)
+
+  assert_installed <- function(pkgs) {
+    ip <- rownames(installed.packages(lib.loc = lib))
+    miss <- pkgs[!pkgs %in% ip]
+    if (length(miss)) {
+      stop(
+        "Package(s) missing after install: ",
+        paste(miss, collapse = ", "),
+        "\nLibrary: ",
+        lib,
+        call. = FALSE
+      )
+    }
+  }
+
+  install_win_binaries <- function(pkgs) {
+    if (!length(pkgs)) {
+      return(invisible(character(0)))
+    }
+    message("Installing: ", paste(pkgs, collapse = ", "))
+    out <- tryCatch(
+      install.packages(pkgs, lib = lib, repos = repos, type = "win.binary"),
+      error = function(e) e
+    )
+    if (inherits(out, "error")) {
+      stop("install.packages failed: ", conditionMessage(out), call. = FALSE)
+    }
+    assert_installed(pkgs)
+    invisible(pkgs)
+  }
 
   if (deps$channel_type == "development") {
     pre <- c("httr", "lubridate")
@@ -25,12 +63,11 @@ install_channel_from_repo <- function(channel) {
         call. = FALSE
       )
     }
-    install.packages(pre, lib = .libPaths()[1], repos = repos, type = "win.binary")
+    install_win_binaries(pre)
   }
 
   resolved <- resolve_channel_packages(deps)
   pkg_names <- unique(vapply(resolved, pkg_name_from_spec, character(1)))
-  pkg_names <- setdiff(pkg_names, c("RGtk2", "cairoDevice"))
 
   ap <- available.packages(repos = repos, type = "win.binary")
   missing <- pkg_names[!pkg_names %in% rownames(ap)]
@@ -45,20 +82,25 @@ install_channel_from_repo <- function(channel) {
     )
   }
 
+  gtk_pkgs <- intersect(c("RGtk2", "cairoDevice"), pkg_names)
+  other_pkgs <- setdiff(pkg_names, gtk_pkgs)
+
   message(
     "Installing ",
     length(pkg_names),
     " package(s) for channel '",
     channel,
-    "' from promoted repos:"
+    "' from promoted repos"
   )
-  print(pkg_names)
-  install.packages(
-    pkg_names,
-    lib = .libPaths()[1],
-    repos = repos,
-    type = "win.binary"
-  )
+  install_win_binaries(gtk_pkgs)
+  install_win_binaries(other_pkgs)
+
+  if (!"iNZight" %in% pkg_names) {
+    warning("iNZight not listed in channel deps", call. = FALSE)
+  } else {
+    assert_installed("iNZight")
+  }
+
   invisible(pkg_names)
 }
 
