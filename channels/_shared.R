@@ -53,6 +53,14 @@ channel_binary_repo_url <- function(channel) {
   sub("/$", "", base)
 }
 
+# Bundled library/ submodules (not listed in *.deps); built and published with each channel.
+CHANNEL_LIBRARY_PKGS <- c(
+  "gWidgets",
+  "gWidgetsRGtk2",
+  "gWidgets2",
+  "gWidgets2RGtk2"
+)
+
 channel_install_repos <- function(channel) {
   base <- channel_binary_repo_url(channel)
   # paste0 not file.path — file.path can emit backslashes on Windows and break URLs.
@@ -75,6 +83,7 @@ hash_channel_inputs <- function(channel) {
     "scripts/build_binaries.R",
     "scripts/build_rgtk2_channel.R",
     "scripts/build_rgtk2_windows_artifacts.R",
+    "scripts/channel_library.R",
     "scripts/install_channel_from_repo.R",
     "install_gtk.R",
     "R/gtk_win64.R",

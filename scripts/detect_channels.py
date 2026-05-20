@@ -21,6 +21,7 @@ HASH_INPUTS = [
     "scripts/build_binaries.R",
     "scripts/build_rgtk2_channel.R",
     "scripts/build_rgtk2_windows_artifacts.R",
+    "scripts/channel_library.R",
     "scripts/install_channel_from_repo.R",
     "install_gtk.R",
     "R/gtk_win64.R",

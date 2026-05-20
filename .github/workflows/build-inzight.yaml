@@ -221,8 +221,14 @@ jobs:
       - name: Check RGtk2
         run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
+      - name: Install channel library packages (gWidgets)
+        run: Rscript scripts/channel_library.R --install
+
       - name: Install channel packages
         run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
+
+      - name: Build channel library win.binaries
+        run: Rscript scripts/channel_library.R --build --channel=${{ matrix.channel }}
 
       - name: Build channel win.binaries
         run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}

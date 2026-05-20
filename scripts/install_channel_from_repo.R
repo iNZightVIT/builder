@@ -69,8 +69,13 @@ install_channel_from_repo <- function(channel) {
   resolved <- resolve_channel_packages(deps)
   pkg_names <- unique(vapply(resolved, pkg_name_from_spec, character(1)))
 
+  gtk_pkgs <- c("RGtk2", "cairoDevice")
+  lib_pkgs <- CHANNEL_LIBRARY_PKGS
+  channel_pkgs <- setdiff(pkg_names, c(gtk_pkgs, lib_pkgs))
+  install_order <- unique(c(gtk_pkgs, lib_pkgs, channel_pkgs))
+
   ap <- available.packages(repos = repos, type = "win.binary")
-  missing <- pkg_names[!pkg_names %in% rownames(ap)]
+  missing <- install_order[!install_order %in% rownames(ap)]
   if (length(missing)) {
     stop(
       "No win.binary on promoted repos for: ",
@@ -82,18 +87,16 @@ install_channel_from_repo <- function(channel) {
     )
   }
 
-  gtk_pkgs <- intersect(c("RGtk2", "cairoDevice"), pkg_names)
-  other_pkgs <- setdiff(pkg_names, gtk_pkgs)
-
   message(
     "Installing ",
-    length(pkg_names),
+    length(install_order),
     " package(s) for channel '",
     channel,
     "' from promoted repos"
   )
   install_win_binaries(gtk_pkgs)
-  install_win_binaries(other_pkgs)
+  install_win_binaries(lib_pkgs)
+  install_win_binaries(channel_pkgs)
 
   if (!"iNZight" %in% pkg_names) {
     warning("iNZight not listed in channel deps", call. = FALSE)
