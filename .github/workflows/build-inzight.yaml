@@ -320,7 +320,7 @@ jobs:
       TZ: "Pacific/Auckland"
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       INZIGHT_CI: "1"
-      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
+      # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
 
     steps:
