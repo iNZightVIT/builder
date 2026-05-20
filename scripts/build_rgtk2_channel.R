@@ -13,7 +13,8 @@ if (sys.nframe() == 0L) {
     paste0("--output-dir=", out_dir),
     paste0("--lib=", lib),
     paste0("--root=", root),
-    "--gtk-free"
+    "--gtk-free",
+    "--zip-only"
   )
   status <- system2("Rscript", argv)
   if (!identical(status, 0L)) {

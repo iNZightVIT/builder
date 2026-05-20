@@ -227,6 +227,9 @@ jobs:
       - name: Build channel win.binaries
         run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
 
+      - name: Build RGtk2 and cairoDevice win.binaries
+        run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
+
       - name: Stage channel repository
         if: ${{ !contains(github.event.head_commit.message, 'skip repo') }}
         shell: bash

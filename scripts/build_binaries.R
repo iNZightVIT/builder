@@ -1,4 +1,5 @@
-# Build missing win.binary zips for a channel (excludes RGtk2/cairoDevice).
+# Build missing win.binary zips for a channel (excludes RGtk2/cairoDevice;
+# those are packaged by scripts/build_rgtk2_channel.R).
 source("channels/_shared.R", local = TRUE)
 source("R/channel_resolve.R", local = TRUE)
 

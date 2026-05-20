@@ -51,6 +51,7 @@ lib <- get_arg("lib", default_lib)
 if (!dir.exists(lib)) dir.create(lib, recursive = TRUE)
 lib <- normalizePath(lib, winslash = "/", mustWork = TRUE)
 gtk_free <- "--gtk-free" %in% args
+zip_only <- "--zip-only" %in% args
 
 repo_root <- get_arg("root", Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd()))
 source(file.path(repo_root, "R", "rgtk2_cairo_install.R"), local = TRUE)
@@ -182,16 +183,29 @@ upload_zips_to_s3 <- function(files, r_minor, publish_contrib = TRUE) {
   }
 }
 
-gtk_root <- ensure_gtk64_devkit()
+if (zip_only) {
+  for (pkg in c("RGtk2", "cairoDevice")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop(
+        pkg,
+        " is not installed; install first or omit --zip-only",
+        call. = FALSE
+      )
+    }
+  }
+  message("Zipping installed RGtk2 and cairoDevice (--zip-only)")
+} else {
+  gtk_root <- ensure_gtk64_devkit()
 
-cat("Installing RGtk2 into curator library ...\n")
-install_rgtk2_from_source(lib, repo_root)
-layout_gtk_runtime_for_lib(lib, gtk_root = gtk_root)
+  cat("Installing RGtk2 into curator library ...\n")
+  install_rgtk2_from_source(lib, repo_root)
+  layout_gtk_runtime_for_lib(lib, gtk_root = gtk_root)
+
+  cat("Installing cairoDevice ...\n")
+  install_cairodevice_from_source(lib, repo_root)
+}
 
 z1 <- zip_win_binary("RGtk2", lib, output_dir, gtk_free = gtk_free)
-
-cat("Installing cairoDevice ...\n")
-install_cairodevice_from_source(lib, repo_root)
 
 r_minor <- paste(
   strsplit(as.character(getRversion()), "\\.")[[1]][1:2],
