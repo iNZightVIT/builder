@@ -1,57 +1,15 @@
 # Install and build win.binary zips for bundled library/ submodules (gWidgets stack).
 source("channels/_shared.R", local = TRUE)
 
-ensure_channel_library_sources <- function() {
-  missing <- CHANNEL_LIBRARY_PKGS[
-    !file.exists(file.path("library", CHANNEL_LIBRARY_PKGS, "DESCRIPTION"))
-  ]
-  if (!length(missing)) {
-    return(invisible(TRUE))
-  }
-
-  message(
-    "Initializing library/ submodules (missing: ",
-    paste(missing, collapse = ", "), ") ..."
-  )
-  init <- file.path("scripts", "init_build_submodules.sh")
-  if (!file.exists(init)) {
-    stop("Missing ", init, "; cannot fetch library/ submodules", call. = FALSE)
-  }
-  status <- system2("bash", init, stdout = TRUE, stderr = TRUE)
-  exit_status <- attr(status, "status")
-  if (!is.null(exit_status) && exit_status != 0L) {
-    stop(
-      "init_build_submodules.sh failed:\n",
-      paste(c(status, ""), collapse = "\n"),
-      call. = FALSE
-    )
-  }
-
-  still_missing <- CHANNEL_LIBRARY_PKGS[
-    !file.exists(file.path("library", CHANNEL_LIBRARY_PKGS, "DESCRIPTION"))
-  ]
-  if (length(still_missing)) {
-    stop(
-      "Missing library submodule(s): ",
-      paste(still_missing, collapse = ", "),
-      "\nwd: ", getwd(),
-      call. = FALSE
-    )
-  }
-  invisible(TRUE)
-}
-
 library_source_dir <- function(pkg) {
   src <- file.path("library", pkg)
-  desc <- file.path(src, "DESCRIPTION")
-  if (!file.exists(desc)) {
+  if (!file.exists(file.path(src, "DESCRIPTION"))) {
     stop("Missing library submodule: ", src, call. = FALSE)
   }
   normalizePath(src, winslash = "/", mustWork = TRUE)
 }
 
 install_channel_library <- function() {
-  ensure_channel_library_sources()
   if (!requireNamespace("remotes", quietly = TRUE)) {
     install.packages("remotes", repos = DEFAULT_CRAN)
   }
@@ -107,7 +65,6 @@ build_win_binary_zip <- function(pkg, srcdir, contrib_dir) {
 }
 
 build_channel_library <- function(channel) {
-  ensure_channel_library_sources()
   contrib_dir <- channel_contrib_dir(channel)
   dir.create(contrib_dir, recursive = TRUE, showWarnings = FALSE)
   contrib_dir <- normalizePath(contrib_dir, winslash = "/", mustWork = FALSE)
@@ -158,11 +115,7 @@ build_channel_library <- function(channel) {
 if (sys.nframe() == 0L) {
   args <- commandArgs(TRUE)
   if (any(args == "--install")) {
-    ensure_channel_library_sources()
     install_channel_library()
-  } else if (any(args == "--build") && any(grepl("^--channel=", args))) {
-    ensure_channel_library_sources()
-    build_channel_library(parse_cli_channel(args))
   } else if (any(grepl("^--channel=", args))) {
     build_channel_library(parse_cli_channel(args))
   } else {

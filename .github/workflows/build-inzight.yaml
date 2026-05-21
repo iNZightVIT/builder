@@ -170,23 +170,13 @@ jobs:
       INZIGHT_CI: "1"
       # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
-      INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
       GTK_PATH: "D:/a/_temp/GTK/x64"
-      INZIGHT_GTK64_ROOT: "D:/a/_temp/GTK/x64"
-      WIN: "64"
-      INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
-      INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
 
 
     steps:
       - uses: actions/checkout@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Checkout build submodules
-        shell: bash
-        run: bash scripts/init_build_submodules.sh
+          submodules: true
 
       - name: Read channel R version
         id: channel-meta
@@ -206,23 +196,39 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Install GTK devkit for RGtk2
-        run: Rscript scripts/install_gtk_ci.R
+      # all this does is downloads the zip, then extracts it to GTK_PATH;
+      # then add the bin directory to the PATH
+      - name: Install GTK runtime and configure
+        run: |
+          curl -L -o gtk.zip https://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          md D:\a\_temp\GTK
+          7z x gtk.zip -ox64 > nul
+          del gtk.zip
+          cp -r x64 ${{ env.GTK_PATH }}
+          echo "${{ env.GTK_PATH }}/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install RGtk2 and cairoDevice
-        run: Rscript scripts/install_rgtk2_ci.R
+        run: |
+          install.packages("remotes")
+          remotes::install_local(file.path("src", "RGtk2", "RGtk2"),
+            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
+          )
+          remotes::install_local(file.path("library", "cairoDevice"),
+            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
+          )
+        shell: Rscript {0}
 
       - name: Check RGtk2
         run: Rscript -e "library(RGtk2); gtkWindowNew()"
+
+      - name: Install channel library packages (gWidgets)
+        run: Rscript scripts/channel_library.R --install
 
       - name: Install channel packages
         run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
 
       - name: Build channel library win.binaries
-        shell: bash
-        run: |
-          bash scripts/init_build_submodules.sh
-          Rscript scripts/channel_library.R --build --channel=${{ matrix.channel }}
+        run: Rscript scripts/channel_library.R --build --channel=${{ matrix.channel }}
 
       - name: Build channel win.binaries
         run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
@@ -357,14 +363,14 @@ jobs:
         run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
 
       - name: Install GTK runtime for RGtk2
-        env:
-          INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
-          GTK_PATH: "D:/a/_temp/GTK/x64"
-          INZIGHT_GTK64_ROOT: "D:/a/_temp/GTK/x64"
-          WIN: "64"
         run: |
-          Rscript scripts/install_gtk_ci.R
-          Rscript scripts/layout_rgtk2_gtk_runtime_ci.R
+          curl -L -o gtk.zip https://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
+          md D:\a\_temp\GTK
+          7z x gtk.zip -ox64 > nul
+          del gtk.zip
+          md ${{ env.R_LIBS_USER }}\RGtk2\gtk
+          cp -r x64 ${{ env.R_LIBS_USER }}\RGtk2\gtk\x64
+          echo "${{ env.R_LIBS_USER }}\RGtk2\gtk\x64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Check RGtk2, cairoDevice, and iNZight
         run: Rscript -e "library(RGtk2); gtkWindowNew(); library(cairoDevice); library(iNZight)"
