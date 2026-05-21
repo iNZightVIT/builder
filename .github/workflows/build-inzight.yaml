@@ -177,6 +177,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Checkout build submodules
         shell: bash
@@ -229,7 +230,10 @@ jobs:
         run: Rscript scripts/install_channel.R --channel=${{ matrix.channel }}
 
       - name: Build channel library win.binaries
-        run: Rscript scripts/channel_library.R --build --channel=${{ matrix.channel }}
+        shell: bash
+        run: |
+          bash scripts/init_build_submodules.sh
+          Rscript scripts/channel_library.R --build --channel=${{ matrix.channel }}
 
       - name: Build channel win.binaries
         run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
