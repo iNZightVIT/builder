@@ -37,17 +37,5 @@ done
 
 # Bash [[ -f ]] and R file.exists() can disagree on Windows runners.
 if command -v Rscript >/dev/null 2>&1; then
-  Rscript -e '
-    pkgs <- c("gWidgets", "gWidgetsRGtk2", "gWidgets2", "gWidgets2RGtk2")
-    root <- Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd())
-    missing <- pkgs[!file.exists(file.path(root, "library", pkgs, "DESCRIPTION"))]
-    if (length(missing)) {
-      stop(
-        "R cannot see library submodule(s): ", paste(missing, collapse = ", "),
-        "\nwd: ", getwd(), "\nroot: ", root,
-        call. = FALSE
-      )
-    }
-    cat("R OK library submodules under ", root, "\n", sep = "")
-  '
+  Rscript "${repo_root}/scripts/verify_library_submodules.R"
 fi

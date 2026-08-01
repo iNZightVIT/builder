@@ -221,18 +221,7 @@ jobs:
         run: Rscript -e "library(RGtk2); gtkWindowNew()"
 
       - name: Verify gWidgets submodules visible to R
-        run: |
-          Rscript -e '
-          pkgs <- c("gWidgets", "gWidgetsRGtk2", "gWidgets2", "gWidgets2RGtk2")
-          root <- Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd())
-          paths <- file.path(root, "library", pkgs, "DESCRIPTION")
-          missing <- pkgs[!file.exists(paths)]
-          if (length(missing)) {
-            stop("Missing library submodule(s): ", paste(missing, collapse = ", "),
-              "\nroot: ", root, "\nwd: ", getwd(), call. = FALSE)
-          }
-          cat(paste(paths, collapse = "\n"), "\n")
-          '
+        run: Rscript scripts/verify_library_submodules.R
 
       - name: Install channel library packages (gWidgets)
         run: Rscript scripts/channel_library.R --install
