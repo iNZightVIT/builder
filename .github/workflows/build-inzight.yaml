@@ -438,9 +438,10 @@ jobs:
           VERSION="${{ steps.inzight.outputs.version }}"
           CHANNEL="${INZIGHT_CHANNEL}"
           EXE="installers/win-installer/iNZightVIT-installer.exe"
+          BUCKET="${{ env.INZIGHT_S3_BUCKET }}"
           aws --profile saml s3 sync \
             --exclude '*' --exclude '!*.html' --exclude '!VERSION*' \
-            s3://${{ env.INZIGHT_CRAN_REPO }}/downloads downloads || mkdir -p downloads
+            "s3://${BUCKET}/downloads" downloads || mkdir -p downloads
           mkdir -p downloads/Windows "downloads/${CHANNEL}"
           case "$CHANNEL" in
             development)
@@ -461,11 +462,11 @@ jobs:
               echo "$VERSION" > "downloads/${CHANNEL}/VERSION"
               ;;
           esac
-          aws --profile saml s3 sync downloads s3://${{ env.INZIGHT_CRAN_REPO }}/downloads
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/ > downloads.txt
-          aws --profile saml s3 ls s3://r.docker.stat.auckland.ac.nz/downloads/Windows/ > downloads_Windows.txt
+          aws --profile saml s3 sync downloads "s3://${BUCKET}/downloads"
+          aws --profile saml s3 ls "s3://${BUCKET}/downloads/" > downloads.txt
+          aws --profile saml s3 ls "s3://${BUCKET}/downloads/Windows/" > downloads_Windows.txt
           Rscript create_index.R downloads downloads/Windows
-          aws --profile saml s3 sync downloads s3://${{ env.INZIGHT_CRAN_REPO }}/downloads
+          aws --profile saml s3 sync downloads "s3://${BUCKET}/downloads"
 
   # reindex-repos:
   #   name: Reindex package repositories
