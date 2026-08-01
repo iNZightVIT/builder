@@ -1,10 +1,25 @@
 # Install and build win.binary zips for bundled library/ submodules (gWidgets stack).
 source("channels/_shared.R", local = TRUE)
 
+builder_root <- function() {
+  r <- Sys.getenv("INZIGHT_BUILDER_ROOT", unset = "")
+  if (nzchar(r)) {
+    return(normalizePath(r, winslash = "/", mustWork = TRUE))
+  }
+  normalizePath(getwd(), winslash = "/", mustWork = TRUE)
+}
+
 library_source_dir <- function(pkg) {
-  src <- file.path("library", pkg)
-  if (!file.exists(file.path(src, "DESCRIPTION"))) {
-    stop("Missing library submodule: ", src, call. = FALSE)
+  src <- file.path(builder_root(), "library", pkg)
+  desc <- file.path(src, "DESCRIPTION")
+  if (!file.exists(desc)) {
+    stop(
+      "Missing library submodule: ", src,
+      "\nDESCRIPTION: ", desc,
+      "\nwd: ", getwd(),
+      "\nINZIGHT_BUILDER_ROOT: ", Sys.getenv("INZIGHT_BUILDER_ROOT", unset = "<unset>"),
+      call. = FALSE
+    )
   }
   normalizePath(src, winslash = "/", mustWork = TRUE)
 }

@@ -83,6 +83,8 @@ hash_channel_inputs <- function(channel) {
     "scripts/build_binaries.R",
     "scripts/build_rgtk2_channel.R",
     "scripts/build_rgtk2_windows_artifacts.R",
+    "scripts/install_rgtk2_ci.R",
+    "scripts/init_build_submodules.sh",
     "scripts/channel_library.R",
     "scripts/install_channel_from_repo.R",
     "install_gtk.R",

@@ -43,13 +43,13 @@
 	url = git@github.com:iNZightVIT/win-installer.git
 [submodule "library/gWidgets"]
 	path = library/gWidgets
-	url = git@github.com:cran/gWidgets.git
+	url = https://github.com/cran/gWidgets.git
 [submodule "library/gWidgetsRGtk2"]
 	path = library/gWidgetsRGtk2
-	url = git@github.com:cran/gWidgetsRGtk2.git
+	url = https://github.com/cran/gWidgetsRGtk2.git
 [submodule "library/gWidgets2RGtk2"]
 	path = library/gWidgets2RGtk2
-	url = git@github.com:iNZightVIT/gWidgets2RGtk2.git
+	url = https://github.com/iNZightVIT/gWidgets2RGtk2.git
 [submodule "library/dembase"]
 	path = library/dembase
 	url = https://github.com/tmelliott/dembase.git

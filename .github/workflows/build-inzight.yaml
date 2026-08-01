@@ -168,27 +168,22 @@ jobs:
       TZ: "Pacific/Auckland"
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       INZIGHT_CI: "1"
-      # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
+      INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
+      INZIGHT_REPO_BASE: ${{ env.INZIGHT_CRAN_REPO }}
+      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       GTK_PATH: "D:/a/_temp/GTK/x64"
+      INZIGHT_GTK64_ROOT: "D:/a/_temp/GTK/x64"
+      INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
+      INZIGHT_CAIRODEVICE_SOURCE: ${{ github.workspace }}/library/cairoDevice
 
 
     steps:
       - uses: actions/checkout@v5
 
-      # SSH submodule URLs fail on Actions; rewrite to HTTPS and fetch only what
-      # build-channel-repo needs (RGtk2/cairoDevice + gWidgets stack).
       - name: Checkout build submodules
         shell: bash
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule update --init --depth 1 \
-            src/RGtk2 \
-            library/cairoDevice \
-            library/gWidgets \
-            library/gWidgetsRGtk2 \
-            library/gWidgets2 \
-            library/gWidgets2RGtk2
+        run: bash scripts/init_build_submodules.sh
 
       - name: Read channel R version
         id: channel-meta
@@ -208,8 +203,7 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      # all this does is downloads the zip, then extracts it to GTK_PATH;
-      # then add the bin directory to the PATH
+      # Runtime (+ headers if source fallback compiles). Laid into RGtk2/gtk by install_rgtk2_ci.R.
       - name: Install GTK runtime and configure
         run: |
           curl -L -o gtk.zip https://ftp.gnome.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip
@@ -220,18 +214,24 @@ jobs:
           echo "${{ env.GTK_PATH }}/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install RGtk2 and cairoDevice
-        run: |
-          install.packages("remotes")
-          remotes::install_local(file.path("src", "RGtk2", "RGtk2"),
-            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
-          )
-          remotes::install_local(file.path("library", "cairoDevice"),
-            INSTALL_opts = c("--no-multiarch", "--no-test-load", "--no-docs")
-          )
-        shell: Rscript {0}
+        run: Rscript scripts/install_rgtk2_ci.R
 
       - name: Check RGtk2
         run: Rscript -e "library(RGtk2); gtkWindowNew()"
+
+      - name: Verify gWidgets submodules visible to R
+        run: |
+          Rscript -e '
+          pkgs <- c("gWidgets", "gWidgetsRGtk2", "gWidgets2", "gWidgets2RGtk2")
+          root <- Sys.getenv("INZIGHT_BUILDER_ROOT", unset = getwd())
+          paths <- file.path(root, "library", pkgs, "DESCRIPTION")
+          missing <- pkgs[!file.exists(paths)]
+          if (length(missing)) {
+            stop("Missing library submodule(s): ", paste(missing, collapse = ", "),
+              "\nroot: ", root, "\nwd: ", getwd(), call. = FALSE)
+          }
+          cat(paste(paths, collapse = "\n"), "\n")
+          '
 
       - name: Install channel library packages (gWidgets)
         run: Rscript scripts/channel_library.R --install
@@ -245,7 +245,9 @@ jobs:
       - name: Build channel win.binaries
         run: Rscript scripts/build_binaries.R --channel=${{ matrix.channel }}
 
-      - name: Build RGtk2 and cairoDevice win.binaries
+      # Re-zip installed packages into channel staging (no compile; source only if
+      # install_rgtk2_ci.R fell back because win.binary was missing from the repo).
+      - name: Stage RGtk2 and cairoDevice win.binaries
         run: Rscript scripts/build_rgtk2_channel.R --channel=${{ matrix.channel }}
 
       - name: Stage channel repository
@@ -341,7 +343,8 @@ jobs:
       TZ: "Pacific/Auckland"
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       INZIGHT_CI: "1"
-      # INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
+      INZIGHT_REPO_BASE: ${{ env.INZIGHT_CRAN_REPO }}
+      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
       INZIGHT_CHANNEL: ${{ matrix.channel }}
 
     steps:
@@ -371,6 +374,7 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      # win.binary only from promoted channel + flat repo (never compiles RGtk2).
       - name: Install channel packages from promoted repos
         run: Rscript scripts/install_channel_from_repo.R --channel=${{ matrix.channel }}
 
