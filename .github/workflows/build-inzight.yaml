@@ -170,8 +170,9 @@ jobs:
       INZIGHT_CI: "1"
       INZIGHT_CHANNEL: ${{ matrix.channel }}
       INZIGHT_BUILDER_ROOT: ${{ github.workspace }}
-      INZIGHT_REPO_BASE: ${{ env.INZIGHT_CRAN_REPO }}
-      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
+      # Job-level env cannot use ${{ env.* }}; keep in sync with workflow env.INZIGHT_CRAN_REPO.
+      INZIGHT_REPO_BASE: https://r.docker.stat.auckland.ac.nz
+      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
       GTK_PATH: "D:/a/_temp/GTK/x64"
       INZIGHT_GTK64_ROOT: "D:/a/_temp/GTK/x64"
       INZIGHT_RGTK2_SOURCE: ${{ github.workspace }}/src/RGtk2/RGtk2
@@ -343,8 +344,9 @@ jobs:
       TZ: "Pacific/Auckland"
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       INZIGHT_CI: "1"
-      INZIGHT_REPO_BASE: ${{ env.INZIGHT_CRAN_REPO }}
-      INZIGHT_BINARY_REPO: ${{ env.INZIGHT_CRAN_REPO }}
+      # Job-level env cannot use ${{ env.* }}; keep in sync with workflow env.INZIGHT_CRAN_REPO.
+      INZIGHT_REPO_BASE: https://r.docker.stat.auckland.ac.nz
+      INZIGHT_BINARY_REPO: https://r.docker.stat.auckland.ac.nz
       INZIGHT_CHANNEL: ${{ matrix.channel }}
 
     steps:
