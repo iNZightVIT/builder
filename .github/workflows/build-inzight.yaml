@@ -452,9 +452,14 @@ jobs:
             stable)
               DEST="downloads/Windows/iNZightVIT-installer-${VERSION}.exe"
               cp "$EXE" "$DEST"
-              # Copy, not symlink: Windows runners and S3 do not handle ln reliably.
-              cp "$EXE" "downloads/iNZightVIT-installer.exe"
-              echo "$VERSION" > downloads/VERSION
+              # Prod default stays pinned at 4.4.0 (new builds only land under Windows/).
+              PINNED_VERSION="4.4.0"
+              PINNED_EXE="downloads/Windows/iNZightVIT-installer-${PINNED_VERSION}.exe"
+              aws --profile saml s3 cp \
+                "s3://${BUCKET}/downloads/Windows/iNZightVIT-installer-${PINNED_VERSION}.exe" \
+                "$PINNED_EXE"
+              cp "$PINNED_EXE" "downloads/iNZightVIT-installer.exe"
+              echo "$PINNED_VERSION" > downloads/VERSION
               ;;
             *)
               DEST="downloads/${CHANNEL}/iNZightVIT-installer-${VERSION}.exe"
